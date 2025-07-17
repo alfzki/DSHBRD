@@ -1,0 +1,440 @@
+/* Custom CSS for NusaStat Dashboard */
+
+/* Global Styles */
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Header Styles */
+.main-header .logo {
+  background-color: #2c3e50 !important;
+  color: white !important;
+  border-bottom: 0 !important;
+}
+
+.main-header .navbar {
+  background-color: #2c3e50 !important;
+}
+
+.main-header .navbar .nav > li > a {
+  color: white !important;
+}
+
+/* Sidebar Styles */
+.main-sidebar {
+  background-color: #34495e !important;
+}
+
+.main-sidebar .sidebar-menu > li > a {
+  color: #ecf0f1 !important;
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.main-sidebar .sidebar-menu > li:hover > a {
+  background-color: #2c3e50 !important;
+  border-left: 3px solid #3498db;
+}
+
+.main-sidebar .sidebar-menu > li.active > a {
+  background-color: #2c3e50 !important;
+  border-left: 3px solid #3498db;
+  color: white !important;
+}
+
+/* Content Area */
+.content-wrapper {
+  background-color: #f8f9fa !important;
+  min-height: 100vh;
+}
+
+/* Box Styles */
+.box {
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: none;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+}
+
+.box:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.box-header {
+  border-bottom: 2px solid #ecf0f1;
+  padding: 15px 20px;
+  background-color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.box-header.with-border {
+  border-bottom: 2px solid #ecf0f1;
+}
+
+.box-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.box-body {
+  padding: 20px;
+  background-color: white;
+}
+
+/* Status Colors */
+.box-primary .box-header {
+  background-color: #3498db;
+  color: white;
+}
+
+.box-success .box-header {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.box-info .box-header {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.box-warning .box-header {
+  background-color: #f39c12;
+  color: white;
+}
+
+.box-danger .box-header {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Button Styles */
+.btn {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 10px 20px;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+}
+
+.btn-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #138496;
+  transform: translateY(-2px);
+}
+
+.btn-warning {
+  background-color: #f39c12;
+  color: white;
+}
+
+.btn-warning:hover {
+  background-color: #e67e22;
+  transform: translateY(-2px);
+}
+
+/* Form Controls */
+.form-control {
+  border-radius: 6px;
+  border: 2px solid #ecf0f1;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+/* Select Inputs */
+.selectize-input {
+  border-radius: 6px;
+  border: 2px solid #ecf0f1;
+  padding: 10px 12px;
+  min-height: 40px;
+}
+
+.selectize-input.focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* DataTables Styling */
+.dataTables_wrapper {
+  margin-top: 20px;
+}
+
+.dataTables_filter input {
+  border-radius: 6px;
+  border: 2px solid #ecf0f1;
+  padding: 8px 12px;
+  margin-left: 10px;
+}
+
+.dataTables_length select {
+  border-radius: 6px;
+  border: 2px solid #ecf0f1;
+  padding: 8px 12px;
+  margin: 0 10px;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #f8f9fa;
+}
+
+.table-hover tbody tr:hover {
+  background-color: #e9ecef;
+}
+
+/* Tab Styles */
+.nav-tabs {
+  border-bottom: 2px solid #ecf0f1;
+}
+
+.nav-tabs > li > a {
+  border-radius: 6px 6px 0 0;
+  color: #2c3e50;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs > li.active > a {
+  background-color: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.nav-tabs > li > a:hover {
+  background-color: #ecf0f1;
+  border-color: #ecf0f1;
+}
+
+/* Progress Bars */
+.progress {
+  height: 20px;
+  border-radius: 10px;
+  background-color: #ecf0f1;
+}
+
+.progress-bar {
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+/* Alerts */
+.alert {
+  border-radius: 6px;
+  border: none;
+  padding: 15px 20px;
+  margin-bottom: 20px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.alert-info {
+  background-color: #cce7f0;
+  color: #0c5460;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Plotly Charts */
+.plotly {
+  border-radius: 6px;
+  border: 1px solid #ecf0f1;
+}
+
+/* Leaflet Maps */
+.leaflet-container {
+  border-radius: 6px;
+  border: 1px solid #ecf0f1;
+}
+
+/* Verbatim Output */
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #ecf0f1;
+  border-radius: 6px;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #2c3e50;
+}
+
+/* Loading Spinners */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7f8c8d;
+}
+
+.loading i {
+  font-size: 2em;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-sidebar {
+    transform: translateX(-100%);
+  }
+
+  .content-wrapper {
+    margin-left: 0;
+  }
+
+  .box {
+    margin-bottom: 15px;
+  }
+
+  .box-header {
+    padding: 10px 15px;
+  }
+
+  .box-body {
+    padding: 15px;
+  }
+}
+
+/* Custom Animations */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Custom Utility Classes */
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.text-left {
+  text-align: left;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+.mt-20 {
+  margin-top: 20px;
+}
+.mb-10 {
+  margin-bottom: 10px;
+}
+.mb-20 {
+  margin-bottom: 20px;
+}
+
+.p-10 {
+  padding: 10px;
+}
+.p-20 {
+  padding: 20px;
+}
+
+.border-radius-6 {
+  border-radius: 6px;
+}
+.border-radius-8 {
+  border-radius: 8px;
+}
+
+/* Print Styles */
+@media print {
+  .main-sidebar,
+  .main-header,
+  .btn,
+  .no-print {
+    display: none !important;
+  }
+
+  .content-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .box {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+}

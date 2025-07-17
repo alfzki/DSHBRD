@@ -197,48 +197,52 @@ manajemen_data_server <- function(id, values) {
             )
         })
 
-        # Initialize interpretation output with safe default
-        interpretation_text <- reactiveVal("Klik 'Proses Kategorisasi' untuk melihat interpretasi hasil.")
-
+        # Generate interpretation
         output$interpretation <- renderText({
-            interpretation_text()
-        })
-
-        # Update interpretation only after successful categorization
-        observeEvent(processed_result(), {
-            if (!is.null(processed_result()) && !is.null(input$select_var)) {
-                var_name <- input$select_var
-                cat_col <- paste0(var_name, "_kategori")
-
-                if (cat_col %in% names(processed_result())) {
-                    n_cat <- input$num_kategori
-                    method_text <- ifelse(input$method == "interval", "interval sama", "kuantil")
-
-                    # Get category summary using base R
-                    cat_data <- processed_result()[[cat_col]]
-                    cat_summary <- table(cat_data)
-
-                    interpretation_text(paste0(
-                        "Hasil Kategorisasi Variabel: ", var_name, "\n",
-                        "Metode: ", method_text, "\n",
-                        "Jumlah kategori: ", n_cat, "\n",
-                        "Distribusi kategori:\n",
-                        paste(paste(names(cat_summary), ":", as.numeric(cat_summary), "observasi"), collapse = "\n"),
-                        "\n\nInterpretasi: Variabel '", var_name, "' telah berhasil diubah menjadi ",
-                        n_cat, " kategori menggunakan metode ", method_text,
-                        ". Setiap kategori memiliki distribusi yang ",
-                        ifelse(input$method == "quantile", "relatif sama", "berdasarkan interval nilai yang sama"), "."
-                    ))
-                }
+            # Early return if no processed result
+            if (is.null(processed_result())) {
+                return("Pilih variabel dan klik 'Proses Kategorisasi' untuk melihat interpretasi hasil.")
             }
-        })
 
-        # Reset interpretation when variable changes
-        observeEvent(input$select_var, {
-            interpretation_text("Klik 'Proses Kategorisasi' untuk melihat interpretasi hasil.")
-        })
+            # Basic input validation without req()
+            if (is.null(input$select_var) || is.null(input$num_kategori) || is.null(input$method)) {
+                return("Pilih variabel dan pengaturan, lalu klik 'Proses Kategorisasi'.")
+            }
 
-        # Download handlers
+            # Validate that the category column exists
+            var_name <- input$select_var
+            cat_col <- paste0(var_name, "_kategori")
+
+            # Check if processed_result actually has data and the column exists
+            result_data <- processed_result()
+            if (is.null(result_data) || nrow(result_data) == 0 || !cat_col %in% names(result_data)) {
+                return("Silakan klik 'Proses Kategorisasi' untuk melihat interpretasi hasil.")
+            }
+
+            # If we get here, everything should be safe
+            n_cat <- input$num_kategori
+            method_text <- ifelse(input$method == "interval", "interval sama", "kuantil")
+
+            # Get category summary using base R to avoid dplyr issues
+            cat_data <- result_data[[cat_col]]
+            if (is.null(cat_data)) {
+                return("Silakan klik 'Proses Kategorisasi' untuk melihat interpretasi hasil.")
+            }
+
+            cat_summary <- table(cat_data)
+
+            paste0(
+                "Hasil Kategorisasi Variabel: ", var_name, "\n",
+                "Metode: ", method_text, "\n",
+                "Jumlah kategori: ", n_cat, "\n",
+                "Distribusi kategori:\n",
+                paste(paste(names(cat_summary), ":", as.numeric(cat_summary), "observasi"), collapse = "\n"),
+                "\n\nInterpretasi: Variabel '", var_name, "' telah berhasil diubah menjadi ",
+                n_cat, " kategori menggunakan metode ", method_text,
+                ". Setiap kategori memiliki distribusi yang ",
+                ifelse(input$method == "quantile", "relatif sama", "berdasarkan interval nilai yang sama"), "."
+            )
+        }) # Download handlers
         output$download_result <- downloadHandler(
             filename = function() {
                 paste0("kategorisasi_", input$select_var, "_", Sys.Date(), ".csv")

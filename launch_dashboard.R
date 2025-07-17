@@ -29,18 +29,13 @@ cat("\nChecking data files...\n")
 if (file.exists("data/sovi_data.csv")) {
     cat("✓ SOVI data file found\n")
 } else {
-    cat("⚠ SOVI data file not found - generating sample data...\n")
-    if (file.exists("generate_sample_data.R")) {
-        source("generate_sample_data.R")
-    } else {
-        cat("✗ Sample data generator not found\n")
-    }
+    cat("⚠ SOVI data file not found. Please provide the required data in 'data/sovi_data.csv'.\n")
 }
 
 if (file.exists("data/distance.csv")) {
     cat("✓ Distance data file found\n")
 } else {
-    cat("⚠ Distance data file not found\n")
+    cat("⚠ Distance data file not found. Please provide the required data in 'data/distance.csv'.\n")
 }
 
 # Load global configuration
@@ -62,9 +57,21 @@ if (file.exists("global.R")) {
     stop("Global configuration file is required")
 }
 
+# Check for development mode argument
+args <- commandArgs(trailingOnly = TRUE)
+is_dev_mode <- "--dev" %in% args
+
+if (is_dev_mode) {
+    cat("\n** DEVELOPMENT MODE ACTIVATED **\n")
+    cat("** Shiny autoreload is ON.      **\n\n")
+    options(shiny.autoreload = TRUE)
+}
+
 # Launch the dashboard
-cat("\nLaunching NusaStat Dashboard...\n")
-cat("Dashboard will be available at: http://127.0.0.1:3838\n")
+cat("Launching NusaStat Dashboard...\n")
+if (!is_dev_mode) {
+    cat("Dashboard will be available at: http://127.0.0.1:3838\n")
+}
 cat("Press Ctrl+C to stop the dashboard\n\n")
 
 # Check if app.R exists

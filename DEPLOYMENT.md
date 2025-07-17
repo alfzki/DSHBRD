@@ -13,7 +13,6 @@ Dashboard/
 ├── app_simple.R                        # Simplified version for basic environments
 ├── global.R                           # Full global configuration
 ├── global_simple.R                    # Simplified global configuration
-├── generate_sample_data.R             # Sample data generator
 ├── launch_dashboard.R                 # Dashboard launcher with dependency checking
 ├── check_requirements.R               # System requirements checker
 ├── data/                             # Data directory
@@ -182,12 +181,10 @@ If package installation fails due to network issues:
 
 ### **Data Issues**
 ```r
-# Generate fresh sample data
-source("generate_sample_data.R")
-
-# Check data files
+# Cek data files
 file.exists("data/sovi_data.csv")
 file.exists("data/distance.csv")
+# Jika data tidak ada, silakan hubungi pengelola untuk mendapatkan data yang benar.
 ```
 
 ## 📈 **Performance Notes**

@@ -748,23 +748,4 @@ Berdasarkan hasil uji t, dapat disimpulkan apakah terdapat perbedaan signifikan.
 }
 
 # Continue with other server modules...
-# (Due to length constraints, I'll continue with the remaining modules in the next part)
-
-# Placeholder for remaining modules
-uji_prop_var_server <- function(id, values) {
-    moduleServer(id, function(input, output, session) {
-        # Implementation will be added in next part
-    })
-}
-
-uji_anova_server <- function(id, values) {
-    moduleServer(id, function(input, output, session) {
-        # Implementation will be added in next part
-    })
-}
-
-regresi_server <- function(id, values) {
-    moduleServer(id, function(input, output, session) {
-        # Implementation will be added in next part
-    })
-}
+# The remaining modules are implemented in additional_server_modules.R

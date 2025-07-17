@@ -276,6 +276,11 @@ validate_data <- function(data, data_name = "data") {
 
 # Initialize sample data files if they don't exist
 initialize_sample_data <- function() {
+    # Create data directory if it doesn't exist
+    if (!dir.exists(here::here("data"))) {
+        dir.create(here::here("data"), recursive = TRUE)
+    }
+
     sovi_path <- here::here("data", "sovi_data.csv")
     distance_path <- here::here("data", "distance.csv")
 
@@ -296,7 +301,11 @@ initialize_sample_data <- function() {
 initialize_sample_data()
 
 # Print startup message
+cat("==========================================\n")
 cat("NusaStat Dashboard initialized successfully!\n")
+cat("==========================================\n")
 cat("Required packages loaded:", length(required_packages), "\n")
 cat("Sample data files created in 'data/' directory\n")
 cat("Ready to launch the application!\n")
+cat("Application URL: http://127.0.0.1:3838\n")
+cat("==========================================\n")

@@ -39,13 +39,7 @@ install.packages(c(
 ))
 ```
 
-### Step 3: Generate Sample Data (Optional)
-If you don't have the actual data files, generate sample data:
-```r
-source("generate_sample_data.R")
-```
-
-### Step 4: Launch the Dashboard
+### Step 3: Launch the Dashboard
 
 **Using VS Code:**
 1. Open Command Palette (Ctrl+Shift+P)
@@ -61,7 +55,7 @@ shiny::runApp("app.R")
 1. Open `app.R`
 2. Click "Run App" button
 
-### Step 5: Access the Dashboard
+### Step 4: Access the Dashboard
 Once running, the dashboard will be available at:
 - Local: http://127.0.0.1:3838
 - Network: http://0.0.0.0:3838 (if accessible from other devices)
@@ -139,9 +133,7 @@ shiny::runApp("app.R", port = 3839)
 # Check if data files exist
 file.exists("data/sovi_data.csv")
 file.exists("data/distance.csv")
-
-# If not, generate sample data
-source("generate_sample_data.R")
+# Jika data tidak ada, silakan hubungi pengelola untuk mendapatkan data yang benar.
 ```
 
 **4. Memory Issues with Large Datasets**
@@ -180,7 +172,7 @@ shiny::runApp("app.R", launch.browser = TRUE)
 1. **Built-in Help**: Each module includes instructions and interpretations
 2. **Error Messages**: The dashboard provides user-friendly error messages
 3. **Validation**: Input validation prevents common errors
-4. **Sample Data**: Use the generated sample data to understand expected data format
+4. **Sample Data**: Instruksi penggunaan sample data dihapus. Silakan gunakan data asli.
 
 ## 🔄 Updates and Maintenance
 

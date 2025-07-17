@@ -1,53 +1,55 @@
-# NusaStat Dashboard
+# 🇮🇩 NusaStat Dashboard - Analisis Kerentanan Sosial Indonesia
 
-**NusaStat: Dasbor Interaktif Analisis Kerentanan Sosial & Statistik Indonesia**
+[![R Shiny](https://img.shields.io/badge/R-Shiny-blue?style=for-the-badge&logo=r)](https://shiny.rstudio.com/)
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-Academic%20Use-orange?style=for-the-badge)]()
 
-## Deskripsi
+Dashboard interaktif untuk analisis statistik data kerentanan sosial Indonesia yang dikembangkan untuk memenuhi kriteria **Ujian Akhir Semester (UAS) Komputasi Statistik**.
 
-NusaStat adalah dashboard interaktif yang dikembangkan menggunakan R Shiny untuk analisis statistik data kerentanan sosial Indonesia. Dashboard ini dirancang khusus untuk memenuhi kebutuhan analisis statistik komprehensif dengan antarmuka yang modern dan mudah digunakan.
+## 🚀 Quick Start
 
-## Fitur Utama
+### Menjalankan Aplikasi
+```r
+# 1. Clone repository atau download project
+# 2. Buka R/RStudio dan set working directory ke folder Dashboard
+setwd("path/to/Dashboard")
 
-### 🏠 **Beranda**
-- Informasi umum tentang dashboard
-- Metadata variabel dataset
-- Informasi sumber data (SUSENAS 2017)
+# 3. Install packages dan jalankan aplikasi
+source("global.R")  # Install dependencies
+source("app.R")     # Launch dashboard
+```
 
-### 📊 **Manajemen Data**
-- Transformasi variabel kontinu menjadi kategorik
-- Metode kategorisasi: Interval sama dan Kuantil
-- Interpretasi otomatis hasil kategorisasi
-- Unduhan hasil dalam format CSV dan TXT
+**Akses aplikasi di**: `http://127.0.0.1:3838`
 
-### 🔍 **Eksplorasi Data**
-- Statistik deskriptif lengkap
-- Visualisasi histogram interaktif dengan Plotly
-- Visualisasi peta (memerlukan data spasial tambahan)
-- Interpretasi otomatis statistik
+## 📊 Fitur Utama
 
-### ✅ **Uji Asumsi**
-- Uji normalitas (Shapiro-Wilk)
-- Uji homogenitas varians (Levene's test)
-- Q-Q plot dan histogram dengan kurva normal
-- Interpretasi hasil uji
+### 🏠 Dashboard Lengkap
+- **Beranda**: Overview dan metadata dataset
+- **Manajemen Data**: Kategorisasi variabel kontinu
+- **Eksplorasi Data**: Statistik deskriptif dan visualisasi
+- **Uji Asumsi**: Normalitas dan homogenitas
+- **Statistik Inferensia**: t-test, ANOVA, uji proporsi/varians
+- **Regresi Linear Berganda**: Model prediktif dengan uji asumsi
 
-### 📈 **Statistik Inferensia**
+### 📈 Analisis Statistik Komprehensif
+- ✅ **Uji t**: Satu sampel dan dua sampel independen
+- ✅ **ANOVA**: Satu arah dan dua arah dengan post-hoc test
+- ✅ **Uji Proporsi**: Chi-square test untuk proporsi
+- ✅ **Uji Varians**: Chi-square test untuk varians
+- ✅ **Regresi**: Multiple linear regression dengan diagnostik lengkap
+- ✅ **Uji Asumsi**: Normalitas, homogenitas, multikolinearitas
 
-#### Uji Beda Rata-Rata
-- Uji t satu sampel
-- Uji t dua sampel independen
-- Interpretasi hasil dengan hipotesis
+### 🎨 Visualisasi Interaktif
+- 📊 Histogram dan boxplot dengan **Plotly**
+- 🗺️ Peta interaktif dengan **Leaflet**
+- 📋 Tabel dinamis dengan **DT**
+- 📈 Plot diagnostik regresi
 
-#### Uji Proporsi & Varians
-- Uji proporsi satu sampel
-- Uji varians satu sampel (Chi-square)
-- Interpretasi hasil uji
-
-#### ANOVA
-- ANOVA satu arah
-- ANOVA dua arah (dengan/tanpa interaksi)
-- Post-hoc test (Tukey HSD)
-- Visualisasi box plot interaktif
+### 📄 Export & Reporting
+- 📑 **PDF Reports**: Laporan lengkap per analisis
+- 📊 **CSV Data**: Export data dan hasil
+- 🖼️ **PNG Plots**: Grafik high-resolution
+- 📝 **Word Documents**: Laporan profesional
 
 ### 📊 **Regresi Linear Berganda**
 - Model regresi dengan multiple variabel independen

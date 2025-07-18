@@ -347,7 +347,7 @@ ALIVA: Alif Vulnerability Analytics Dashboard adalah platform analisis statistik
 
 ## Fitur Utama
 - Manajemen Data: Transformasi variabel kontinu ke kategorik
-- Eksplorasi Data: Statistik deskriptif dan visualisasi  
+- Eksplorasi Data: Statistik deskriptif dan visualisasi
 - Uji Asumsi: Normalitas dan homogenitas varians
 - Statistik Inferensia: Uji t, ANOVA, uji proporsi dan varians
 - Regresi Linear Berganda: Model prediktif dengan uji asumsi
@@ -366,7 +366,7 @@ Fitur manajemen data memungkinkan transformasi variabel kontinu menjadi kategori
 ## Statistik Deskriptif
 Analisis deskriptif mencakup:
 - Measures of central tendency (mean, median, mode)
-- Measures of variability (std dev, variance, range)  
+- Measures of variability (std dev, variance, range)
 - Measures of shape (skewness, kurtosis)
 
 ## Visualisasi
@@ -381,7 +381,7 @@ Analisis deskriptif mencakup:
 Menguji apakah data berdistribusi normal - prerequisite untuk uji parametrik.
 
 **Hipotesis**:
-- H₀: Data berdistribusi normal  
+- H₀: Data berdistribusi normal
 - H₁: Data tidak berdistribusi normal
 
 ## Uji Homogenitas (Levene Test)
@@ -400,7 +400,7 @@ Menguji kesamaan varians antar grup - asumsi penting untuk ANOVA.
 ### Uji t Satu Sampel
 Membandingkan rata-rata sampel dengan nilai hipotesis tertentu.
 
-### Uji t Dua Sampel  
+### Uji t Dua Sampel
 Membandingkan rata-rata dua kelompok independen.
 
 **Interpretasi**: Uji t membantu menentukan apakah perbedaan yang diamati signifikan secara statistik.
@@ -432,7 +432,7 @@ Analisis hubungan antara satu variabel dependen dengan multiple variabel indepen
 
 ## Uji Asumsi Klasik
 - **Multikolinearitas (VIF)**: Mengecek korelasi tinggi antar prediktor
-- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual  
+- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual
 - **Normalitas Residual (Shapiro-Wilk)**: Mengecek distribusi normal residual
 
 ## Interpretasi Model
@@ -449,7 +449,7 @@ ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari e
 
 ## Rekomendasi Penggunaan
 1. Mulai dengan eksplorasi data untuk memahami karakteristik dataset
-2. Lakukan uji asumsi sebelum analisis inferensia  
+2. Lakukan uji asumsi sebelum analisis inferensia
 3. Pilih uji statistik yang sesuai berdasarkan jenis data dan tujuan analisis
 4. Validasi model regresi dengan pengujian asumsi klasik
 5. Interpretasikan hasil dalam konteks domain knowledge

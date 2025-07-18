@@ -68,7 +68,7 @@ options(
 #' @return data.frame containing SOVI data with added categorical variables
 load_sovi_data <- function() {
     file_path <- here::here("data", "sovi_data.csv")
-    
+
     # Check if there's an existing dataset with user variables
     if (exists(".app_state", envir = .GlobalEnv) && !is.null(.GlobalEnv$.app_state$user_variables)) {
         cat("GLOBAL.R: Found existing user variables to preserve\n")
@@ -279,7 +279,7 @@ get_categorical_columns <- function(data) {
         .[. == TRUE] %>%
         names()
     # Exclude 'district' as it is not a valid grouping variable for statistical tests
-    return(categorical_vars[categorical_vars != 'district'])
+    return(categorical_vars[categorical_vars != "district"])
 }
 
 #' Interpret p-value for statistical tests
@@ -389,33 +389,36 @@ cat("==========================================\n")
 #' @param output_format Output format ("pdf_document" or "word_document")
 #' @return TRUE if successful, FALSE otherwise
 generate_clean_report <- function(rmd_content, output_file, output_format = "pdf_document") {
-    tryCatch({
-        temp_rmd <- tempfile(fileext = ".Rmd")
-        writeLines(rmd_content, temp_rmd)
-        
-        # Suppress all output during rendering
-        output_path <- suppressMessages(suppressWarnings(
-            rmarkdown::render(
-                input = temp_rmd, 
-                output_format = output_format, 
-                quiet = TRUE,
-                output_dir = tempdir(),
-                clean = TRUE
-            )
-        ))
-        
-        if (file.exists(output_path)) {
-            file.copy(output_path, output_file)
-            # Clean up temporary files
-            unlink(temp_rmd)
-            if (file.exists(output_path)) unlink(output_path)
-            return(TRUE)
-        } else {
-            stop("Output file not generated")
+    tryCatch(
+        {
+            temp_rmd <- tempfile(fileext = ".Rmd")
+            writeLines(rmd_content, temp_rmd)
+
+            # Suppress all output during rendering
+            output_path <- suppressMessages(suppressWarnings(
+                rmarkdown::render(
+                    input = temp_rmd,
+                    output_format = output_format,
+                    quiet = TRUE,
+                    output_dir = tempdir(),
+                    clean = TRUE
+                )
+            ))
+
+            if (file.exists(output_path)) {
+                file.copy(output_path, output_file)
+                # Clean up temporary files
+                unlink(temp_rmd)
+                if (file.exists(output_path)) unlink(output_path)
+                return(TRUE)
+            } else {
+                stop("Output file not generated")
+            }
+        },
+        error = function(e) {
+            # If generation fails, create a simple error document
+            writeLines(paste("Error generating report:", e$message), output_file)
+            return(FALSE)
         }
-    }, error = function(e) {
-        # If generation fails, create a simple error document
-        writeLines(paste("Error generating report:", e$message), output_file)
-        return(FALSE)
-    })
+    )
 }

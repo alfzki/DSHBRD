@@ -9,12 +9,18 @@
 #' @param values Reactive values object containing shared data
 uji_prop_var_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                updateSelectInput(session, "var_variance", choices = numeric_choices, selected = numeric_choices[1])
-            }
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            updateSelectInput(session, "var_variance", choices = numeric_choices, selected = numeric_choices[1])
         })
 
         # Reactive values

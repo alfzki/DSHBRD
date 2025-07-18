@@ -54,19 +54,6 @@ uji_rata_ui <- function(id) {
                     ),
                     actionButton(ns("run_test"), "Jalankan Uji",
                         class = "btn-success", icon = icon("play"), width = "100%"
-                    ),
-                    hr(),
-                    h5("Download Options:"),
-                    downloadButton(ns("download_interpretation"), "Interpretasi (.docx)",
-                        class = "btn-sm btn-outline-info", icon = icon("file-word"), width = "100%"
-                    ),
-                    br(), br(),
-                    downloadButton(ns("download_report_pdf"), "Laporan Lengkap (PDF)",
-                        class = "btn-primary", icon = icon("file-pdf"), width = "100%"
-                    ),
-                    br(), br(),
-                    downloadButton(ns("download_report_word"), "Laporan Lengkap (Word)",
-                        class = "btn-success", icon = icon("file-word"), width = "100%"
                     )
                 )
             ),
@@ -81,6 +68,44 @@ uji_rata_ui <- function(id) {
                     br(),
                     h4("Interpretasi:"),
                     uiOutput(ns("interpretation"))
+                )
+            )
+        ),
+        fluidRow(
+            column(
+                width = 12,
+                box(
+                    title = tags$span(icon("download"), "Unduh Laporan"),
+                    status = "info",
+                    solidHeader = TRUE,
+                    width = NULL,
+                    collapsible = TRUE,
+                    collapsed = TRUE,
+                    p(class = "text-muted", style = "font-size: 0.9em;", 
+                      "Klik 'Jalankan Uji' terlebih dahulu untuk mengaktifkan tombol unduh."),
+                    fluidRow(
+                        column(
+                            width = 4,
+                            h6("Interpretasi"),
+                            downloadButton(ns("download_interpretation"), "Unduh (.docx)",
+                                class = "btn-outline-info btn-sm", icon = icon("file-word"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 4,
+                            h6("Laporan PDF"),
+                            downloadButton(ns("download_report_pdf"), "Unduh PDF",
+                                class = "btn-primary btn-sm", icon = icon("file-pdf"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 4,
+                            h6("Laporan Word"),
+                            downloadButton(ns("download_report_word"), "Unduh Word",
+                                class = "btn-success btn-sm", icon = icon("file-word"), width = "100%"
+                            )
+                        )
+                    )
                 )
             )
         )

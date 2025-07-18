@@ -9,16 +9,22 @@
 #' @param values Reactive values object containing shared data
 uji_anova_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
-                updateSelectInput(session, "dep_var", choices = numeric_choices)
-                updateSelectInput(session, "factor1", choices = categorical_choices)
-                updateSelectInput(session, "factor2", choices = categorical_choices)
-            }
+            updateSelectInput(session, "dep_var", choices = numeric_choices)
+            updateSelectInput(session, "factor1", choices = categorical_choices)
+            updateSelectInput(session, "factor2", choices = categorical_choices)
         })
 
         # Reactive values
@@ -278,7 +284,7 @@ uji_anova_server <- function(id, values) {
                     interaction = input$interaction,
                     posthoc_result = posthoc_result(),
                     analysis_date = Sys.Date(),
-                    interpretation = interpret_anova(result, input$anova_type)
+                    interpretation = interpret_anova(result$summary, alpha = 0.05, type = result$type)
                 )
 
                 # Render the R Markdown template
@@ -322,7 +328,7 @@ uji_anova_server <- function(id, values) {
                     interaction = input$interaction,
                     posthoc_result = posthoc_result(),
                     analysis_date = Sys.Date(),
-                    interpretation = interpret_anova(result, input$anova_type)
+                    interpretation = interpret_anova(result$summary, alpha = 0.05, type = result$type)
                 )
 
                 # Create temporary Rmd file for Word output

@@ -214,16 +214,38 @@ interpret_var_test <- function(test_result, alpha = 0.05) {
 #' @param type Type of ANOVA ("one_way" or "two_way")
 #' @return Character string with interpretation in Indonesian
 interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
+    # Validate input
+    if (is.null(anova_result) || length(anova_result) == 0) {
+        return("Error: ANOVA result is empty or NULL.")
+    }
+    
     # Extract ANOVA table
     anova_table <- anova_result[[1]]
+    
+    if (is.null(anova_table) || nrow(anova_table) == 0) {
+        return("Error: ANOVA table is empty or NULL.")
+    }
     
     interpretations <- c()
     
     if (type == "one_way") {
+        # Check if required columns exist
+        if (!all(c("Pr(>F)", "F value", "Df", "Sum Sq") %in% names(anova_table))) {
+            return("Error: Required columns not found in ANOVA table.")
+        }
+        
         p_value <- anova_table$`Pr(>F)`[1]
         f_stat <- anova_table$`F value`[1]
         df1 <- anova_table$Df[1]
         df2 <- anova_table$Df[2]
+        
+        # Check if values are valid
+        if (is.null(p_value) || is.na(p_value) || length(p_value) == 0) {
+            return("Error: p-value is missing or invalid.")
+        }
+        if (is.null(f_stat) || is.na(f_stat) || length(f_stat) == 0) {
+            return("Error: F-statistic is missing or invalid.")
+        }
         
         # Calculate effect size (eta squared)
         ss_factor <- anova_table$`Sum Sq`[1]
@@ -289,16 +311,33 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
 #' @param alpha Significance level (default: 0.05)
 #' @return Character string with interpretation in Indonesian
 interpret_regression <- function(lm_result, alpha = 0.05) {
-    summary_lm <- summary(lm_result)
+    # Validate input
+    if (is.null(lm_result)) {
+        return("Error: Regression result is NULL.")
+    }
     
-    # Model fit statistics
-    r_squared <- summary_lm$r.squared
-    adj_r_squared <- summary_lm$adj.r.squared
-    f_stat <- summary_lm$fstatistic[1]
-    f_p_value <- pf(f_stat, summary_lm$fstatistic[2], summary_lm$fstatistic[3], lower.tail = FALSE)
+    if (!inherits(lm_result, "lm")) {
+        return("Error: Input must be an lm object.")
+    }
     
-    # Coefficients
-    coefficients <- summary_lm$coefficients
+    tryCatch({
+        summary_lm <- summary(lm_result)
+        
+        # Model fit statistics
+        r_squared <- summary_lm$r.squared
+        adj_r_squared <- summary_lm$adj.r.squared
+        f_stat <- summary_lm$fstatistic[1]
+        f_p_value <- pf(f_stat, summary_lm$fstatistic[2], summary_lm$fstatistic[3], lower.tail = FALSE)
+        
+        # Coefficients
+        coefficients <- summary_lm$coefficients
+        
+        # Validate extracted values
+        if (is.null(r_squared) || is.na(r_squared) || 
+            is.null(f_stat) || is.na(f_stat) || 
+            is.null(f_p_value) || is.na(f_p_value)) {
+            return("Error: Unable to extract valid statistics from regression model.")
+        }
     
     # Model interpretation
     if (f_p_value < alpha) {
@@ -377,6 +416,10 @@ interpret_regression <- function(lm_result, alpha = 0.05) {
     )
     
     return(interpretation)
+    
+    }, error = function(e) {
+        return(paste("Error in regression interpretation:", e$message))
+    })
 }
 
 #' Interpret Assumption Test Results
@@ -492,4 +535,96 @@ interpret_with_recommendations <- function(test_result, test_type, context = NUL
     )
     
     return(paste0(base_interpretation, recommendations))
+}
+
+#' Robust PDF Generation Function
+#'
+#' @param rmd_content Character string containing R Markdown content
+#' @param output_file Path to output file
+#' @param title Document title for error fallback
+#' @return Logical indicating success
+render_pdf_safely <- function(rmd_content, output_file, title = "Report") {
+    temp_rmd <- tempfile(fileext = ".Rmd")
+    temp_dir <- tempdir()
+    
+    tryCatch({
+        writeLines(rmd_content, temp_rmd)
+        
+        # Capture and suppress all output including pandoc logs
+        capture.output({
+            suppressMessages(suppressWarnings({
+                output_path <- rmarkdown::render(
+                    input = temp_rmd, 
+                    output_format = rmarkdown::pdf_document(
+                        latex_engine = "xelatex",
+                        keep_tex = FALSE
+                    ), 
+                    quiet = TRUE,
+                    output_dir = temp_dir,
+                    clean = TRUE,
+                    envir = new.env()
+                )
+            }))
+        }, type = "message")
+        
+        if (file.exists(output_path)) {
+            file.copy(output_path, output_file, overwrite = TRUE)
+            # Clean up all temporary files including logs
+            unlink(temp_rmd)
+            unlink(output_path)
+            unlink(list.files(temp_dir, pattern = "^file.*\\.(log|aux|out|tex)$", full.names = TRUE))
+            return(TRUE)
+        } else {
+            stop("PDF output file not generated")
+        }
+    }, error = function(e) {
+        # Create minimal text file as fallback
+        writeLines(paste("Error generating PDF report for", title, ":", e$message), output_file)
+        return(FALSE)
+    })
+}
+
+#' Robust Word Document Generation Function
+#'
+#' @param rmd_content Character string containing R Markdown content
+#' @param output_file Path to output file
+#' @param title Document title for error fallback
+#' @return Logical indicating success
+render_word_safely <- function(rmd_content, output_file, title = "Report") {
+    temp_rmd <- tempfile(fileext = ".Rmd")
+    temp_dir <- tempdir()
+    
+    tryCatch({
+        writeLines(rmd_content, temp_rmd)
+        
+        # Capture and suppress all output
+        capture.output({
+            suppressMessages(suppressWarnings({
+                output_path <- rmarkdown::render(
+                    input = temp_rmd, 
+                    output_format = rmarkdown::word_document(
+                        reference_docx = NULL
+                    ), 
+                    quiet = TRUE,
+                    output_dir = temp_dir,
+                    clean = TRUE,
+                    envir = new.env()
+                )
+            }))
+        }, type = "message")
+        
+        if (file.exists(output_path)) {
+            file.copy(output_path, output_file, overwrite = TRUE)
+            # Clean up all temporary files
+            unlink(temp_rmd)
+            unlink(output_path)
+            return(TRUE)
+        } else {
+            stop("Word output file not generated")
+        }
+    }, error = function(e) {
+        # Create minimal text file as fallback
+        writeLines(paste("Error generating Word report for", title, ":", e$message), output_file)
+        return(FALSE)
+    })
 }

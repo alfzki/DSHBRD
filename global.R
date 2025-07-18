@@ -22,10 +22,7 @@ required_packages <- c(
     "rmarkdown", "knitr", "pagedown", "officer", "flextable",
 
     # Additional utilities
-    "here", "glue", "scales", "RColorBrewer", "viridis",
-
-    # Pandoc installation (Windows only)
-    "installr"
+    "here", "glue", "scales", "RColorBrewer", "viridis"
 )
 
 # Set CRAN mirror
@@ -53,87 +50,6 @@ lapply(required_packages, function(pkg) {
 
 # Source interpretation helpers for statistical analysis
 source("R/utils/interpretation_helpers.R")
-
-# Pandoc Setup and Installation
-# =============================
-
-#' Check if pandoc is available and install if missing
-#' @return logical indicating if pandoc is available
-check_and_install_pandoc <- function() {
-    # Check if pandoc is available
-    if (rmarkdown::pandoc_available()) {
-        pandoc_version <- rmarkdown::pandoc_version()
-        cat("✓ Pandoc is available (version:", as.character(pandoc_version), ")\n")
-        return(TRUE)
-    }
-
-    cat("⚠ Pandoc not found. Attempting to install...\n")
-
-    # Only attempt installation on Windows
-    if (.Platform$OS.type == "windows") {
-        tryCatch(
-            {
-                # First try using winget (Windows Package Manager)
-                if (system("winget --version", ignore.stdout = TRUE, ignore.stderr = TRUE) == 0) {
-                    cat("ℹ Installing pandoc using Windows Package Manager (winget)...\n")
-                    install_result <- system("winget install --source winget --exact --id JohnMacFarlane.Pandoc --silent",
-                        ignore.stdout = TRUE, ignore.stderr = TRUE
-                    )
-
-                    if (install_result == 0) {
-                        cat("✓ Pandoc installation completed via winget.\n")
-
-                        # Refresh environment variables
-                        system("refreshenv", ignore.stdout = TRUE, ignore.stderr = TRUE)
-
-                        # Check again if pandoc is now available
-                        if (rmarkdown::pandoc_available()) {
-                            pandoc_version <- rmarkdown::pandoc_version()
-                            cat("✓ Pandoc is now available (version:", as.character(pandoc_version), ")\n")
-                            return(TRUE)
-                        } else {
-                            cat("⚠ Pandoc installed but not detected by R. Please restart your R session.\n")
-                            return(FALSE)
-                        }
-                    } else {
-                        stop("Winget installation failed")
-                    }
-                } else {
-                    # Fallback to installr if winget is not available
-                    cat("ℹ Installing pandoc using installr package...\n")
-                    installr::install.pandoc()
-                    cat("✓ Pandoc installation completed via installr.\n")
-
-                    # Check again if pandoc is now available
-                    if (rmarkdown::pandoc_available()) {
-                        pandoc_version <- rmarkdown::pandoc_version()
-                        cat("✓ Pandoc is now available (version:", as.character(pandoc_version), ")\n")
-                        return(TRUE)
-                    } else {
-                        cat("⚠ Pandoc installation completed but still not detected by R.\n")
-                        cat("ℹ Please restart your R session or try installing pandoc manually.\n")
-                        return(FALSE)
-                    }
-                }
-            },
-            error = function(e) {
-                cat("✗ Failed to install pandoc automatically:", e$message, "\n")
-                cat("ℹ Please install pandoc manually using one of these methods:\n")
-                cat("  • Download from: https://pandoc.org/installing.html\n")
-                cat("  • Use winget: winget install --source winget --exact --id JohnMacFarlane.Pandoc\n")
-                cat("  • Use chocolatey: choco install pandoc\n")
-                return(FALSE)
-            }
-        )
-    } else {
-        cat("ℹ Automatic pandoc installation is only supported on Windows.\n")
-        cat("ℹ Please install pandoc manually from: https://pandoc.org/installing.html\n")
-        return(FALSE)
-    }
-}
-
-# Check and install pandoc if needed
-check_and_install_pandoc()
 
 # Global Settings
 # ===============
@@ -443,3 +359,43 @@ cat("Real data files expected in 'data/' directory\n")
 cat("Ready to launch the application!\n")
 cat("Application URL: http://127.0.0.1:3838\n")
 cat("==========================================\n")
+
+# Helper Functions for Report Generation
+# ======================================
+
+#' Generate PDF report with proper cleanup and suppression
+#' @param rmd_content Character string containing R Markdown content
+#' @param output_file Path to output file
+#' @param output_format Output format ("pdf_document" or "word_document")
+#' @return TRUE if successful, FALSE otherwise
+generate_clean_report <- function(rmd_content, output_file, output_format = "pdf_document") {
+    tryCatch({
+        temp_rmd <- tempfile(fileext = ".Rmd")
+        writeLines(rmd_content, temp_rmd)
+        
+        # Suppress all output during rendering
+        output_path <- suppressMessages(suppressWarnings(
+            rmarkdown::render(
+                input = temp_rmd, 
+                output_format = output_format, 
+                quiet = TRUE,
+                output_dir = tempdir(),
+                clean = TRUE
+            )
+        ))
+        
+        if (file.exists(output_path)) {
+            file.copy(output_path, output_file)
+            # Clean up temporary files
+            unlink(temp_rmd)
+            if (file.exists(output_path)) unlink(output_path)
+            return(TRUE)
+        } else {
+            stop("Output file not generated")
+        }
+    }, error = function(e) {
+        # If generation fails, create a simple error document
+        writeLines(paste("Error generating report:", e$message), output_file)
+        return(FALSE)
+    })
+}

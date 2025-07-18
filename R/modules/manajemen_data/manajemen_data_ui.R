@@ -32,6 +32,20 @@ manajemen_data_ui <- function(id) {
                         ),
                         selected = "interval"
                     ),
+                    conditionalPanel(
+                        condition = "output.show_save_options",
+                        ns = ns,
+                        hr(),
+                        h5("Simpan Sebagai Variabel Baru:"),
+                        textInput(ns("new_var_name"), "Nama Variabel Baru:",
+                            placeholder = "contoh: income_kategori", width = "100%"
+                        ),
+                        actionButton(ns("save_variable"), "Simpan ke Dataset",
+                            class = "btn-info", icon = icon("save"),
+                            width = "100%"
+                        ),
+                        hr()
+                    ),
                     actionButton(ns("process_btn"), "Proses Kategorisasi",
                         class = "btn-success", icon = icon("play"),
                         width = "100%"
@@ -61,55 +75,49 @@ manajemen_data_ui <- function(id) {
                 )
             )
         ),
-        fluidRow(
-            column(
-                width = 12,
-                box(
-                    title = tags$span(icon("comment"), "Interpretasi"),
-                    status = "info",
-                    solidHeader = TRUE,
-                    width = NULL,
-                    verbatimTextOutput(ns("interpretation"))
-                )
-            )
-        ),
-        fluidRow(
-            column(
-                width = 12,
-                box(
-                    title = tags$span(icon("download"), "Unduh Hasil"),
-                    status = "success",
-                    solidHeader = TRUE,
-                    width = NULL,
-                    p(class = "text-muted", style = "font-size: 0.9em;", 
-                      "Klik 'Proses Kategorisasi' terlebih dahulu untuk mengaktifkan tombol unduh."),
-                    fluidRow(
-                        column(
-                            width = 3,
-                            h6("Data Hasil"),
-                            downloadButton(ns("download_result"), "Unduh Data (.csv)",
-                                class = "btn-outline-primary", icon = icon("file-csv"), width = "100%"
-                            )
-                        ),
-                        column(
-                            width = 3,
-                            h6("Interpretasi"),
-                            downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
-                                class = "btn-outline-info", icon = icon("file-word"), width = "100%"
-                            )
-                        ),
-                        column(
-                            width = 3,
-                            h6("Laporan PDF"),
-                            downloadButton(ns("download_report_pdf"), "Unduh Laporan PDF",
-                                class = "btn-primary", icon = icon("file-pdf"), width = "100%"
-                            )
-                        ),
-                        column(
-                            width = 3,
-                            h6("Laporan Word"),
-                            downloadButton(ns("download_report_word"), "Unduh Laporan Word",
-                                class = "btn-success", icon = icon("file-word"), width = "100%"
+        conditionalPanel(
+            condition = "output.show_downloads",
+            ns = ns,
+            fluidRow(
+                column(
+                    width = 12,
+                    box(
+                        title = tags$span(icon("download"), "Unduh Hasil"),
+                        status = "success",
+                        solidHeader = TRUE,
+                        width = NULL,
+                        collapsible = TRUE,
+                        collapsed = FALSE,
+                        p(class = "text-info", style = "font-size: 0.9em; margin-bottom: 15px;", 
+                          icon("info-circle"), " Fitur unduh tersedia setelah kategorisasi berhasil dilakukan."),
+                        fluidRow(
+                            column(
+                                width = 3,
+                                h6("Data Hasil"),
+                                downloadButton(ns("download_result"), "Unduh Data (.csv)",
+                                    class = "btn-outline-primary", icon = icon("file-csv"), width = "100%"
+                                )
+                            ),
+                            column(
+                                width = 3,
+                                h6("Interpretasi"),
+                                downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
+                                    class = "btn-outline-info", icon = icon("file-word"), width = "100%"
+                                )
+                            ),
+                            column(
+                                width = 3,
+                                h6("Laporan PDF"),
+                                downloadButton(ns("download_report_pdf"), "Unduh Laporan PDF",
+                                    class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                                )
+                            ),
+                            column(
+                                width = 3,
+                                h6("Laporan Word"),
+                                downloadButton(ns("download_report_word"), "Unduh Laporan Word",
+                                    class = "btn-success", icon = icon("file-word"), width = "100%"
+                                )
                             )
                         )
                     )

@@ -9,16 +9,22 @@
 #' @param values Reactive values object containing shared data
 uji_rata_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
-                updateSelectInput(session, "var_one", choices = numeric_choices)
-                updateSelectInput(session, "var_two", choices = numeric_choices)
-                updateSelectInput(session, "group_two", choices = categorical_choices)
-            }
+            updateSelectInput(session, "var_one", choices = numeric_choices)
+            updateSelectInput(session, "var_two", choices = numeric_choices)
+            updateSelectInput(session, "group_two", choices = categorical_choices)
         })
 
         # Reactive values

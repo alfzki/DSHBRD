@@ -9,16 +9,22 @@
 #' @param values Reactive values object containing shared data
 uji_asumsi_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
-                updateSelectInput(session, "var_normal", choices = numeric_choices, selected = numeric_choices[1])
-                updateSelectInput(session, "var_homogen", choices = numeric_choices, selected = numeric_choices[1])
-                updateSelectInput(session, "group_homogen", choices = categorical_choices, selected = categorical_choices[1])
-            }
+            updateSelectInput(session, "var_normal", choices = numeric_choices, selected = numeric_choices[1])
+            updateSelectInput(session, "var_homogen", choices = numeric_choices, selected = numeric_choices[1])
+            updateSelectInput(session, "group_homogen", choices = categorical_choices, selected = categorical_choices[1])
         })
 
         # Normality test
@@ -321,8 +327,24 @@ Laporan ini menyajikan hasil uji asumsi yang diperlukan untuk analisis statistik
                 
                 # Render using the correct pattern to avoid pandoc error
                 tryCatch({
-                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
-                    file.copy(output_path, file)
+                    # Suppress output during rendering
+                    output_path <- suppressMessages(suppressWarnings(
+                        rmarkdown::render(
+                            input = temp_rmd, 
+                            output_format = "pdf_document", 
+                            quiet = TRUE,
+                            output_dir = tempdir(),
+                            clean = TRUE
+                        )
+                    ))
+                    if (file.exists(output_path)) {
+                        file.copy(output_path, file)
+                        # Clean up temporary files
+                        unlink(temp_rmd)
+                        if (file.exists(output_path)) unlink(output_path)
+                    } else {
+                        stop("PDF output file not generated")
+                    }
                 }, error = function(e) {
                     # If PDF generation fails, create a simple error document
                     writeLines(paste("Error generating PDF report:", e$message), file)

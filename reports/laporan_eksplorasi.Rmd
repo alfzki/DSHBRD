@@ -80,7 +80,9 @@ if (!is.null(params$data_summary)) {
 
 ```{r plot-display, fig.cap="Distribusi Variabel", out.width="100%"}
 if (!is.null(params$plot_path) && file.exists(params$plot_path)) {
-    knitr::include_graphics(params$plot_path)
+    # Normalize path for LaTeX compatibility
+    normalized_path <- normalizePath(params$plot_path, winslash = "/")
+    knitr::include_graphics(normalized_path)
 } else {
     cat("Plot tidak tersedia.")
 }

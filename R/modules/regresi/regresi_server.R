@@ -9,14 +9,20 @@
 #' @param values Reactive values object containing shared data
 regresi_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
 
-                updateSelectInput(session, "dep_var", choices = numeric_choices)
-                updateSelectizeInput(session, "indep_vars", choices = numeric_choices)
-            }
+            updateSelectInput(session, "dep_var", choices = numeric_choices)
+            updateSelectizeInput(session, "indep_vars", choices = numeric_choices)
         })
 
         # Reactive values
@@ -309,7 +315,7 @@ regresi_server <- function(id, values) {
                     dep_var = input$dep_var,
                     indep_vars = input$indep_vars,
                     analysis_date = Sys.Date(),
-                    interpretation = interpret_regression(model_result(), assumption_tests())
+                    interpretation = interpret_regression(model_result(), alpha = 0.05)
                 )
 
                 # Render the R Markdown template
@@ -347,7 +353,7 @@ regresi_server <- function(id, values) {
                     dep_var = input$dep_var,
                     indep_vars = input$indep_vars,
                     analysis_date = Sys.Date(),
-                    interpretation = interpret_regression(model_result(), assumption_tests())
+                    interpretation = interpret_regression(model_result(), alpha = 0.05)
                 )
 
                 # Create temporary Rmd file for Word output

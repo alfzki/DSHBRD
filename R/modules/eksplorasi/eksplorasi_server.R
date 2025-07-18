@@ -9,12 +9,18 @@
 #' @param values Reactive values object containing shared data
 eksplorasi_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Update variable choices
+        # Update variable choices - reactive to data structure changes
         observe({
-            if (!is.null(values$sovi_data)) {
-                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                updateSelectInput(session, "select_var", choices = numeric_choices)
-            }
+            # Create reactive dependency on data structure
+            req(values$sovi_data)
+            data_structure <- list(
+                nrow = nrow(values$sovi_data),
+                ncol = ncol(values$sovi_data), 
+                column_names = names(values$sovi_data)
+            )
+            
+            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            updateSelectInput(session, "select_var", choices = numeric_choices)
         })
 
         # Summary statistics
@@ -414,8 +420,9 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
             content = function(file) {
                 req(input$select_var)
 
-                # Create temporary plot file
-                temp_plot <- tempfile(fileext = ".png")
+                # Create temporary plot file with clean path
+                temp_plot <- tempfile(fileext = ".png", tmpdir = tempdir())
+                temp_plot <- normalizePath(temp_plot, winslash = "/", mustWork = FALSE)
                 p <- ggplot(values$sovi_data, aes_string(x = input$select_var)) +
                     geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
                     labs(
@@ -529,8 +536,9 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
             content = function(file) {
                 req(input$select_var)
 
-                # Create temporary plot file
-                temp_plot <- tempfile(fileext = ".png")
+                # Create temporary plot file with clean path
+                temp_plot <- tempfile(fileext = ".png", tmpdir = tempdir())
+                temp_plot <- normalizePath(temp_plot, winslash = "/", mustWork = FALSE)
                 p <- ggplot(values$sovi_data, aes_string(x = input$select_var)) +
                     geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
                     labs(

@@ -11,16 +11,26 @@ uji_anova_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
         # Update variable choices - reactive to data structure changes
         observe({
-            # Create reactive dependency on data structure
+            # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_structure <- list(
-                nrow = nrow(values$sovi_data),
-                ncol = ncol(values$sovi_data), 
-                column_names = names(values$sovi_data)
-            )
+            data_counter <- values$data_update_counter  # This creates a reactive dependency
+            
+            # Debug: Check what data we actually receive
+            cat("ANOVA DEBUG: Observer triggered with counter:", data_counter, "\n")
+            cat("ANOVA DEBUG: Data dimensions:", nrow(values$sovi_data), "x", ncol(values$sovi_data), "\n")
+            cat("ANOVA DEBUG: All column names:", paste(names(values$sovi_data), collapse=", "), "\n")
+            
+            # Check specifically for categorical columns
+            cat_columns <- names(values$sovi_data)[sapply(values$sovi_data, function(x) is.character(x) || is.factor(x))]
+            cat("ANOVA DEBUG: Categorical columns found:", paste(cat_columns, collapse=", "), "\n")
             
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
+
+            # Debug logging to console
+            cat("ANOVA: Updating variable choices (counter:", data_counter, ")...\n")
+            cat("Categorical choices:", names(categorical_choices), "\n")
+            cat("Categorical choice values:", paste(categorical_choices, collapse=", "), "\n")
 
             updateSelectInput(session, "dep_var", choices = numeric_choices)
             updateSelectInput(session, "factor1", choices = categorical_choices)

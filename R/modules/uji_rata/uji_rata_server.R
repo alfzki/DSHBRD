@@ -11,13 +11,9 @@ uji_rata_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
         # Update variable choices - reactive to data structure changes
         observe({
-            # Create reactive dependency on data structure
+            # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_structure <- list(
-                nrow = nrow(values$sovi_data),
-                ncol = ncol(values$sovi_data), 
-                column_names = names(values$sovi_data)
-            )
+            data_counter <- values$data_update_counter  # This creates a reactive dependency
             
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             categorical_choices <- get_variable_choices(values$sovi_data, "categorical")

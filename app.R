@@ -93,14 +93,45 @@ server <- function(input, output, session) {
   values <- reactiveValues(
     sovi_data = NULL,
     distance_data = NULL,
-    processed_data = NULL
+    processed_data = NULL,
+    data_update_counter = 0,  # Counter to track data structure changes
+    data_initialized = FALSE, # Flag to prevent reinitialization
+    user_created_vars = list() # Store user-created variables
   )
 
-  # Load data on startup
+  # Load data on startup ONCE - using a more reliable trigger
   observe({
-    values$sovi_data <- load_sovi_data()
-    values$distance_data <- load_distance_data()
-    values$processed_data <- values$sovi_data
+    if (is.null(values$sovi_data) && !values$data_initialized) {
+      cat("MAIN APP: ===== INITIAL DATA LOADING TRIGGERED =====\n")
+      values$sovi_data <- load_sovi_data()
+      values$distance_data <- load_distance_data()
+      values$processed_data <- values$sovi_data
+      values$data_initialized <- TRUE
+      cat("MAIN APP: ===== INITIAL DATA LOADING COMPLETED =====\n")
+    } else if (values$data_initialized) {
+      cat("MAIN APP: Data initialization flag set, preventing reload\n")
+    } else {
+      cat("MAIN APP: Data already loaded, skipping reload\n")
+    }
+  })
+  
+  # CRITICAL: Auto-restore user variables if data gets reloaded
+  observe({
+    current_data <- values$sovi_data
+    if (!is.null(current_data) && length(values$user_created_vars) > 0) {
+      # Check if any user variables are missing from current data
+      missing_vars <- setdiff(names(values$user_created_vars), names(current_data))
+      if (length(missing_vars) > 0) {
+        cat("MAIN APP: Auto-restoring", length(missing_vars), "missing user variables\n")
+        for (var_name in missing_vars) {
+          current_data[[var_name]] <- values$user_created_vars[[var_name]]
+          cat("MAIN APP: Restored variable:", var_name, "\n")
+        }
+        values$sovi_data <- current_data
+        values$data_update_counter <- values$data_update_counter + 1
+        cat("MAIN APP: Auto-restore complete, counter incremented to:", values$data_update_counter, "\n")
+      }
+    }
   })
 
   # Call server modules

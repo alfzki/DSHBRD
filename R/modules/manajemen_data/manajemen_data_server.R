@@ -11,13 +11,9 @@ manajemen_data_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
         # Update variable choices - reactive to data structure changes
         observe({
-            # Create reactive dependency on data structure
+            # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_structure <- list(
-                nrow = nrow(values$sovi_data),
-                ncol = ncol(values$sovi_data), 
-                column_names = names(values$sovi_data)
-            )
+            data_counter <- values$data_update_counter  # This creates a reactive dependency
             
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             updateSelectInput(session, "select_var", choices = numeric_choices, selected = numeric_choices[1])
@@ -179,7 +175,38 @@ manajemen_data_server <- function(id, values) {
             if (cat_col_name %in% names(processed_result())) {
                 # Add to main dataset as a factor variable
                 categorized_data <- processed_result()[[cat_col_name]]
-                values$sovi_data[[var_name]] <- as.factor(categorized_data)
+                
+                # Use isolate to prevent reactive loops and ensure atomic update
+                isolate({
+                    # Create completely new data frame to force Shiny to recognize change
+                    current_data <- values$sovi_data
+                    new_data <- current_data  # Create a copy
+                    new_data[[var_name]] <- as.factor(categorized_data)
+                    
+                    # Atomic update - assign the entire data frame
+                    values$sovi_data <- new_data
+                    
+                    # CRITICAL: Save user variable to app state for auto-restoration
+                    values$user_created_vars[[var_name]] <- as.factor(categorized_data)
+                    cat("MANAJEMEN DATA: Saved user variable to app state:", var_name, "\n")
+                    
+                    # Save user variable to global state for preservation
+                    if (!exists(".app_state", envir = .GlobalEnv)) {
+                        .GlobalEnv$.app_state <- list(user_variables = list())
+                    }
+                    .GlobalEnv$.app_state$user_variables[[var_name]] <- as.factor(categorized_data)
+                    cat("SAVED TO GLOBAL STATE: Variable", var_name, "with", length(categorized_data), "values\n")
+                    
+                    # Debug logging 
+                    cat("Manajemen Data: Saved new categorical variable:", var_name, "\n")
+                    cat("Data columns after save:", paste(names(values$sovi_data), collapse=", "), "\n")
+                    cat("New variable class:", class(values$sovi_data[[var_name]]), "\n")
+                    cat("Current categorical variables:", names(get_variable_choices(values$sovi_data, "categorical")), "\n")
+                })
+                
+                # Increment counter AFTER data is updated to ensure proper sequencing
+                values$data_update_counter <- values$data_update_counter + 1
+                cat("Data update counter incremented to:", values$data_update_counter, "\n")
                 
                 showNotification(paste("Variabel", var_name, "berhasil disimpan ke dataset sebagai variabel kategorik!"), 
                                type = "message", duration = 5)

@@ -439,17 +439,29 @@ pre {
   }
 }
 
-/* Memindahkan hamburger menu ke kiri */
-.main-header .navbar-custom-menu,
-.main-header .navbar-right {
-  float: left !important;
+/* --- Perbaikan Posisi Hamburger Menu (Solusi Flexbox) --- */
+
+/* 1. Jadikan header sebagai wadah flexbox */
+.main-header .navbar {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
 }
 
+/* 2. Atur urutan elemen di dalamnya.
+      - Tombol hamburger (sidebar-toggle) akan menjadi urutan pertama.
+      - Judul (logo) akan menjadi urutan kedua.
+*/
 .main-header .sidebar-toggle {
-  float: left;
-  padding: 15px 15px;
+  order: 1;
 }
 
 .main-header .logo {
-  float: left;
+  order: 2;
+}
+
+/* 3. Dorong elemen-elemen lain (jika ada) ke ujung kanan */
+.main-header .navbar-custom-menu {
+  order: 3;
+  margin-left: auto; /* Ini penting untuk mendorongnya ke kanan */
 }

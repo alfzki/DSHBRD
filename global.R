@@ -68,6 +68,14 @@ options(
 #' @return data.frame containing SOVI data with added categorical variables
 load_sovi_data <- function() {
     file_path <- here::here("data", "sovi_data.csv")
+    
+    # Check if there's an existing dataset with user variables
+    if (exists(".app_state", envir = .GlobalEnv) && !is.null(.GlobalEnv$.app_state$user_variables)) {
+        cat("GLOBAL.R: Found existing user variables to preserve\n")
+        preserved_vars <- .GlobalEnv$.app_state$user_variables
+    } else {
+        preserved_vars <- NULL
+    }
 
     if (file.exists(file_path)) {
         data <- readr::read_csv(file_path, show_col_types = FALSE)
@@ -145,6 +153,17 @@ load_sovi_data <- function() {
                 island = as.factor(island),
                 province = as.factor(province)
             )
+
+        # Restore any preserved user variables
+        if (!is.null(preserved_vars)) {
+            cat("GLOBAL.R: Restoring", length(preserved_vars), "user variables\n")
+            for (var_name in names(preserved_vars)) {
+                if (!var_name %in% names(data)) {
+                    data[[var_name]] <- preserved_vars[[var_name]]
+                    cat("GLOBAL.R: Restored variable:", var_name, "with", length(preserved_vars[[var_name]]), "values\n")
+                }
+            }
+        }
 
         cat("SOVI data loaded successfully:", nrow(data), "rows,", ncol(data), "columns\n")
         cat("Added categorical variables: region, island, province, district\n")

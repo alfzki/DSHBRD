@@ -282,13 +282,20 @@ uji_anova_server <- function(id, values) {
                 )
 
                 # Render the R Markdown template
-                rmarkdown::render(
-                    input = "reports/laporan_anova.Rmd",
-                    output_file = file,
-                    params = params,
-                    envir = new.env(parent = globalenv()),
-                    quiet = TRUE
-                )
+                tryCatch({
+                    rmarkdown::render(
+                        input = "reports/laporan_anova.Rmd",
+                        output_file = file,
+                        output_format = "pdf_document",
+                        params = params,
+                        envir = new.env(parent = globalenv()),
+                        quiet = TRUE
+                    )
+                }, error = function(e) {
+                    # If PDF generation fails, create a simple error document
+                    writeLines(paste("Error generating PDF report:", e$message), file)
+                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                })
             }
         )
 

@@ -81,6 +81,8 @@ manajemen_data_ui <- function(id) {
                     status = "success",
                     solidHeader = TRUE,
                     width = NULL,
+                    p(class = "text-muted", style = "font-size: 0.9em;", 
+                      "Klik 'Proses Kategorisasi' terlebih dahulu untuk mengaktifkan tombol unduh."),
                     fluidRow(
                         column(
                             width = 3,

@@ -178,18 +178,25 @@ uji_rata_server <- function(id, values) {
                 interpretation_text <- interpret_ttest(result, input$test_type)
 
                 # Render report using template
-                rmarkdown::render(
-                    input = here::here("reports", "laporan_uji_rata.Rmd"),
-                    output_file = file,
-                    params = list(
-                        jenis_uji = test_type_text,
-                        variabel = variabel,
-                        hasil_uji = result,
-                        interpretasi = interpretation_text,
-                        input_params = input_params
-                    ),
-                    quiet = TRUE
-                )
+                tryCatch({
+                    rmarkdown::render(
+                        input = here::here("reports", "laporan_uji_rata.Rmd"),
+                        output_file = file,
+                        output_format = "pdf_document",
+                        params = list(
+                            jenis_uji = test_type_text,
+                            variabel = variabel,
+                            hasil_uji = result,
+                            interpretasi = interpretation_text,
+                            input_params = input_params
+                        ),
+                        quiet = TRUE
+                    )
+                }, error = function(e) {
+                    # If PDF generation fails, create a simple error document
+                    writeLines(paste("Error generating PDF report:", e$message), file)
+                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                })
             }
         )
 

@@ -78,6 +78,8 @@ uji_prop_var_ui <- function(id) {
                         width = NULL,
                         collapsible = TRUE,
                         collapsed = TRUE,
+                        p(class = "text-muted", style = "font-size: 0.9em;", 
+                          "Masukkan parameter uji dan klik 'Lakukan Uji' untuk mengaktifkan tombol unduh."),
                         fluidRow(
                             column(
                                 width = 4,

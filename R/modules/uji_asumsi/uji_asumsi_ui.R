@@ -50,6 +50,8 @@ uji_asumsi_ui <- function(id) {
                     width = NULL,
                     collapsible = TRUE,
                     collapsed = TRUE,
+                    p(class = "text-muted", style = "font-size: 0.9em;", 
+                      "Pilih variabel untuk uji normalitas atau homogenitas untuk mengaktifkan tombol unduh."),
                     h6("Interpretasi Individual"),
                     downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
                         class = "btn-outline-info btn-sm", icon = icon("file-word"), width = "100%"

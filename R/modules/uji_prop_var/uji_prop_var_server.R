@@ -13,7 +13,7 @@ uji_prop_var_server <- function(id, values) {
         observe({
             if (!is.null(values$sovi_data)) {
                 numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
-                updateSelectInput(session, "var_variance", choices = numeric_choices)
+                updateSelectInput(session, "var_variance", choices = numeric_choices, selected = numeric_choices[1])
             }
         })
 
@@ -197,7 +197,180 @@ uji_prop_var_server <- function(id, values) {
                        "</div>"))
         })
 
-        # Download handler
+        # Download interpretation as Word document
+        output$download_interpretation <- downloadHandler(
+            filename = function() {
+                test_name <- ifelse(input$test_choice == "proportion", "proporsi", "varians")
+                paste0("interpretasi_uji_", test_name, "_", Sys.Date(), ".docx")
+            },
+            content = function(file) {
+                req(test_result())
+
+                result <- test_result()
+                test_title <- ifelse(input$test_choice == "proportion",
+                    "Uji Proporsi Satu Sampel",
+                    "Uji Varians Satu Sampel"
+                )
+
+                # Generate interpretation text
+                interpretation_text <- tryCatch({
+                    if (input$test_choice == "proportion") {
+                        interpret_prop_test(result, alpha = 0.05)
+                    } else {
+                        interpret_var_test(result, alpha = 0.05)
+                    }
+                }, error = function(e) {
+                    paste("Error generating interpretation:", e$message)
+                })
+
+                # Create Word document using officer
+                doc <- officer::read_docx()
+                doc <- officer::body_add_par(doc, "NusaStat Dashboard", style = "heading 1")
+                doc <- officer::body_add_par(doc, paste("Interpretasi", test_title), style = "heading 2")
+                doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
+                doc <- officer::body_add_par(doc, "")
+                doc <- officer::body_add_par(doc, interpretation_text)
+
+                print(doc, target = file)
+            }
+        )
+
+        # Download report as PDF
+        output$download_report_pdf <- downloadHandler(
+            filename = function() {
+                test_name <- ifelse(input$test_choice == "proportion", "uji_proporsi", "uji_varians")
+                paste0("laporan_", test_name, "_", Sys.Date(), ".pdf")
+            },
+            content = function(file) {
+                temp_rmd <- tempfile(fileext = ".Rmd")
+
+                test_title <- ifelse(input$test_choice == "proportion",
+                    "Uji Proporsi Satu Sampel",
+                    "Uji Varians Satu Sampel"
+                )
+
+                rmd_content <- paste0('---
+title: "', test_title, ' - NusaStat Dashboard"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), \'%d %B %Y\')`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# ', test_title, '
+
+## Informasi Analisis
+
+**Jenis Uji:** ', test_title, '
+
+**Tanggal Analisis:** `r format(Sys.Date(), \'%d %B %Y\')`
+
+**Sumber Data:** SUSENAS 2017, BPS-Statistics Indonesia
+
+---
+
+## Parameter Uji
+
+Parameter uji yang digunakan dalam analisis.
+
+---
+
+## Hasil Uji Statistik
+
+Hasil perhitungan statistik uji dan interpretasinya.
+
+---
+
+## Interpretasi dan Kesimpulan
+
+Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak pada tingkat signifikansi yang ditentukan.
+')
+
+                writeLines(rmd_content, temp_rmd)
+                
+                # Render using the correct pattern to avoid pandoc error
+                tryCatch({
+                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
+                    file.copy(output_path, file)
+                }, error = function(e) {
+                    # If PDF generation fails, create a simple error document
+                    writeLines(paste("Error generating PDF report:", e$message), file)
+                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                })
+            }
+        )
+
+        # Download report as Word document
+        output$download_report_word <- downloadHandler(
+            filename = function() {
+                test_name <- ifelse(input$test_choice == "proportion", "uji_proporsi", "uji_varians")
+                paste0("laporan_", test_name, "_", Sys.Date(), ".docx")
+            },
+            content = function(file) {
+                temp_rmd <- tempfile(fileext = ".Rmd")
+
+                test_title <- ifelse(input$test_choice == "proportion",
+                    "Uji Proporsi Satu Sampel",
+                    "Uji Varians Satu Sampel"
+                )
+
+                rmd_content <- paste0('---
+title: "', test_title, ' - NusaStat Dashboard"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), \'%d %B %Y\')`"
+output:
+  word_document:
+    reference_docx: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# ', test_title, '
+
+## Informasi Analisis
+
+**Jenis Uji:** ', test_title, '
+
+**Tanggal Analisis:** `r format(Sys.Date(), \'%d %B %Y\')`
+
+**Sumber Data:** SUSENAS 2017, BPS-Statistics Indonesia
+
+---
+
+## Parameter Uji
+
+Parameter uji yang digunakan dalam analisis.
+
+---
+
+## Hasil Uji Statistik
+
+Hasil perhitungan statistik uji dan interpretasinya.
+
+---
+
+## Interpretasi dan Kesimpulan
+
+Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak pada tingkat signifikansi yang ditentukan.
+')
+
+                writeLines(rmd_content, temp_rmd)
+                
+                # Render using the correct pattern to avoid pandoc error
+                output_path <- rmarkdown::render(input = temp_rmd, output_format = "word_document", quiet = TRUE)
+                file.copy(output_path, file)
+            }
+        )
+
+        # Download handler (keeping the existing one for compatibility)
         output$download_results <- downloadHandler(
             filename = function() {
                 test_name <- ifelse(input$test_choice == "proportion", "uji_proporsi", "uji_varians")
@@ -227,7 +400,16 @@ Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak
 ")
 
                 writeLines(rmd_content, temp_rmd)
-                rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
+                
+                # Render using the correct pattern to avoid pandoc error
+                tryCatch({
+                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
+                    file.copy(output_path, file)
+                }, error = function(e) {
+                    # If PDF generation fails, create a simple error document
+                    writeLines(paste("Error generating PDF report:", e$message), file)
+                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                })
             }
         )
     })

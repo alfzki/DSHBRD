@@ -496,18 +496,25 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                 )
 
                 # Render report using template
-                rmarkdown::render(
-                    input = here::here("reports", "laporan_eksplorasi.Rmd"),
-                    output_file = file,
-                    params = list(
-                        var_terpilih = input$select_var,
-                        data_summary = var_summary,
-                        plot_path = temp_plot,
-                        interpretasi = interpretation_text,
-                        dataset_info = dataset_info
-                    ),
-                    quiet = TRUE
-                )
+                tryCatch({
+                    rmarkdown::render(
+                        input = here::here("reports", "laporan_eksplorasi.Rmd"),
+                        output_file = file,
+                        output_format = "pdf_document",
+                        params = list(
+                            var_terpilih = input$select_var,
+                            data_summary = var_summary,
+                            plot_path = temp_plot,
+                            interpretasi = interpretation_text,
+                            dataset_info = dataset_info
+                        ),
+                        quiet = TRUE
+                    )
+                }, error = function(e) {
+                    # If PDF generation fails, create a simple error document
+                    writeLines(paste("Error generating PDF report:", e$message), file)
+                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                })
 
                 # Clean up temporary file
                 if (file.exists(temp_plot)) file.remove(temp_plot)

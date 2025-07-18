@@ -203,7 +203,6 @@ SOVI_VARIABLE_LABELS <- list(
     "DISTRICTCODE" = "Kode Wilayah (DISTRICTCODE)",
 
     # Categorical variables
-    "district" = "Nama Kabupaten/Kota",
     "region" = "Wilayah Regional",
     "island" = "Kelompok Pulau",
     "province" = "Provinsi"
@@ -257,9 +256,11 @@ get_categorical_columns <- function(data) {
     if (is.null(data)) {
         return(character(0))
     }
-    sapply(data, function(x) is.character(x) || is.factor(x)) %>%
+    categorical_vars <- sapply(data, function(x) is.character(x) || is.factor(x)) %>%
         .[. == TRUE] %>%
         names()
+    # Exclude 'district' as it is not a valid grouping variable for statistical tests
+    return(categorical_vars[categorical_vars != 'district'])
 }
 
 #' Interpret p-value for statistical tests

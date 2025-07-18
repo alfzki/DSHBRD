@@ -1,4 +1,4 @@
-# NusaStat Dashboard - User Manual
+# ALIVA Dashboard - User Manual
 
 ## Panduan Pengguna Lengkap
 
@@ -12,7 +12,7 @@
 
 ## Pengenalan
 
-NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analisis statistik data kerentanan sosial Indonesia. Aplikasi ini menyediakan berbagai tools analisis mulai dari statistik deskriptif hingga regresi linear berganda dengan interpretasi otomatis.
+ALIVA Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analisis statistik data kerentanan sosial Indonesia. Aplikasi ini menyediakan berbagai tools analisis mulai dari statistik deskriptif hingga regresi linear berganda dengan interpretasi otomatis.
 
 ### Fitur Utama
 - ✅ Analisis data interaktif tanpa coding
@@ -274,6 +274,6 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 
 ---
 
-**Selamat menggunakan NusaStat Dashboard!** 🎉
+**Selamat menggunakan ALIVA Dashboard!** 🎉
 
 Untuk bantuan teknis, lihat file `TROUBLESHOOTING.md` atau konsultasi dengan supervisor/dosen pembimbing.

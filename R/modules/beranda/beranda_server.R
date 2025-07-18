@@ -1,5 +1,5 @@
 # Beranda Server Module
-# Server logic for the home page of NusaStat Dashboard
+# Server logic for the home page of ALIVA Dashboard
 
 #' Beranda Server Module
 #'
@@ -12,8 +12,8 @@ beranda_server <- function(id, values) {
         # Welcome content
         output$welcome_content <- renderUI({
             tagList(
-                h3("NusaStat: Dasbor Interaktif Analisis Kerentanan Sosial & Statistik Indonesia"),
-                p("Selamat datang di NusaStat Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
+                h3("ALIVA: Alif's Vulnerability Analytics Dashboard"),
+                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
           data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
                 hr(),
                 h4("Fitur Utama:"),
@@ -107,20 +107,20 @@ beranda_server <- function(id, values) {
 
         # Download handler for dashboard info
         output$download_info <- downloadHandler(
-            filename = "NusaStat_Info.pdf",
+            filename = "ALIVA_Info.pdf",
             content = function(file) {
                 # Create a temporary R Markdown file
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
                 rmd_content <- '---
-title: "NusaStat Dashboard - Informasi Lengkap"
+title: "ALIVA Dashboard - Informasi Lengkap"
 output: pdf_document
 date: "`r Sys.Date()`"
 ---
 
-# Tentang NusaStat Dashboard
+# Tentang ALIVA Dashboard
 
-NusaStat adalah dashboard interaktif untuk analisis kerentanan sosial dan statistik Indonesia yang dikembangkan menggunakan R Shiny.
+ALIVA adalah dashboard interaktif untuk analisis kerentanan sosial dan statistik Indonesia yang dikembangkan menggunakan R Shiny.
 
 ## Fitur Utama
 

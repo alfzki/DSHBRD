@@ -1,7 +1,7 @@
-# NusaStat Dashboard Launcher
+# ALIVA Dashboard Launcher
 # This script ensures all dependencies are installed before launching
 
-cat("NusaStat Dashboard Launcher\n")
+cat("ALIVA Dashboard Launcher\n")
 cat("===========================\n\n")
 
 # Set CRAN mirror
@@ -68,7 +68,7 @@ if (is_dev_mode) {
 }
 
 # Launch the dashboard
-cat("Launching NusaStat Dashboard...\n")
+cat("Launching ALIVA Dashboard...\n")
 if (!is_dev_mode) {
     cat("Dashboard will be available at: http://127.0.0.1:3838\n")
 }

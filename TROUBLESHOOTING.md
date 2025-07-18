@@ -1,4 +1,4 @@
-# NusaStat Dashboard - Troubleshooting Guide
+# ALIVA Dashboard - Troubleshooting Guide
 
 ## Quick Start Checklist
 

@@ -1,4 +1,4 @@
-# NusaStat Dashboard - Quick Start Guide
+# ALIVA Dashboard - Quick Start Guide
 
 ## 🚀 Quick Start
 
@@ -44,7 +44,7 @@ install.packages(c(
 **Using VS Code:**
 1. Open Command Palette (Ctrl+Shift+P)
 2. Type "Tasks: Run Task"
-3. Select "Run NusaStat Shiny Dashboard"
+3. Select "Run ALIVA Shiny Dashboard"
 
 **Using R Console:**
 ```r

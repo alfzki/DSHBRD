@@ -1,7 +1,7 @@
 # Load All Modules Helper Script
-# This script loads all modular UI and server components for NusaStat Dashboard
+# This script loads all modular UI and server components for ALIVA Dashboard
 
-#' Load all UI and server modules for NusaStat Dashboard
+#' Load all UI and server modules for ALIVA Dashboard
 #'
 #' This function sources all the modular components needed for the dashboard.
 #' It should be called after global.R is loaded to ensure all dependencies are available.

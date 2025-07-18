@@ -19,7 +19,7 @@ ui <- dashboardPage(
   dashboardHeader(
     title = tags$span(
       icon("chart-line"),
-      "NusaStat Dashboard",
+      "ALIVA Dashboard",
       style = "font-size: 18px; font-weight: bold;"
     ),
     titleWidth = 280

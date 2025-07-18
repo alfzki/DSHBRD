@@ -1,10 +1,10 @@
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
-# NusaStat Dashboard - AI Coding Agent Instructions
+# ALIVA Dashboard - Instruksi Copilot
 
 ## Project Overview
 
-NusaStat is a modular R Shiny dashboard for Indonesian social vulnerability analysis. It features data management, exploration, assumption testing, inferential statistics, and regression, with a focus on maintainability, extensibility, and statistical rigor.
+ALIVA: Alif's Vulnerability Analytics Dashboard is a modular R Shiny dashboard for Indonesian social vulnerability analysis. It features data management, exploration, assumption testing, inferential statistics, and regression, with a focus on maintainability, extensibility, and statistical rigor.
 
 ## Architecture & Key Patterns
 

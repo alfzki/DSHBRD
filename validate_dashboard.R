@@ -1,4 +1,4 @@
-# NusaStat Dashboard - Final Validation Test
+# ALIVA Dashboard - Final Validation Test
 # This script tests all major functionalities
 
 # Test 1: Load and check global environment

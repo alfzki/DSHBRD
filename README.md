@@ -1,4 +1,4 @@
-# 🇮🇩 NusaStat Dashboard - Analisis Kerentanan Sosial Indonesia
+# 🇮🇩 ALIVA Dashboard - Analisis Kerentanan Sosial Indonesia
 
 [![R Shiny](https://img.shields.io/badge/R-Shiny-blue?style=for-the-badge&logo=r)](https://shiny.rstudio.com/)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=for-the-badge)]()

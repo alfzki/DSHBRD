@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch NusaStat Dashboard",
+      "name": "Launch ALIVA Dashboard",
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/app.R",

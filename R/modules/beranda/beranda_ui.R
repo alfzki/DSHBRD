@@ -1,5 +1,5 @@
 # Beranda UI Module
-# Home page user interface for NusaStat Dashboard
+# Home page user interface for ALIVA: Alif's Vulnerability Analytics Dashboard
 
 #' Beranda UI Module
 #'
@@ -15,7 +15,7 @@ beranda_ui <- function(id) {
             column(
                 width = 12,
                 box(
-                    title = tags$span(icon("home"), "Selamat Datang di NusaStat Dashboard"),
+                    title = tags$span(icon("home"), "Selamat Datang di ALIVA: Alif's Vulnerability Analytics Dashboard"),
                     status = "primary",
                     solidHeader = TRUE,
                     width = NULL,
@@ -53,8 +53,8 @@ beranda_ui <- function(id) {
                     status = "warning",
                     solidHeader = TRUE,
                     width = NULL,
-                    p("Unduh informasi lengkap tentang dashboard ini:"),
-                    downloadButton(ns("download_info"), "Unduh Info Dashboard (.pdf)",
+                    p("Unduh informasi lengkap tentang ALIVA Dashboard ini:"),
+                    downloadButton(ns("download_info"), "Unduh Info ALIVA Dashboard (.pdf)",
                         class = "btn-primary", icon = icon("file-pdf")
                     )
                 )

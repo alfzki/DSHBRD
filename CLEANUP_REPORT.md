@@ -1,7 +1,7 @@
 # Codebase Cleanup Report
 
 **Date:** July 18, 2025  
-**Task:** Remove unused files, variables, and functions from NusaStat Dashboard
+**Task:** Remove unused files, variables, and functions from ALIVA Dashboard
 
 ## Summary
 

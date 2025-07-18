@@ -1,8 +1,8 @@
-# NusaStat Dashboard - Deployment Guide
+# ALIVA Dashboard - Deployment Guide
 
 ## 🚀 Deployment Status
 
-The NusaStat Dashboard has been successfully created and is ready for deployment! Here's what has been accomplished:
+The ALIVA Dashboard has been successfully created and is ready for deployment! Here's what has been accomplished:
 
 ## ✅ Completed Features
 
@@ -134,7 +134,7 @@ shiny::runApp("app_simple.R", port = 3839)
 ### **Option 3: VS Code Tasks**
 1. Open Command Palette (Ctrl+Shift+P)
 2. Type "Tasks: Run Task"
-3. Select "Run NusaStat Shiny Dashboard"
+3. Select "Run ALIVA Shiny Dashboard"
 
 ## 🌐 **Access the Dashboard**
 
@@ -152,7 +152,7 @@ Once running, access the dashboard at:
 5. ✅ **Menu ANOVA (1&2 arah)**: Both implemented with interaction options
 6. ✅ **Menu Regresi Linear Berganda + Uji Asumsi**: Fully implemented
 7. ✅ **Setiap output bisa di-download**: All modules have download functionality
-8. ✅ **Nama unik**: "NusaStat" - Dashboard for Indonesian Statistical Analysis
+8. ✅ **Nama unik**: "ALIVA" - Dashboard for Indonesian Statistical Analysis
 
 ### ✅ **Technical Requirements**
 - **Modular Architecture**: Separated UI and server modules
@@ -216,7 +216,7 @@ This dashboard serves as an excellent example of:
 
 ## 🏆 **Project Success**
 
-The NusaStat Dashboard successfully demonstrates:
+The ALIVA Dashboard successfully demonstrates:
 - **Complete Statistical Analysis Suite**: All required statistical procedures
 - **Professional User Interface**: Modern, intuitive design
 - **Comprehensive Documentation**: Multiple levels of documentation
@@ -226,6 +226,6 @@ The NusaStat Dashboard successfully demonstrates:
 
 ---
 
-**🎉 The NusaStat Dashboard is ready for use and evaluation!**
+**🎉 The ALIVA Dashboard is ready for use and evaluation!**
 
 The project fully meets all requirements for the UAS Komputasi Statistik and provides a comprehensive, professional-grade statistical analysis platform for Indonesian social vulnerability data.

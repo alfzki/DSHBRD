@@ -2,7 +2,7 @@
 
 ## Overview
 
-The NusaStat Dashboard has been successfully refactored from a monolithic architecture to a modular structure following separation of concerns principles. This document outlines the new architecture and provides guidance for future development.
+The ALIVA Dashboard has been successfully refactored from a monolithic architecture to a modular structure following separation of concerns principles. This document outlines the new architecture and provides guidance for future development.
 
 ## Architecture Changes
 

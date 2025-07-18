@@ -1,7 +1,7 @@
-# NusaStat Dashboard - Comprehensive Feature Documentation
+# ALIVA Dashboard - Comprehensive Feature Documentation
 
 ## Overview
-NusaStat adalah dashboard analisis statistik interaktif untuk data kerentanan sosial Indonesia yang dikembangkan dengan R Shiny. Dashboard ini memenuhi semua kriteria UAS Komputasi Statistik dengan fitur-fitur lengkap dan interpretasi otomatis.
+ALIVA adalah dashboard analisis statistik interaktif untuk data kerentanan sosial Indonesia yang dikembangkan dengan R Shiny. Dashboard ini memenuhi semua kriteria UAS Komputasi Statistik dengan fitur-fitur lengkap dan interpretasi otomatis.
 
 ## Fitur Utama
 

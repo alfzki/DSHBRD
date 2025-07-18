@@ -1,4 +1,4 @@
-# Global configurations and functions for NusaStat Dashboard
+# Global configurations and functions for ALIVA Dashboard
 # This file contains package installations, data loading, and utility functions
 
 # Package Installation and Loading
@@ -429,7 +429,7 @@ validate_data_files()
 
 # Print startup message
 cat("==========================================\n")
-cat("NusaStat Dashboard initialized!\n")
+cat("ALIVA Dashboard initialized!\n")
 cat("==========================================\n")
 cat("Required packages loaded:", length(required_packages), "\n")
 cat("Real data files expected in 'data/' directory\n")

@@ -13,6 +13,7 @@ load_all_modules()
 
 # Define UI
 ui <- dashboardPage(
+  title = "ALIVA Dashboard",
   skin = "blue",
 
   # Header

@@ -287,6 +287,7 @@ SOVI_VARIABLE_LABELS <- list(
     "DISTRICTCODE" = "Kode Wilayah (DISTRICTCODE)",
 
     # Categorical variables
+    "district" = "Nama Kabupaten/Kota",
     "region" = "Wilayah Regional",
     "island" = "Kelompok Pulau",
     "province" = "Provinsi"

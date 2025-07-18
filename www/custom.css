@@ -438,3 +438,18 @@ pre {
     border: 1px solid #ccc !important;
   }
 }
+
+/* Memindahkan hamburger menu ke kiri */
+.main-header .navbar-custom-menu,
+.main-header .navbar-right {
+  float: left !important;
+}
+
+.main-header .sidebar-toggle {
+  float: left;
+  padding: 15px 15px;
+}
+
+.main-header .logo {
+  float: left;
+}

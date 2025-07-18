@@ -202,16 +202,116 @@ eksplorasi_server <- function(id, values) {
             plotly::ggplotly(p, tooltip = c("x", "y"))
         })
 
-        # Map visualization (placeholder)
+        # Interactive Map visualization with social vulnerability data
         output$map_viz <- leaflet::renderLeaflet({
-            # This is a placeholder map - in real implementation, you would need spatial data
-            leaflet::leaflet() %>%
-                leaflet::addTiles() %>%
-                leaflet::setView(lng = 106.845599, lat = -6.208763, zoom = 5) %>%
-                leaflet::addMarkers(
-                    lng = 106.845599, lat = -6.208763,
-                    popup = "Indonesia - Peta data spasial memerlukan file shapefile tambahan"
+            req(input$select_var)
+            
+            # Read GeoJSON data for Indonesian districts
+            geojson_path <- here::here("data", "indonesia_kabkota.geojson")
+            
+            if (!file.exists(geojson_path)) {
+                # Fallback to basic map if GeoJSON not available
+                return(
+                    leaflet::leaflet() %>%
+                        leaflet::addTiles() %>%
+                        leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
+                        leaflet::addMarkers(
+                            lng = 117.0, lat = -2.5,
+                            popup = "Data peta spasial tidak tersedia. Silakan unduh file GeoJSON Indonesia."
+                        )
                 )
+            }
+            
+            tryCatch({
+                # Read the GeoJSON file
+                indonesia_map <- sf::st_read(geojson_path, quiet = TRUE)
+                
+                # Get the selected variable data
+                var_data <- values$sovi_data[[input$select_var]]
+                
+                # Create sample spatial data (normally you'd join with actual district data)
+                # For demo purposes, create random data for each district
+                set.seed(123)  # For reproducible results
+                n_districts <- nrow(indonesia_map)
+                
+                # Simulate district values based on the variable's distribution
+                mean_val <- mean(var_data, na.rm = TRUE)
+                sd_val <- sd(var_data, na.rm = TRUE)
+                simulated_values <- rnorm(n_districts, mean = mean_val, sd = sd_val)
+                
+                # Add the simulated data to the spatial data
+                indonesia_map$vulnerability_value <- simulated_values
+                
+                # Create color palette
+                pal <- leaflet::colorNumeric(
+                    palette = "YlOrRd",
+                    domain = indonesia_map$vulnerability_value,
+                    na.color = "transparent"
+                )
+                
+                # Create labels for popups
+                labels <- sprintf(
+                    "<strong>%s</strong><br/>
+                     Nilai %s: <strong>%.3f</strong><br/>
+                     <em>Catatan: Data ini disimulasikan untuk demonstrasi</em>",
+                    indonesia_map$NAME_2,  # District name
+                    input$select_var,
+                    indonesia_map$vulnerability_value
+                ) %>% lapply(htmltools::HTML)
+                
+                # Create the leaflet map
+                leaflet::leaflet(indonesia_map) %>%
+                    leaflet::addTiles() %>%
+                    leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
+                    leaflet::addPolygons(
+                        fillColor = ~pal(vulnerability_value),
+                        weight = 1,
+                        opacity = 1,
+                        color = "white",
+                        dashArray = "1",
+                        fillOpacity = 0.7,
+                        highlight = leaflet::highlightOptions(
+                            weight = 3,
+                            color = "#666",
+                            dashArray = "",
+                            fillOpacity = 0.9,
+                            bringToFront = TRUE
+                        ),
+                        label = labels,
+                        labelOptions = leaflet::labelOptions(
+                            style = list("font-weight" = "normal", padding = "3px 8px"),
+                            textsize = "15px",
+                            direction = "auto"
+                        )
+                    ) %>%
+                    leaflet::addLegend(
+                        pal = pal, 
+                        values = ~vulnerability_value,
+                        opacity = 0.9, 
+                        title = paste("Nilai", input$select_var),
+                        position = "bottomright"
+                    ) %>%
+                    leaflet::addControl(
+                        html = paste0(
+                            "<div style='background: white; padding: 10px; border-radius: 5px;'>",
+                            "<h4>Peta Kerentanan Sosial Indonesia</h4>",
+                            "<p><strong>Variabel:</strong> ", input$select_var, "</p>",
+                            "<p><em>Catatan: Data spasial ini disimulasikan untuk tujuan demonstrasi.</em></p>",
+                            "</div>"
+                        ),
+                        position = "topright"
+                    )
+                    
+            }, error = function(e) {
+                # Error handling - show basic map
+                leaflet::leaflet() %>%
+                    leaflet::addTiles() %>%
+                    leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
+                    leaflet::addMarkers(
+                        lng = 117.0, lat = -2.5,
+                        popup = paste("Error loading map data:", e$message)
+                    )
+            })
         })
 
         # Download handlers
@@ -331,21 +431,61 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                     )
                 ggsave(temp_plot, p, width = 10, height = 6, dpi = 300)
 
-                # Prepare data for report
+                # Prepare enhanced data for report  
                 var_data <- values$sovi_data[[input$select_var]]
                 var_summary <- summary(var_data)
+                
+                # Calculate additional statistics
+                mean_val <- var_summary["Mean"]
+                median_val <- var_summary["Median"]
+                sd_val <- sd(var_data, na.rm = TRUE)
+                cv_val <- (sd_val / mean_val) * 100
 
+                # Generate enhanced interpretation using comprehensive analysis
                 interpretation_text <- paste(
-                    "Berdasarkan analisis statistik deskriptif, variabel", input$select_var,
-                    "memiliki nilai rata-rata", format_number(var_summary["Mean"]),
-                    "dan median", format_number(var_summary["Median"]), ".",
-                    "Distribusi data menunjukkan rentang dari",
-                    format_number(var_summary["Min."]), "hingga",
-                    format_number(var_summary["Max."]),
-                    "dengan kuartil pertama", format_number(var_summary["1st Qu."]),
-                    "dan kuartil ketiga", format_number(var_summary["3rd Qu."]), ".",
-                    "\n\nAnalisis ini memberikan gambaran komprehensif tentang karakteristik distribusi",
-                    "variabel dalam dataset kerentanan sosial Indonesia."
+                    "**LAPORAN EKSPLORASI DATA KOMPREHENSIF**\n\n",
+                    "**Variabel yang Dianalisis:** ", input$select_var, "\n\n",
+                    "**ANALISIS STATISTIK DESKRIPTIF**\n\n",
+                    "1. **Tendensi Sentral:**\n",
+                    "   - Rata-rata (Mean): ", format_number(mean_val, 4), "\n",
+                    "   - Median: ", format_number(median_val, 4), "\n",
+                    "   - Selisih rata-rata dan median: ", format_number(abs(mean_val - median_val), 4), "\n\n",
+                    "2. **Ukuran Penyebaran:**\n",
+                    "   - Standar deviasi: ", format_number(sd_val, 4), "\n",
+                    "   - Koefisien variasi: ", format_number(cv_val, 2), "%\n",
+                    "   - Minimum: ", format_number(var_summary["Min."], 4), "\n",
+                    "   - Maksimum: ", format_number(var_summary["Max."], 4), "\n",
+                    "   - Kuartil 1 (Q1): ", format_number(var_summary["1st Qu."], 4), "\n",
+                    "   - Kuartil 3 (Q3): ", format_number(var_summary["3rd Qu."], 4), "\n",
+                    "   - Interquartile Range (IQR): ", format_number(var_summary["3rd Qu."] - var_summary["1st Qu."], 4), "\n\n",
+                    "**INTERPRETASI DAN ANALISIS:**\n\n",
+                    "3. **Bentuk Distribusi:**\n",
+                    if (abs(mean_val - median_val) < 0.1 * median_val) {
+                        "   - Distribusi data relatif SIMETRIS karena rata-rata dan median hampir sama.\n"
+                    } else if (mean_val > median_val) {
+                        "   - Distribusi data MIRING KE KANAN (positively skewed) karena rata-rata > median.\n"
+                    } else {
+                        "   - Distribusi data MIRING KE KIRI (negatively skewed) karena rata-rata < median.\n"
+                    },
+                    "\n4. **Tingkat Variabilitas:**\n",
+                    if (cv_val < 15) {
+                        "   - Variabilitas RENDAH (CV < 15%) - data relatif homogen dan konsisten.\n"
+                    } else if (cv_val > 35) {
+                        "   - Variabilitas TINGGI (CV > 35%) - data cukup heterogen dengan penyebaran luas.\n"
+                    } else {
+                        "   - Variabilitas SEDANG (15% ≤ CV ≤ 35%) - tingkat keragaman data normal.\n"
+                    },
+                    "\n5. **Kesimpulan Analisis:**\n",
+                    "   Berdasarkan analisis statistik deskriptif komprehensif, variabel ", input$select_var,
+                    " menunjukkan karakteristik distribusi dengan rentang nilai yang mencakup spektrum luas ",
+                    "dalam konteks analisis kerentanan sosial. Data ini dapat digunakan untuk memahami ",
+                    "pola sebaran indikator sosial-ekonomi di berbagai wilayah Indonesia.\n\n",
+                    "**IMPLIKASI PRAKTIS:**\n",
+                    "- Nilai rata-rata dapat dijadikan benchmarking untuk evaluasi tingkat kerentanan\n",
+                    "- Tingkat variabilitas menunjukkan sejauh mana heterogenitas kondisi antar wilayah\n",
+                    "- Informasi distribusi membantu dalam perumusan kebijakan yang tepat sasaran\n\n",
+                    "**Tanggal Analisis:** ", format(Sys.Date(), "%d %B %Y"), "\n",
+                    "**Sumber Data:** ALIVA Dashboard - Analisis Kerentanan Sosial Indonesia"
                 )
 
                 dataset_info <- list(
@@ -399,21 +539,61 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                     )
                 ggsave(temp_plot, p, width = 10, height = 6, dpi = 300)
 
-                # Prepare data for report
+                # Prepare enhanced data for report
                 var_data <- values$sovi_data[[input$select_var]]
                 var_summary <- summary(var_data)
+                
+                # Calculate additional statistics
+                mean_val <- var_summary["Mean"]
+                median_val <- var_summary["Median"]
+                sd_val <- sd(var_data, na.rm = TRUE)
+                cv_val <- (sd_val / mean_val) * 100
 
+                # Generate enhanced interpretation using comprehensive analysis
                 interpretation_text <- paste(
-                    "Berdasarkan analisis statistik deskriptif, variabel", input$select_var,
-                    "memiliki nilai rata-rata", format_number(var_summary["Mean"]),
-                    "dan median", format_number(var_summary["Median"]), ".",
-                    "Distribusi data menunjukkan rentang dari",
-                    format_number(var_summary["Min."]), "hingga",
-                    format_number(var_summary["Max."]),
-                    "dengan kuartil pertama", format_number(var_summary["1st Qu."]),
-                    "dan kuartil ketiga", format_number(var_summary["3rd Qu."]), ".",
-                    "\n\nAnalisis ini memberikan gambaran komprehensif tentang karakteristik distribusi",
-                    "variabel dalam dataset kerentanan sosial Indonesia."
+                    "**LAPORAN EKSPLORASI DATA KOMPREHENSIF**\n\n",
+                    "**Variabel yang Dianalisis:** ", input$select_var, "\n\n",
+                    "**ANALISIS STATISTIK DESKRIPTIF**\n\n",
+                    "1. **Tendensi Sentral:**\n",
+                    "   - Rata-rata (Mean): ", format_number(mean_val, 4), "\n",
+                    "   - Median: ", format_number(median_val, 4), "\n",
+                    "   - Selisih rata-rata dan median: ", format_number(abs(mean_val - median_val), 4), "\n\n",
+                    "2. **Ukuran Penyebaran:**\n",
+                    "   - Standar deviasi: ", format_number(sd_val, 4), "\n",
+                    "   - Koefisien variasi: ", format_number(cv_val, 2), "%\n",
+                    "   - Minimum: ", format_number(var_summary["Min."], 4), "\n",
+                    "   - Maksimum: ", format_number(var_summary["Max."], 4), "\n",
+                    "   - Kuartil 1 (Q1): ", format_number(var_summary["1st Qu."], 4), "\n",
+                    "   - Kuartil 3 (Q3): ", format_number(var_summary["3rd Qu."], 4), "\n",
+                    "   - Interquartile Range (IQR): ", format_number(var_summary["3rd Qu."] - var_summary["1st Qu."], 4), "\n\n",
+                    "**INTERPRETASI DAN ANALISIS:**\n\n",
+                    "3. **Bentuk Distribusi:**\n",
+                    if (abs(mean_val - median_val) < 0.1 * median_val) {
+                        "   - Distribusi data relatif SIMETRIS karena rata-rata dan median hampir sama.\n"
+                    } else if (mean_val > median_val) {
+                        "   - Distribusi data MIRING KE KANAN (positively skewed) karena rata-rata > median.\n"
+                    } else {
+                        "   - Distribusi data MIRING KE KIRI (negatively skewed) karena rata-rata < median.\n"
+                    },
+                    "\n4. **Tingkat Variabilitas:**\n",
+                    if (cv_val < 15) {
+                        "   - Variabilitas RENDAH (CV < 15%) - data relatif homogen dan konsisten.\n"
+                    } else if (cv_val > 35) {
+                        "   - Variabilitas TINGGI (CV > 35%) - data cukup heterogen dengan penyebaran luas.\n"
+                    } else {
+                        "   - Variabilitas SEDANG (15% ≤ CV ≤ 35%) - tingkat keragaman data normal.\n"
+                    },
+                    "\n5. **Kesimpulan Analisis:**\n",
+                    "   Berdasarkan analisis statistik deskriptif komprehensif, variabel ", input$select_var,
+                    " menunjukkan karakteristik distribusi dengan rentang nilai yang mencakup spektrum luas ",
+                    "dalam konteks analisis kerentanan sosial. Data ini dapat digunakan untuk memahami ",
+                    "pola sebaran indikator sosial-ekonomi di berbagai wilayah Indonesia.\n\n",
+                    "**IMPLIKASI PRAKTIS:**\n",
+                    "- Nilai rata-rata dapat dijadikan benchmarking untuk evaluasi tingkat kerentanan\n",
+                    "- Tingkat variabilitas menunjukkan sejauh mana heterogenitas kondisi antar wilayah\n",
+                    "- Informasi distribusi membantu dalam perumusan kebijakan yang tepat sasaran\n\n",
+                    "**Tanggal Analisis:** ", format(Sys.Date(), "%d %B %Y"), "\n",
+                    "**Sumber Data:** ALIVA Dashboard - Analisis Kerentanan Sosial Indonesia"
                 )
 
                 dataset_info <- list(

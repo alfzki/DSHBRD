@@ -69,7 +69,7 @@ uji_asumsi_server <- function(id, values) {
             )
         })
 
-        # Normality interpretation
+        # Normality interpretation using helper function
         output$interpretation_normal <- renderUI({
             req(input$var_normal)
             if (!validate_data(values$sovi_data, "Data SOVI")) {
@@ -89,17 +89,20 @@ uji_asumsi_server <- function(id, values) {
 
             test_result <- shapiro.test(var_data)
 
-            interpretation <- interpret_p_value(
-                test_result$p.value,
-                h0 = "Data berdistribusi normal",
-                h1 = "Data tidak berdistribusi normal"
+            # Use the interpretation helper function
+            interpretation_text <- interpret_assumption_test(
+                test_result = test_result,
+                test_name = "normalitas",
+                alpha = 0.05
             )
 
-            tagList(
-                h4("Interpretasi Uji Normalitas:"),
-                p(interpretation),
-                p("Jika p-value < 0.05, maka data tidak berdistribusi normal dan mungkin memerlukan transformasi atau uji non-parametrik.")
-            )
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
+
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Homogeneity test
@@ -160,17 +163,20 @@ uji_asumsi_server <- function(id, values) {
 
             p_value <- test_result$`Pr(>F)`[1]
 
-            interpretation <- interpret_p_value(
-                p_value,
-                h0 = "Varians antar grup homogen",
-                h1 = "Varians antar grup tidak homogen"
+            # Use the interpretation helper function
+            interpretation_text <- interpret_assumption_test(
+                test_result = list(p.value = p_value, statistic = test_result$`F value`[1]),
+                test_name = "homogenitas",
+                alpha = 0.05
             )
 
-            tagList(
-                h4("Interpretasi Uji Homogenitas:"),
-                p(interpretation),
-                p("Jika p-value < 0.05, maka varians antar grup tidak homogen dan asumsi homogenitas dilanggar.")
-            )
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
+
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Download handler

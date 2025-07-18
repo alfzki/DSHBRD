@@ -84,106 +84,26 @@ uji_anova_server <- function(id, values) {
             print(result$summary)
         })
 
-        # ANOVA interpretation with enhanced analysis
+        # ANOVA interpretation using helper function
         output$interpretation <- renderUI({
             req(anova_result())
 
             result <- anova_result()
-            anova_table <- result$summary[[1]]
+            
+            # Use the interpretation helper function
+            interpretation_text <- interpret_anova(
+                anova_result = result$summary,
+                alpha = 0.05,
+                type = result$type
+            )
 
-            interpretations <- list()
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            if (result$type == "one_way") {
-                p_value <- anova_table$`Pr(>F)`[1]
-                f_stat <- anova_table$`F value`[1]
-
-                # Calculate effect size (eta squared)
-                ss_factor <- anova_table$`Sum Sq`[1]
-                ss_total <- sum(anova_table$`Sum Sq`, na.rm = TRUE)
-                eta_squared <- ss_factor / ss_total
-
-                # Interpret effect size
-                effect_size_interpretation <- if (eta_squared < 0.01) {
-                    "sangat kecil (< 1%)"
-                } else if (eta_squared < 0.06) {
-                    "kecil (1-6%)"
-                } else if (eta_squared < 0.14) {
-                    "sedang (6-14%)"
-                } else {
-                    "besar (> 14%)"
-                }
-
-                # Count groups and observations
-                group_counts <- table(values$sovi_data[[input$factor1]])
-                n_groups <- length(group_counts)
-
-                # Statistical interpretation
-                base_interpretation <- interpret_p_value(
-                    p_value,
-                    h0 = paste("Semua rata-rata grup", input$factor1, "sama"),
-                    h1 = paste("Minimal ada satu rata-rata grup", input$factor1, "yang berbeda")
-                )
-
-                # Dynamic contextual interpretation
-                confidence_level <- ifelse(p_value < 0.001, "sangat tinggi",
-                    ifelse(p_value < 0.01, "tinggi",
-                        ifelse(p_value < 0.05, "cukup", "rendah")
-                    )
-                )
-
-                practical_recommendation <- if (p_value < 0.05) {
-                    if (eta_squared > 0.06) {
-                        paste(
-                            "Perbedaan antar grup memiliki signifikansi praktis yang berarti.",
-                            "Disarankan untuk melakukan analisis lebih lanjut pada grup-grup spesifik",
-                            "yang berbeda menggunakan uji post-hoc."
-                        )
-                    } else {
-                        paste(
-                            "Meskipun secara statistik signifikan, ukuran efek relatif kecil.",
-                            "Pertimbangkan relevansi praktis dari perbedaan yang ditemukan."
-                        )
-                    }
-                } else {
-                    paste(
-                        "Tidak ada bukti yang cukup untuk menyimpulkan adanya perbedaan antar grup.",
-                        "Pastikan ukuran sampel memadai dan pertimbangkan faktor lain yang mungkin mempengaruhi."
-                    )
-                }
-
-                interpretations <- list(
-                    h4("Interpretasi Komprehensif ANOVA Satu Arah:"),
-                    div(
-                        class = "alert alert-info",
-                        strong("Kesimpulan Statistik: "), base_interpretation
-                    ),
-                    h5("Detail Analisis:"),
-                    tags$ul(
-                        tags$li(paste("F-statistic:", format_number(f_stat, 4))),
-                        tags$li(paste("Derajat kebebasan:", anova_table$Df[1], "dan", anova_table$Df[2])),
-                        tags$li(paste("Tingkat kepercayaan:", confidence_level)),
-                        tags$li(paste(
-                            "Ukuran efek (η²):", format_number(eta_squared, 4),
-                            paste0("(", effect_size_interpretation, ")")
-                        )),
-                        tags$li(paste("Jumlah grup:", n_groups)),
-                        tags$li(paste("Total observasi:", sum(group_counts)))
-                    ),
-                    h5("Rekomendasi Praktis:"),
-                    div(class = "alert alert-warning", practical_recommendation),
-                    if (p_value < 0.05 && n_groups > 2) {
-                        div(
-                            class = "alert alert-success",
-                            strong("Langkah selanjutnya: "),
-                            "Karena ANOVA menunjukkan perbedaan signifikan dan terdapat lebih dari 2 grup, ",
-                            "lakukan uji post-hoc (tab Post-Hoc Test) untuk mengidentifikasi ",
-                            "pasangan grup mana yang berbeda secara signifikan."
-                        )
-                    }
-                )
-            }
-
-            do.call(tagList, interpretations)
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Post-hoc test results
@@ -357,7 +277,8 @@ uji_anova_server <- function(id, values) {
                     anova_type = input$anova_type,
                     interaction = input$interaction,
                     posthoc_result = posthoc_result(),
-                    analysis_date = Sys.Date()
+                    analysis_date = Sys.Date(),
+                    interpretation = interpret_anova(result, input$anova_type)
                 )
 
                 # Render the R Markdown template
@@ -393,7 +314,8 @@ uji_anova_server <- function(id, values) {
                     anova_type = input$anova_type,
                     interaction = input$interaction,
                     posthoc_result = posthoc_result(),
-                    analysis_date = Sys.Date()
+                    analysis_date = Sys.Date(),
+                    interpretation = interpret_anova(result, input$anova_type)
                 )
 
                 # Create temporary Rmd file for Word output

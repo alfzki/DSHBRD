@@ -82,197 +82,27 @@ uji_rata_server <- function(id, values) {
             test_result()
         })
 
-        # Generate ENHANCED DYNAMIC interpretation
+        # Generate ENHANCED DYNAMIC interpretation using helper function
         output$interpretation <- renderUI({
             req(test_result())
 
             result <- test_result()
-            p_value <- result$p.value
-            t_stat <- result$statistic
-            df <- result$parameter
-            conf_int <- result$conf.int
-            alpha <- 0.05 # Could be made dynamic
-
-            # Effect size calculation (Cohen's d for two-sample, d for one-sample)
-            effect_size <- NULL
-            if (input$test_type == "one_sample") {
-                # Cohen's d for one-sample t-test
-                var_data <- values$sovi_data[[input$var_one]]
-                var_data <- var_data[!is.na(var_data)]
-                effect_size <- (mean(var_data) - input$mu_test) / sd(var_data)
-
-                h0 <- paste("μ =", input$mu_test)
-                h1 <- switch(input$alternative,
-                    "two.sided" = paste("μ ≠", input$mu_test),
-                    "greater" = paste("μ >", input$mu_test),
-                    "less" = paste("μ <", input$mu_test)
-                )
-
-                sample_mean <- mean(var_data)
-                sample_sd <- sd(var_data)
-                sample_n <- length(var_data)
-            } else {
-                # Two-sample t-test
-                group_var <- values$sovi_data[[input$group_two]]
-                unique_groups <- unique(group_var)
-                var_data <- values$sovi_data[[input$var_two]]
-
-                group1_data <- var_data[group_var == unique_groups[1] & !is.na(var_data)]
-                group2_data <- var_data[group_var == unique_groups[2] & !is.na(var_data)]
-
-                # Cohen's d for two-sample t-test
-                pooled_sd <- sqrt(((length(group1_data) - 1) * var(group1_data) +
-                    (length(group2_data) - 1) * var(group2_data)) /
-                    (length(group1_data) + length(group2_data) - 2))
-                effect_size <- (mean(group1_data) - mean(group2_data)) / pooled_sd
-
-                h0 <- "μ₁ = μ₂"
-                h1 <- switch(input$alternative,
-                    "two.sided" = "μ₁ ≠ μ₂",
-                    "greater" = "μ₁ > μ₂",
-                    "less" = "μ₁ < μ₂"
-                )
-            }
-
-            # Effect size interpretation
-            effect_interpretation <- if (is.null(effect_size)) {
-                "Tidak dapat dihitung"
-            } else if (abs(effect_size) < 0.2) {
-                "kecil"
-            } else if (abs(effect_size) < 0.5) {
-                "sedang"
-            } else if (abs(effect_size) < 0.8) {
-                "besar"
-            } else {
-                "sangat besar"
-            }
-
-            # Statistical decision
-            is_significant <- p_value < alpha
-
-            # Power and confidence
-            confidence_level <- if (p_value < 0.001) {
-                "sangat tinggi"
-            } else if (p_value < 0.01) {
-                "tinggi"
-            } else if (p_value < 0.05) {
-                "cukup"
-            } else {
-                "rendah"
-            }
-
-            tagList(
-                # Main decision box
-                div(
-                    style = if (is_significant) {
-                        "background-color: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin-bottom: 15px;"
-                    } else {
-                        "background-color: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin-bottom: 15px;"
-                    },
-                    h5(if (is_significant) "✅ Hasil Signifikan" else "❌ Hasil Tidak Signifikan"),
-                    p(
-                        strong("Keputusan Statistik: "),
-                        if (is_significant) {
-                            paste("Tolak H₀ pada α =", alpha)
-                        } else {
-                            paste("Gagal menolak H₀ pada α =", alpha)
-                        }
-                    ),
-                    p(
-                        strong("Kesimpulan: "),
-                        if (is_significant) {
-                            paste("Terdapat bukti statistik yang", confidence_level, "untuk menolak hipotesis nol.")
-                        } else {
-                            "Tidak terdapat bukti statistik yang cukup untuk menolak hipotesis nol."
-                        }
-                    )
-                ),
-
-                # Statistical details
-                div(
-                    style = "background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 15px;",
-                    h5("📊 Detail Statistik:"),
-                    tags$ul(
-                        tags$li(paste("t-statistik:", format_number(t_stat, 4))),
-                        tags$li(paste("Derajat kebebasan:", df)),
-                        tags$li(paste("p-value:", format_number(p_value, 6))),
-                        tags$li(paste(
-                            "Interval kepercayaan 95%: [",
-                            format_number(conf_int[1], 4), ",",
-                            format_number(conf_int[2], 4), "]"
-                        )),
-                        if (!is.null(effect_size)) {
-                            tags$li(paste(
-                                "Effect size (Cohen's d):", format_number(effect_size, 4),
-                                "(", effect_interpretation, ")"
-                            ))
-                        }
-                    )
-                ),
-
-                # Hypotheses
-                div(
-                    style = "background-color: #e8f4fd; padding: 15px; border-radius: 5px; margin-bottom: 15px;",
-                    h5("🔬 Hipotesis:"),
-                    p(paste("H₀:", h0)),
-                    p(paste("H₁:", h1)),
-                    p(paste("Tingkat signifikansi: α =", alpha))
-                ),
-
-                # Practical interpretation
-                if (input$test_type == "one_sample") {
-                    div(
-                        style = "background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;",
-                        h5("💡 Interpretasi Praktis:"),
-                        p(paste("Rata-rata sampel:", format_number(sample_mean, 4))),
-                        p(paste("Standar deviasi:", format_number(sample_sd, 4))),
-                        p(paste("Ukuran sampel:", sample_n)),
-                        if (is_significant) {
-                            p(paste(
-                                "Rata-rata populasi secara signifikan berbeda dari", input$mu_test,
-                                "dengan tingkat kepercayaan", confidence_level, "."
-                            ))
-                        } else {
-                            p(paste("Tidak ada bukti yang cukup bahwa rata-rata populasi berbeda dari", input$mu_test, "."))
-                        }
-                    )
-                } else {
-                    div(
-                        style = "background-color: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px;",
-                        h5("💡 Interpretasi Praktis:"),
-                        p(paste("Rata-rata", unique_groups[1], ":", format_number(mean(group1_data), 4))),
-                        p(paste("Rata-rata", unique_groups[2], ":", format_number(mean(group2_data), 4))),
-                        p(paste("Selisih rata-rata:", format_number(abs(mean(group1_data) - mean(group2_data)), 4))),
-                        if (is_significant) {
-                            p(paste(
-                                "Terdapat perbedaan rata-rata yang signifikan antara", unique_groups[1],
-                                "dan", unique_groups[2], "dengan ukuran efek", effect_interpretation, "."
-                            ))
-                        } else {
-                            p(paste(
-                                "Tidak terdapat perbedaan rata-rata yang signifikan antara", unique_groups[1],
-                                "dan", unique_groups[2], "."
-                            ))
-                        }
-                    )
-                },
-
-                # Recommendations
-                div(
-                    style = "background-color: #d1ecf1; padding: 15px; border-radius: 5px;",
-                    h5("📋 Rekomendasi:"),
-                    if (is_significant && !is.null(effect_size) && abs(effect_size) < 0.3) {
-                        p("⚠️ Meskipun signifikan secara statistik, ukuran efek relatif kecil. Pertimbangkan kepentingan praktis dari temuan ini.")
-                    } else if (is_significant) {
-                        p("✅ Hasil menunjukkan perbedaan yang signifikan secara statistik dan praktis.")
-                    } else {
-                        p("🔍 Pertimbangkan untuk memperbesar ukuran sampel atau memeriksa asumsi uji jika diperlukan.")
-                    },
-                    if (df < 30) {
-                        p("📝 Catatan: Ukuran sampel relatif kecil. Pastikan asumsi normalitas terpenuhi.")
-                    }
-                )
+            test_type <- input$test_type
+            
+            # Use the interpretation helper function
+            interpretation_text <- interpret_ttest(
+                test_result = result,
+                alpha = 0.05,
+                test_type = test_type
             )
+
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
+
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Individual interpretation download using officer
@@ -344,17 +174,8 @@ uji_rata_server <- function(id, values) {
                     variabel <- paste(input$var_two, "by", input$group_two)
                 }
 
-                # Generate interpretation text
-                interpretation_text <- paste(
-                    "Berdasarkan hasil uji t, dengan p-value =", format_number(result$p.value, 6),
-                    if (result$p.value < 0.05) {
-                        ", terdapat bukti statistik yang cukup untuk menolak hipotesis nol pada tingkat signifikansi α = 0.05."
-                    } else {
-                        ", tidak terdapat bukti statistik yang cukup untuk menolak hipotesis nol pada tingkat signifikansi α = 0.05."
-                    },
-                    "\n\nInterval kepercayaan 95% untuk perbedaan rata-rata adalah [",
-                    format_number(result$conf.int[1], 4), ", ", format_number(result$conf.int[2], 4), "]."
-                )
+                # Generate enhanced interpretation using helper function
+                interpretation_text <- interpret_ttest(result, input$test_type)
 
                 # Render report using template
                 rmarkdown::render(
@@ -398,17 +219,8 @@ uji_rata_server <- function(id, values) {
                     variabel <- paste(input$var_two, "by", input$group_two)
                 }
 
-                # Generate interpretation text
-                interpretation_text <- paste(
-                    "Berdasarkan hasil uji t, dengan p-value =", format_number(result$p.value, 6),
-                    if (result$p.value < 0.05) {
-                        ", terdapat bukti statistik yang cukup untuk menolak hipotesis nol pada tingkat signifikansi α = 0.05."
-                    } else {
-                        ", tidak terdapat bukti statistik yang cukup untuk menolak hipotesis nol pada tingkat signifikansi α = 0.05."
-                    },
-                    "\n\nInterval kepercayaan 95% untuk perbedaan rata-rata adalah [",
-                    format_number(result$conf.int[1], 4), ", ", format_number(result$conf.int[2], 4), "]."
-                )
+                # Generate enhanced interpretation using helper function
+                interpretation_text <- interpret_ttest(result, input$test_type)
 
                 # Render report using template (Word output)
                 rmarkdown::render(

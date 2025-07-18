@@ -48,6 +48,12 @@ lapply(required_packages, function(pkg) {
     suppressPackageStartupMessages(library(pkg, character.only = TRUE))
 })
 
+# Load utility functions
+# ======================
+
+# Source interpretation helpers for statistical analysis
+source("R/utils/interpretation_helpers.R")
+
 # Pandoc Setup and Installation
 # =============================
 

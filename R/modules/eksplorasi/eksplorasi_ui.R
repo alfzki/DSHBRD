@@ -67,7 +67,12 @@ eksplorasi_ui <- function(id) {
                         "Visualisasi Peta",
                         icon = icon("map"),
                         br(),
-                        p("Catatan: Fitur peta memerlukan data spasial tambahan."),
+                        div(
+                            style = "background-color: #e8f4fd; padding: 10px; border-radius: 5px; margin-bottom: 15px;",
+                            h5(icon("info-circle"), "Informasi Peta Interaktif"),
+                            p("Peta ini menampilkan distribusi spasial variabel yang dipilih across kabupaten/kota di Indonesia."),
+                            p("Fitur:", tags$span(style = "font-weight: bold;", "• Hover untuk detail • Klik untuk informasi • Legend warna otomatis"))
+                        ),
                         leaflet::leafletOutput(ns("map_viz"), height = "500px")
                     )
                 )

@@ -88,170 +88,25 @@ regresi_server <- function(id, values) {
             print(summary(model))
         })
 
-        # Enhanced regression interpretation with comprehensive analysis
+        # Enhanced regression interpretation using helper function
         output$interpretation <- renderUI({
             req(model_result())
 
             model <- model_result()
-            summary_model <- summary(model)
-
-            # Extract key statistics
-            r_squared <- summary_model$r.squared
-            adj_r_squared <- summary_model$adj.r.squared
-            f_statistic <- summary_model$fstatistic[1]
-            f_p_value <- pf(f_statistic, summary_model$fstatistic[2],
-                summary_model$fstatistic[3],
-                lower.tail = FALSE
+            
+            # Use the interpretation helper function
+            interpretation_text <- interpret_regression(
+                lm_result = model,
+                alpha = 0.05
             )
 
-            # Model assessment
-            model_quality <- if (r_squared >= 0.7) {
-                "sangat baik (R² ≥ 0.7)"
-            } else if (r_squared >= 0.5) {
-                "baik (R² ≥ 0.5)"
-            } else if (r_squared >= 0.3) {
-                "cukup (R² ≥ 0.3)"
-            } else {
-                "rendah (R² < 0.3)"
-            }
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            # Practical interpretation
-            practical_recommendation <- if (f_p_value < 0.05) {
-                if (r_squared > 0.5) {
-                    "Model memiliki kekuatan prediktif yang baik dan dapat digunakan untuk inferensi statistik."
-                } else {
-                    "Model secara statistik signifikan namun memiliki kekuatan prediktif yang terbatas. Pertimbangkan untuk menambah variabel prediktor."
-                }
-            } else {
-                "Model tidak menunjukkan hubungan yang signifikan. Pertimbangkan untuk menggunakan variabel prediktor yang berbeda atau memeriksa asumsi model."
-            }
-
-            interpretations <- list(
-                h4("Interpretasi Komprehensif Model Regresi:"),
-                div(
-                    class = "alert alert-info",
-                    strong("Ringkasan Model: "),
-                    paste(
-                        "Model memiliki kualitas", model_quality,
-                        "dalam menjelaskan variabilitas data."
-                    )
-                ),
-                h5("Kebaikan Model (Goodness of Fit):"),
-                tags$ul(
-                    tags$li(paste(
-                        "R² =", format_number(r_squared, 4),
-                        paste0("(", format_number(r_squared * 100, 1), "% varians dijelaskan)")
-                    )),
-                    tags$li(paste("Adjusted R² =", format_number(adj_r_squared, 4))),
-                    tags$li(paste("F-statistic =", format_number(f_statistic, 4))),
-                    tags$li(paste("Model p-value =", format_number(f_p_value, 6)))
-                ),
-                div(
-                    class = if (f_p_value < 0.05) "alert alert-success" else "alert alert-warning",
-                    strong("Kesimpulan Model: "),
-                    interpret_p_value(
-                        f_p_value,
-                        h0 = "Model tidak signifikan (semua koefisien = 0)",
-                        h1 = "Model signifikan (minimal ada satu koefisien ≠ 0)"
-                    )
-                ),
-                h5("Analisis Koefisien Regresi:"),
-                p("Interpretasi individual untuk setiap variabel prediktor:")
-            )
-
-            # Enhanced coefficient interpretations
-            coeffs <- summary_model$coefficients
-            significant_vars <- 0
-
-            for (i in 2:nrow(coeffs)) { # Skip intercept
-                var_name <- rownames(coeffs)[i]
-                coeff_value <- coeffs[i, 1]
-                std_error <- coeffs[i, 2]
-                t_value <- coeffs[i, 3]
-                p_value <- coeffs[i, 4]
-
-                if (p_value < 0.05) significant_vars <- significant_vars + 1
-
-                # Confidence interval
-                ci_lower <- coeff_value - 1.96 * std_error
-                ci_upper <- coeff_value + 1.96 * std_error
-
-                # Effect interpretation
-                effect_direction <- if (coeff_value > 0) "positif" else "negatif"
-                effect_magnitude <- if (abs(coeff_value) > 1) "besar" else if (abs(coeff_value) > 0.5) "sedang" else "kecil"
-
-                significance_text <- if (p_value < 0.001) {
-                    "sangat signifikan (p < 0.001)"
-                } else if (p_value < 0.01) {
-                    "signifikan (p < 0.01)"
-                } else if (p_value < 0.05) {
-                    "signifikan (p < 0.05)"
-                } else {
-                    "tidak signifikan (p ≥ 0.05)"
-                }
-
-                var_interpretation <- div(
-                    class = "card mb-2",
-                    div(
-                        class = "card-body",
-                        h6(class = "card-title", var_name),
-                        tags$ul(
-                            tags$li(paste("Koefisien:", format_number(coeff_value, 4))),
-                            tags$li(paste(
-                                "95% CI: [", format_number(ci_lower, 4), ",",
-                                format_number(ci_upper, 4), "]"
-                            )),
-                            tags$li(paste("t-value:", format_number(t_value, 4))),
-                            tags$li(paste("Status:", significance_text)),
-                            tags$li(paste("Efek:", effect_direction, "dengan magnitude", effect_magnitude))
-                        ),
-                        if (p_value < 0.05) {
-                            p(
-                                class = "text-success",
-                                paste(
-                                    "Untuk setiap kenaikan 1 unit", var_name,
-                                    ", variabel", input$dep_var,
-                                    ifelse(coeff_value > 0, "meningkat", "menurun"),
-                                    "sebesar", abs(format_number(coeff_value, 4)), "unit."
-                                )
-                            )
-                        } else {
-                            p(
-                                class = "text-muted",
-                                paste(
-                                    "Pengaruh", var_name, "terhadap", input$dep_var,
-                                    "tidak terbukti secara statistik."
-                                )
-                            )
-                        }
-                    )
-                )
-
-                interpretations <- append(interpretations, list(var_interpretation))
-            }
-
-            # Summary and recommendations
-            interpretations <- append(interpretations, list(
-                h5("Ringkasan dan Rekomendasi:"),
-                div(class = "alert alert-warning", practical_recommendation),
-                if (significant_vars > 0) {
-                    div(
-                        class = "alert alert-info",
-                        paste(
-                            "Dari", length(input$indep_vars), "variabel prediktor,",
-                            significant_vars, "variabel menunjukkan pengaruh yang signifikan."
-                        )
-                    )
-                },
-                div(
-                    class = "alert alert-secondary",
-                    strong("Catatan Penting: "),
-                    "Pastikan untuk memeriksa asumsi regresi (tab 'Uji Asumsi') ",
-                    "sebelum menginterpretasikan hasil secara final."
-                )
-            ))
-
-            do.call(tagList, interpretations)
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Display assumption tests
@@ -453,7 +308,8 @@ regresi_server <- function(id, values) {
                     assumption_tests = assumption_tests(),
                     dep_var = input$dep_var,
                     indep_vars = input$indep_vars,
-                    analysis_date = Sys.Date()
+                    analysis_date = Sys.Date(),
+                    interpretation = interpret_regression(model_result(), assumption_tests())
                 )
 
                 # Render the R Markdown template
@@ -483,7 +339,8 @@ regresi_server <- function(id, values) {
                     assumption_tests = assumption_tests(),
                     dep_var = input$dep_var,
                     indep_vars = input$indep_vars,
-                    analysis_date = Sys.Date()
+                    analysis_date = Sys.Date(),
+                    interpretation = interpret_regression(model_result(), assumption_tests())
                 )
 
                 # Create temporary Rmd file for Word output

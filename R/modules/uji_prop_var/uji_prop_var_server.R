@@ -20,6 +20,11 @@ uji_prop_var_server <- function(id, values) {
         # Reactive values
         test_result <- reactiveVal(NULL)
 
+        # Clear test result when test choice changes to prevent errors
+        observeEvent(input$test_choice, {
+            test_result(NULL)
+        })
+
         # Run test
         observeEvent(input$run_test, {
             if (!validate_data(values$sovi_data, "Data SOVI")) {
@@ -97,93 +102,99 @@ uji_prop_var_server <- function(id, values) {
             req(test_result())
 
             result <- test_result()
-
-            if (input$test_choice == "proportion") {
-                cat("Uji Proporsi Satu Sampel\n")
-                cat("========================\n\n")
-                cat("Data:", input$x_prop, "sukses dari", input$n_prop, "percobaan\n")
-                cat("Proporsi sampel:", round(input$x_prop / input$n_prop, 4), "\n")
-                cat("Hipotesis nol: p =", input$p_test, "\n")
-                cat(
-                    "Hipotesis alternatif: p",
-                    switch(input$alternative,
-                        "two.sided" = "≠",
-                        "greater" = ">",
-                        "less" = "<"
-                    ),
-                    input$p_test, "\n\n"
-                )
-                cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
-                cat("Derajat kebebasan:", result$parameter, "\n")
-                cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
-                cat("Interval kepercayaan 95%:", round(result$conf.int[1], 4), "-", round(result$conf.int[2], 4), "\n")
-            } else {
-                cat("Uji Varians Satu Sampel\n")
-                cat("=======================\n\n")
-                cat("Data:", result$data.name, "\n")
-                cat("Varians sampel:", round(result$sample.var, 4), "\n")
-                cat("Hipotesis nol: σ² =", result$null.value, "\n")
-                cat(
-                    "Hipotesis alternatif: σ²",
-                    switch(result$alternative,
-                        "two.sided" = "≠",
-                        "greater" = ">",
-                        "less" = "<"
-                    ),
-                    result$null.value, "\n\n"
-                )
-                cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
-                cat("Derajat kebebasan:", result$parameter, "\n")
-                cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
-            }
+            
+            # Validate that result matches the current test type
+            tryCatch({
+                if (input$test_choice == "proportion") {
+                    # Validate proportion test result structure
+                    if (is.null(result$conf.int) || is.null(result$statistic) || is.null(result$parameter)) {
+                        cat("Error: Invalid test result for proportion test. Please run the test again.\n")
+                        return()
+                    }
+                    
+                    cat("Uji Proporsi Satu Sampel\n")
+                    cat("========================\n\n")
+                    cat("Data:", input$x_prop, "sukses dari", input$n_prop, "percobaan\n")
+                    cat("Proporsi sampel:", round(input$x_prop / input$n_prop, 4), "\n")
+                    cat("Hipotesis nol: p =", input$p_test, "\n")
+                    cat(
+                        "Hipotesis alternatif: p",
+                        switch(input$alternative,
+                            "two.sided" = "≠",
+                            "greater" = ">",
+                            "less" = "<"
+                        ),
+                        input$p_test, "\n\n"
+                    )
+                    cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
+                    cat("Derajat kebebasan:", result$parameter, "\n")
+                    cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
+                    cat("Interval kepercayaan 95%:", round(result$conf.int[1], 4), "-", round(result$conf.int[2], 4), "\n")
+                } else {
+                    # Validate variance test result structure
+                    if (is.null(result$sample.var) || is.null(result$data.name) || is.null(result$null.value)) {
+                        cat("Error: Invalid test result for variance test. Please run the test again.\n")
+                        return()
+                    }
+                    
+                    cat("Uji Varians Satu Sampel\n")
+                    cat("=======================\n\n")
+                    cat("Data:", result$data.name, "\n")
+                    cat("Varians sampel:", round(result$sample.var, 4), "\n")
+                    cat("Hipotesis nol: σ² =", result$null.value, "\n")
+                    cat(
+                        "Hipotesis alternatif: σ²",
+                        switch(result$alternative,
+                            "two.sided" = "≠",
+                            "greater" = ">",
+                            "less" = "<"
+                        ),
+                        result$null.value, "\n\n"
+                    )
+                    cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
+                    cat("Derajat kebebasan:", result$parameter, "\n")
+                    cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
+                }
+            }, error = function(e) {
+                cat("Error displaying results: ", e$message, "\n")
+                cat("Please run the test again after changing the test type.\n")
+            })
         })
 
-        # Generate interpretation
+        # Generate interpretation using helper functions
         output$interpretation <- renderUI({
             req(test_result())
 
             result <- test_result()
-            p_value <- result$p.value
+            
+            # Use appropriate interpretation helper function with error handling
+            interpretation_text <- tryCatch({
+                if (input$test_choice == "proportion") {
+                    # Validate proportion result before interpretation
+                    if (is.null(result$estimate) || is.null(result$p.value)) {
+                        return("**Error:** Invalid test result. Please run the proportion test again.")
+                    }
+                    interpret_prop_test(result, alpha = 0.05)
+                } else {
+                    # Validate variance result before interpretation
+                    if (is.null(result$sample.var) || is.null(result$p.value)) {
+                        return("**Error:** Invalid test result. Please run the variance test again.")
+                    }
+                    interpret_var_test(result, alpha = 0.05)
+                }
+            }, error = function(e) {
+                paste("**Error generating interpretation:** Please run the", 
+                      ifelse(input$test_choice == "proportion", "proportion", "variance"), 
+                      "test again.")
+            })
 
-            if (input$test_choice == "proportion") {
-                h0 <- paste("Proporsi populasi =", input$p_test)
-                h1 <- switch(input$alternative,
-                    "two.sided" = paste("Proporsi populasi ≠", input$p_test),
-                    "greater" = paste("Proporsi populasi >", input$p_test),
-                    "less" = paste("Proporsi populasi <", input$p_test)
-                )
+            # Convert to HTML with proper formatting
+            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
+            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-                sample_prop <- input$x_prop / input$n_prop
-
-                additional_info <- tagList(
-                    p(paste("Proporsi sampel:", format_number(sample_prop, 4))),
-                    p(paste(
-                        "Interval kepercayaan 95%:",
-                        format_number(result$conf.int[1], 4), "hingga",
-                        format_number(result$conf.int[2], 4)
-                    ))
-                )
-            } else {
-                h0 <- paste("Varians populasi =", input$var_test)
-                h1 <- switch(input$alternative,
-                    "two.sided" = paste("Varians populasi ≠", input$var_test),
-                    "greater" = paste("Varians populasi >", input$var_test),
-                    "less" = paste("Varians populasi <", input$var_test)
-                )
-
-                additional_info <- tagList(
-                    p(paste("Varians sampel:", format_number(result$sample.var, 4))),
-                    p(paste("Statistik Chi-square:", format_number(result$statistic, 4)))
-                )
-            }
-
-            interpretation <- interpret_p_value(p_value, h0 = h0, h1 = h1)
-
-            tagList(
-                h4("Interpretasi Hasil Uji:"),
-                p(interpretation),
-                additional_info
-            )
+            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                       interpretation_html,
+                       "</div>"))
         })
 
         # Download handler

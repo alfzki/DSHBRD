@@ -9,6 +9,16 @@
 #' @description Sources all UI and server module files from the R/modules directory
 #' following the new modular architecture that separates concerns by functionality.
 load_all_modules <- function() {
+    # Load utility functions first
+    utils_dir <- file.path("R", "utils")
+    if (dir.exists(utils_dir)) {
+        utils_files <- list.files(utils_dir, pattern = "\\.R$", full.names = TRUE)
+        for (util_file in utils_files) {
+            source(util_file)
+            cat(paste("✓ Loaded utility:", basename(util_file), "\n"))
+        }
+    }
+
     # Define the base modules directory
     modules_dir <- file.path("R", "modules")
 

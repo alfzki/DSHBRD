@@ -13,8 +13,8 @@ eksplorasi_server <- function(id, values) {
         observe({
             # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
-            
+            data_counter <- values$data_update_counter # This creates a reactive dependency
+
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             updateSelectInput(session, "select_var", choices = numeric_choices)
         })
@@ -207,10 +207,10 @@ eksplorasi_server <- function(id, values) {
         # Interactive Map visualization with social vulnerability data
         output$map_viz <- leaflet::renderLeaflet({
             req(input$select_var)
-            
+
             # Read GeoJSON data for Indonesian districts
             geojson_path <- here::here("data", "indonesia_kabkota.geojson")
-            
+
             if (!file.exists(geojson_path)) {
                 # Fallback to basic map if GeoJSON not available
                 return(
@@ -223,97 +223,99 @@ eksplorasi_server <- function(id, values) {
                         )
                 )
             }
-            
-            tryCatch({
-                # Read the GeoJSON file
-                indonesia_map <- sf::st_read(geojson_path, quiet = TRUE)
-                
-                # Get the selected variable data
-                var_data <- values$sovi_data[[input$select_var]]
-                
-                # Create sample spatial data (normally you'd join with actual district data)
-                # For demo purposes, create random data for each district
-                set.seed(123)  # For reproducible results
-                n_districts <- nrow(indonesia_map)
-                
-                # Simulate district values based on the variable's distribution
-                mean_val <- mean(var_data, na.rm = TRUE)
-                sd_val <- sd(var_data, na.rm = TRUE)
-                simulated_values <- rnorm(n_districts, mean = mean_val, sd = sd_val)
-                
-                # Add the simulated data to the spatial data
-                indonesia_map$vulnerability_value <- simulated_values
-                
-                # Create color palette
-                pal <- leaflet::colorNumeric(
-                    palette = "YlOrRd",
-                    domain = indonesia_map$vulnerability_value,
-                    na.color = "transparent"
-                )
-                
-                # Create labels for popups
-                labels <- sprintf(
-                    "<strong>%s</strong><br/>
+
+            tryCatch(
+                {
+                    # Read the GeoJSON file
+                    indonesia_map <- sf::st_read(geojson_path, quiet = TRUE)
+
+                    # Get the selected variable data
+                    var_data <- values$sovi_data[[input$select_var]]
+
+                    # Create sample spatial data (normally you'd join with actual district data)
+                    # For demo purposes, create random data for each district
+                    set.seed(123) # For reproducible results
+                    n_districts <- nrow(indonesia_map)
+
+                    # Simulate district values based on the variable's distribution
+                    mean_val <- mean(var_data, na.rm = TRUE)
+                    sd_val <- sd(var_data, na.rm = TRUE)
+                    simulated_values <- rnorm(n_districts, mean = mean_val, sd = sd_val)
+
+                    # Add the simulated data to the spatial data
+                    indonesia_map$vulnerability_value <- simulated_values
+
+                    # Create color palette
+                    pal <- leaflet::colorNumeric(
+                        palette = "YlOrRd",
+                        domain = indonesia_map$vulnerability_value,
+                        na.color = "transparent"
+                    )
+
+                    # Create labels for popups
+                    labels <- sprintf(
+                        "<strong>%s</strong><br/>
                      Nilai %s: <strong>%.3f</strong><br/>
                      <em>Catatan: Data ini disimulasikan untuk demonstrasi</em>",
-                    indonesia_map$NAME_2,  # District name
-                    input$select_var,
-                    indonesia_map$vulnerability_value
-                ) %>% lapply(htmltools::HTML)
-                
-                # Create the leaflet map
-                leaflet::leaflet(indonesia_map) %>%
-                    leaflet::addTiles() %>%
-                    leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
-                    leaflet::addPolygons(
-                        fillColor = ~pal(vulnerability_value),
-                        weight = 1,
-                        opacity = 1,
-                        color = "white",
-                        dashArray = "1",
-                        fillOpacity = 0.7,
-                        highlight = leaflet::highlightOptions(
-                            weight = 3,
-                            color = "#666",
-                            dashArray = "",
-                            fillOpacity = 0.9,
-                            bringToFront = TRUE
-                        ),
-                        label = labels,
-                        labelOptions = leaflet::labelOptions(
-                            style = list("font-weight" = "normal", padding = "3px 8px"),
-                            textsize = "15px",
-                            direction = "auto"
+                        indonesia_map$NAME_2, # District name
+                        input$select_var,
+                        indonesia_map$vulnerability_value
+                    ) %>% lapply(htmltools::HTML)
+
+                    # Create the leaflet map
+                    leaflet::leaflet(indonesia_map) %>%
+                        leaflet::addTiles() %>%
+                        leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
+                        leaflet::addPolygons(
+                            fillColor = ~ pal(vulnerability_value),
+                            weight = 1,
+                            opacity = 1,
+                            color = "white",
+                            dashArray = "1",
+                            fillOpacity = 0.7,
+                            highlight = leaflet::highlightOptions(
+                                weight = 3,
+                                color = "#666",
+                                dashArray = "",
+                                fillOpacity = 0.9,
+                                bringToFront = TRUE
+                            ),
+                            label = labels,
+                            labelOptions = leaflet::labelOptions(
+                                style = list("font-weight" = "normal", padding = "3px 8px"),
+                                textsize = "15px",
+                                direction = "auto"
+                            )
+                        ) %>%
+                        leaflet::addLegend(
+                            pal = pal,
+                            values = ~vulnerability_value,
+                            opacity = 0.9,
+                            title = paste("Nilai", input$select_var),
+                            position = "bottomright"
+                        ) %>%
+                        leaflet::addControl(
+                            html = paste0(
+                                "<div style='background: white; padding: 10px; border-radius: 5px;'>",
+                                "<h4>Peta Kerentanan Sosial Indonesia</h4>",
+                                "<p><strong>Variabel:</strong> ", input$select_var, "</p>",
+                                "<p><em>Catatan: Data spasial ini disimulasikan untuk tujuan demonstrasi.</em></p>",
+                                "</div>"
+                            ),
+                            position = "topright"
                         )
-                    ) %>%
-                    leaflet::addLegend(
-                        pal = pal, 
-                        values = ~vulnerability_value,
-                        opacity = 0.9, 
-                        title = paste("Nilai", input$select_var),
-                        position = "bottomright"
-                    ) %>%
-                    leaflet::addControl(
-                        html = paste0(
-                            "<div style='background: white; padding: 10px; border-radius: 5px;'>",
-                            "<h4>Peta Kerentanan Sosial Indonesia</h4>",
-                            "<p><strong>Variabel:</strong> ", input$select_var, "</p>",
-                            "<p><em>Catatan: Data spasial ini disimulasikan untuk tujuan demonstrasi.</em></p>",
-                            "</div>"
-                        ),
-                        position = "topright"
-                    )
-                    
-            }, error = function(e) {
-                # Error handling - show basic map
-                leaflet::leaflet() %>%
-                    leaflet::addTiles() %>%
-                    leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
-                    leaflet::addMarkers(
-                        lng = 117.0, lat = -2.5,
-                        popup = paste("Error loading map data:", e$message)
-                    )
-            })
+                },
+                error = function(e) {
+                    # Error handling - show basic map
+                    leaflet::leaflet() %>%
+                        leaflet::addTiles() %>%
+                        leaflet::setView(lng = 117.0, lat = -2.5, zoom = 5) %>%
+                        leaflet::addMarkers(
+                            lng = 117.0, lat = -2.5,
+                            popup = paste("Error loading map data:", e$message)
+                        )
+                }
+            )
         })
 
         # Download handlers
@@ -365,6 +367,27 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                     theme_minimal()
 
                 ggsave(file, p, width = 10, height = 6, dpi = 300)
+            }
+        )
+
+        # Plot download as JPG
+        output$download_plot_jpg <- downloadHandler(
+            filename = function() {
+                paste0("plot_", input$select_var, "_", Sys.Date(), ".jpg")
+            },
+            content = function(file) {
+                req(input$select_var)
+
+                p <- ggplot(values$sovi_data, aes_string(x = input$select_var)) +
+                    geom_histogram(bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
+                    labs(
+                        title = paste("Distribusi", input$select_var),
+                        x = input$select_var,
+                        y = "Frekuensi"
+                    ) +
+                    theme_minimal()
+
+                ggsave(file, p, width = 10, height = 6, dpi = 300, device = "jpeg")
             }
         )
 
@@ -434,10 +457,10 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                     )
                 ggsave(temp_plot, p, width = 10, height = 6, dpi = 300)
 
-                # Prepare enhanced data for report  
+                # Prepare enhanced data for report
                 var_data <- values$sovi_data[[input$select_var]]
                 var_summary <- summary(var_data)
-                
+
                 # Calculate additional statistics
                 mean_val <- var_summary["Mean"]
                 median_val <- var_summary["Median"]
@@ -499,25 +522,28 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                 )
 
                 # Render report using template
-                tryCatch({
-                    rmarkdown::render(
-                        input = here::here("reports", "laporan_eksplorasi.Rmd"),
-                        output_file = file,
-                        output_format = "pdf_document",
-                        params = list(
-                            var_terpilih = input$select_var,
-                            data_summary = var_summary,
-                            plot_path = temp_plot,
-                            interpretasi = interpretation_text,
-                            dataset_info = dataset_info
-                        ),
-                        quiet = TRUE
-                    )
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        rmarkdown::render(
+                            input = here::here("reports", "laporan_eksplorasi.Rmd"),
+                            output_file = file,
+                            output_format = "pdf_document",
+                            params = list(
+                                var_terpilih = input$select_var,
+                                data_summary = var_summary,
+                                plot_path = temp_plot,
+                                interpretasi = interpretation_text,
+                                dataset_info = dataset_info
+                            ),
+                            quiet = TRUE
+                        )
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
 
                 # Clean up temporary file
                 if (file.exists(temp_plot)) file.remove(temp_plot)
@@ -553,7 +579,7 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
                 # Prepare enhanced data for report
                 var_data <- values$sovi_data[[input$select_var]]
                 var_summary <- summary(var_data)
-                
+
                 # Calculate additional statistics
                 mean_val <- var_summary["Mean"]
                 median_val <- var_summary["Median"]

@@ -80,9 +80,13 @@ uji_anova_ui <- function(id) {
                     width = NULL,
                     collapsible = TRUE,
                     collapsed = TRUE,
-                    h5("Interpretasi Individual"),
+                    h5("Unduhan Individual"),
                     downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
                         class = "btn-outline-info btn-sm", icon = icon("file-word"), width = "100%"
+                    ),
+                    br(), br(),
+                    downloadButton(ns("download_plot_jpg"), "Unduh Plot (.jpg)",
+                        class = "btn-outline-success btn-sm", icon = icon("image"), width = "100%"
                     ),
                     br(), br(),
                     h5("Laporan Lengkap"),

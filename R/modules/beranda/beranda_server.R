@@ -12,7 +12,7 @@ beranda_server <- function(id, values) {
         # Welcome content
         output$welcome_content <- renderUI({
             tagList(
-                h3("ALIVA: Alif's Vulnerability Analytics Dashboard"),
+                h3("ALIVA: Alif Vulnerability Analytics Dashboard"),
                 p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
           data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
                 hr(),
@@ -146,6 +146,317 @@ metadata <- data.frame(
 )
 knitr::kable(metadata)
 ```
+'
+
+                writeLines(rmd_content, temp_rmd)
+                rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
+            }
+        )
+
+        # Combined download handler for all menus (PDF)
+        output$download_combined_pdf <- downloadHandler(
+            filename = function() {
+                paste0("ALIVA_Laporan_Gabungan_", Sys.Date(), ".pdf")
+            },
+            content = function(file) {
+                # Create comprehensive combined report
+                temp_rmd <- tempfile(fileext = ".Rmd")
+
+                rmd_content <- '---
+title: "ALIVA Dashboard - Laporan Gabungan Semua Menu"
+subtitle: "Analisis Kerentanan Sosial Indonesia"
+author: "ALIVA: Alif\'s Vulnerability Analytics Dashboard"
+date: "`r format(Sys.Date(), \'%d %B %Y\')`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# Executive Summary
+
+ALIVA Dashboard merupakan aplikasi analisis statistik komprehensif untuk data kerentanan sosial Indonesia. Dashboard ini menyediakan berbagai fitur analisis mulai dari eksplorasi data dasar hingga analisis regresi lanjutan.
+
+## Dataset Overview
+
+Dataset yang digunakan berasal dari SUSENAS 2017 dengan 511 observasi kabupaten/kota di Indonesia dan 17 variabel indikator kerentanan sosial.
+
+# 1. Beranda - Informasi Dashboard
+
+## Tentang ALIVA
+ALIVA: Alif Vulnerability Analytics Dashboard adalah platform analisis statistik yang dirancang khusus untuk menganalisis data kerentanan sosial Indonesia.
+
+## Fitur Utama
+- Manajemen Data: Transformasi variabel kontinu ke kategorik
+- Eksplorasi Data: Statistik deskriptif dan visualisasi
+- Uji Asumsi: Normalitas dan homogenitas varians
+- Statistik Inferensia: Uji t, ANOVA, uji proporsi dan varians
+- Regresi Linear Berganda: Model prediktif dengan uji asumsi
+
+# 2. Manajemen Data
+
+Fitur manajemen data memungkinkan transformasi variabel kontinu menjadi kategorik menggunakan dua metode:
+- **Interval Sama**: Pembagian berdasarkan rentang nilai yang sama
+- **Kuantil**: Pembagian berdasarkan persentil untuk jumlah observasi yang sama
+
+**Interpretasi**: Kategorisasi membantu dalam analisis eksploratori dan memudahkan interpretasi pola data untuk analisis statistik lanjutan.
+
+# 3. Eksplorasi Data
+
+## Statistik Deskriptif
+Analisis deskriptif mencakup:
+- Measures of central tendency (mean, median, mode)
+- Measures of variability (std dev, variance, range)
+- Measures of shape (skewness, kurtosis)
+
+## Visualisasi
+- **Histogram**: Menampilkan distribusi frekuensi variabel
+- **Peta Interaktif**: Visualisasi spasial distribusi variabel per kabupaten/kota
+
+**Interpretasi**: Eksplorasi data memberikan pemahaman awal tentang karakteristik dataset sebelum melakukan analisis inferensia.
+
+# 4. Uji Asumsi
+
+## Uji Normalitas (Shapiro-Wilk)
+Menguji apakah data berdistribusi normal - prerequisite untuk uji parametrik.
+
+**Hipotesis**:
+- H₀: Data berdistribusi normal
+- H₁: Data tidak berdistribusi normal
+
+## Uji Homogenitas (Levene Test)
+Menguji kesamaan varians antar grup - asumsi penting untuk ANOVA.
+
+**Hipotesis**:
+- H₀: Varians antar grup homogen
+- H₁: Varians antar grup tidak homogen
+
+**Interpretasi**: Pengujian asumsi memastikan validitas analisis statistik selanjutnya.
+
+# 5. Statistik Inferensia
+
+## 5.1 Uji Beda Rata-Rata
+### Uji t Satu Sampel
+Membandingkan rata-rata sampel dengan nilai hipotesis tertentu.
+
+### Uji t Dua Sampel
+Membandingkan rata-rata dua kelompok independen.
+
+**Interpretasi**: Uji t membantu menentukan apakah perbedaan yang diamati signifikan secara statistik.
+
+## 5.2 Uji Proporsi dan Varians
+### Uji Proporsi Satu Sampel
+Menguji apakah proporsi sampel berbeda dari nilai hipotesis.
+
+### Uji Varians Satu Sampel
+Menguji apakah varians sampel berbeda dari nilai hipotesis.
+
+**Interpretasi**: Uji ini penting untuk validasi asumsi dan analisis karakteristik populasi.
+
+## 5.3 ANOVA (Analysis of Variance)
+### One-Way ANOVA
+Membandingkan rata-rata lebih dari dua kelompok independen.
+
+### Two-Way ANOVA
+Menganalisis pengaruh dua faktor sekaligus, termasuk efek interaksi.
+
+**Interpretasi**: ANOVA memungkinkan analisis pengaruh multiple factors terhadap variabel outcome.
+
+# 6. Regresi Linear Berganda
+
+## Model Regresi
+Analisis hubungan antara satu variabel dependen dengan multiple variabel independen.
+
+## Uji Asumsi Klasik
+- **Multikolinearitas (VIF)**: Mengecek korelasi tinggi antar prediktor
+- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual
+- **Normalitas Residual (Shapiro-Wilk)**: Mengecek distribusi normal residual
+
+## Interpretasi Model
+- **R-squared**: Proporsi varians yang dijelaskan model
+- **Adjusted R-squared**: R-squared yang disesuaikan dengan jumlah prediktor
+- **F-test**: Signifikansi model secara keseluruhan
+- **t-test**: Signifikansi masing-masing koefisien
+
+**Interpretasi**: Regresi berganda memberikan model prediktif dan understanding tentang faktor-faktor yang mempengaruhi variabel outcome.
+
+# Kesimpulan
+
+ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari eksplorasi data hingga modeling prediktif. Setiap fitur dilengkapi dengan interpretasi yang memudahkan pengguna memahami hasil analisis.
+
+## Rekomendasi Penggunaan
+1. Mulai dengan eksplorasi data untuk memahami karakteristik dataset
+2. Lakukan uji asumsi sebelum analisis inferensia
+3. Pilih uji statistik yang sesuai berdasarkan jenis data dan tujuan analisis
+4. Validasi model regresi dengan pengujian asumsi klasik
+5. Interpretasikan hasil dalam konteks domain knowledge
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
+'
+
+                writeLines(rmd_content, temp_rmd)
+                rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
+            }
+        )
+
+        # Combined download handler for all menus (Word)
+        output$download_combined_word <- downloadHandler(
+            filename = function() {
+                paste0("ALIVA_Laporan_Gabungan_", Sys.Date(), ".docx")
+            },
+            content = function(file) {
+                # Create Word version of combined report
+                temp_rmd <- tempfile(fileext = ".Rmd")
+
+                rmd_content <- '---
+title: "ALIVA Dashboard - Laporan Gabungan Semua Menu"
+subtitle: "Analisis Kerentanan Sosial Indonesia"
+author: "ALIVA: Alif Vulnerability Analytics Dashboard"
+date: "`r format(Sys.Date(), \"%d %B %Y\")`"
+output:
+  word_document:
+    reference_docx: NULL
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+# Executive Summary
+
+ALIVA Dashboard merupakan aplikasi analisis statistik komprehensif untuk data kerentanan sosial Indonesia. Dashboard ini menyediakan berbagai fitur analisis mulai dari eksplorasi data dasar hingga analisis regresi lanjutan.
+
+## Dataset Overview
+
+Dataset yang digunakan berasal dari SUSENAS 2017 dengan 511 observasi kabupaten/kota di Indonesia dan 17 variabel indikator kerentanan sosial.
+
+# 1. Beranda - Informasi Dashboard
+
+## Tentang ALIVA
+ALIVA: Alif Vulnerability Analytics Dashboard adalah platform analisis statistik yang dirancang khusus untuk menganalisis data kerentanan sosial Indonesia.
+
+## Fitur Utama
+- Manajemen Data: Transformasi variabel kontinu ke kategorik
+- Eksplorasi Data: Statistik deskriptif dan visualisasi  
+- Uji Asumsi: Normalitas dan homogenitas varians
+- Statistik Inferensia: Uji t, ANOVA, uji proporsi dan varians
+- Regresi Linear Berganda: Model prediktif dengan uji asumsi
+
+# 2. Manajemen Data
+
+Fitur manajemen data memungkinkan transformasi variabel kontinu menjadi kategorik menggunakan dua metode:
+
+**Metode Interval Sama**: Pembagian berdasarkan rentang nilai yang sama
+**Metode Kuantil**: Pembagian berdasarkan persentil untuk jumlah observasi yang sama
+
+**Interpretasi**: Kategorisasi membantu dalam analisis eksploratori dan memudahkan interpretasi pola data untuk analisis statistik lanjutan.
+
+# 3. Eksplorasi Data
+
+## Statistik Deskriptif
+Analisis deskriptif mencakup:
+- Measures of central tendency (mean, median, mode)
+- Measures of variability (std dev, variance, range)  
+- Measures of shape (skewness, kurtosis)
+
+## Visualisasi
+- **Histogram**: Menampilkan distribusi frekuensi variabel
+- **Peta Interaktif**: Visualisasi spasial distribusi variabel per kabupaten/kota
+
+**Interpretasi**: Eksplorasi data memberikan pemahaman awal tentang karakteristik dataset sebelum melakukan analisis inferensia.
+
+# 4. Uji Asumsi
+
+## Uji Normalitas (Shapiro-Wilk)
+Menguji apakah data berdistribusi normal - prerequisite untuk uji parametrik.
+
+**Hipotesis**:
+- H₀: Data berdistribusi normal  
+- H₁: Data tidak berdistribusi normal
+
+## Uji Homogenitas (Levene Test)
+Menguji kesamaan varians antar grup - asumsi penting untuk ANOVA.
+
+**Hipotesis**:
+- H₀: Varians antar grup homogen
+- H₁: Varians antar grup tidak homogen
+
+**Interpretasi**: Pengujian asumsi memastikan validitas analisis statistik selanjutnya.
+
+# 5. Statistik Inferensia
+
+## 5.1 Uji Beda Rata-Rata
+
+### Uji t Satu Sampel
+Membandingkan rata-rata sampel dengan nilai hipotesis tertentu.
+
+### Uji t Dua Sampel  
+Membandingkan rata-rata dua kelompok independen.
+
+**Interpretasi**: Uji t membantu menentukan apakah perbedaan yang diamati signifikan secara statistik.
+
+## 5.2 Uji Proporsi dan Varians
+
+### Uji Proporsi Satu Sampel
+Menguji apakah proporsi sampel berbeda dari nilai hipotesis.
+
+### Uji Varians Satu Sampel
+Menguji apakah varians sampel berbeda dari nilai hipotesis.
+
+**Interpretasi**: Uji ini penting untuk validasi asumsi dan analisis karakteristik populasi.
+
+## 5.3 ANOVA (Analysis of Variance)
+
+### One-Way ANOVA
+Membandingkan rata-rata lebih dari dua kelompok independen.
+
+### Two-Way ANOVA
+Menganalisis pengaruh dua faktor sekaligus, termasuk efek interaksi.
+
+**Interpretasi**: ANOVA memungkinkan analisis pengaruh multiple factors terhadap variabel outcome.
+
+# 6. Regresi Linear Berganda
+
+## Model Regresi
+Analisis hubungan antara satu variabel dependen dengan multiple variabel independen.
+
+## Uji Asumsi Klasik
+- **Multikolinearitas (VIF)**: Mengecek korelasi tinggi antar prediktor
+- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual  
+- **Normalitas Residual (Shapiro-Wilk)**: Mengecek distribusi normal residual
+
+## Interpretasi Model
+- **R-squared**: Proporsi varians yang dijelaskan model
+- **Adjusted R-squared**: R-squared yang disesuaikan dengan jumlah prediktor
+- **F-test**: Signifikansi model secara keseluruhan
+- **t-test**: Signifikansi masing-masing koefisien
+
+**Interpretasi**: Regresi berganda memberikan model prediktif dan understanding tentang faktor-faktor yang mempengaruhi variabel outcome.
+
+# Kesimpulan
+
+ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari eksplorasi data hingga modeling prediktif. Setiap fitur dilengkapi dengan interpretasi yang memudahkan pengguna memahami hasil analisis.
+
+## Rekomendasi Penggunaan
+1. Mulai dengan eksplorasi data untuk memahami karakteristik dataset
+2. Lakukan uji asumsi sebelum analisis inferensia  
+3. Pilih uji statistik yang sesuai berdasarkan jenis data dan tujuan analisis
+4. Validasi model regresi dengan pengujian asumsi klasik
+5. Interpretasikan hasil dalam konteks domain knowledge
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
 '
 
                 writeLines(rmd_content, temp_rmd)

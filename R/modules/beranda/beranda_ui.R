@@ -54,8 +54,29 @@ beranda_ui <- function(id) {
                     solidHeader = TRUE,
                     width = NULL,
                     p("Unduh informasi lengkap tentang ALIVA Dashboard ini:"),
-                    downloadButton(ns("download_info"), "Unduh Info ALIVA Dashboard (.pdf)",
-                        class = "btn-primary", icon = icon("file-pdf")
+                    fluidRow(
+                        column(
+                            width = 6,
+                            h5("Unduhan Individual:"),
+                            downloadButton(ns("download_info"), "Info Dashboard (.pdf)",
+                                class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 6,
+                            h5("Unduhan Gabungan Semua Menu:"),
+                            p(
+                                class = "text-info", style = "font-size: 0.9em;",
+                                icon("info-circle"), " Kombinasi laporan dari semua menu dashboard"
+                            ),
+                            downloadButton(ns("download_combined_pdf"), "Laporan Gabungan (PDF)",
+                                class = "btn-success", icon = icon("file-pdf"), width = "100%"
+                            ),
+                            br(), br(),
+                            downloadButton(ns("download_combined_word"), "Laporan Gabungan (Word)",
+                                class = "btn-info", icon = icon("file-word"), width = "100%"
+                            )
+                        )
                     )
                 )
             )

@@ -30,11 +30,11 @@ library(dplyr)
 
 ## Informasi Analisis
 
-**Jenis Analisis:** `r params$jenis_anova`
+**Jenis Analisis:** `r if(!is.null(params$anova_type)) ifelse(params$anova_type == "one_way", "One-Way ANOVA", "Two-Way ANOVA") else "ANOVA"`
 
-**Variabel Terikat:** `r params$variabel_dependen`
+**Variabel Terikat:** `r params$dep_var`
 
-**Faktor:** `r params$faktor`
+**Faktor:** `r if(!is.null(params$factor1) && !is.null(params$factor2)) paste(params$factor1, "dan", params$factor2) else params$factor1`
 
 **Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
 
@@ -45,18 +45,26 @@ library(dplyr)
 ## Deskripsi Model
 
 ```{r model-description}
-if (!is.null(params$input_params)) {
-    if (params$input_params$anova_type == "one_way") {
-        cat("**Model:** ", params$variabel_dependen, " ~ ", params$faktor, "\n\n")
+if (!is.null(params$anova_type)) {
+    if (params$anova_type == "one_way") {
+        cat("**Model:** ", params$dep_var, " ~ ", params$factor1, "\n\n")
         cat("**Tipe ANOVA:** Satu Arah (One-Way ANOVA)\n\n")
         cat(
-            "**Tujuan:** Menguji apakah terdapat perbedaan rata-rata ", params$variabel_dependen,
-            " antar kategori ", params$faktor, "\n\n"
+            "**Tujuan:** Menguji apakah terdapat perbedaan rata-rata ", params$dep_var,
+            " antar kategori ", params$factor1, "\n\n"
         )
     } else {
-        cat("**Model:** ", params$variabel_dependen, " ~ ", params$faktor, "\n\n")
+        if (!is.null(params$interaction) && params$interaction) {
+            cat("**Model:** ", params$dep_var, " ~ ", params$factor1, " * ", params$factor2, "\n\n")
+        } else {
+            cat("**Model:** ", params$dep_var, " ~ ", params$factor1, " + ", params$factor2, "\n\n")
+        }
         cat("**Tipe ANOVA:** Dua Arah (Two-Way ANOVA)\n\n")
-        cat("**Tujuan:** Menguji pengaruh dua faktor dan interaksinya terhadap ", params$variabel_dependen, "\n\n")
+        cat("**Tujuan:** Menguji pengaruh dua faktor")
+        if (!is.null(params$interaction) && params$interaction) {
+            cat(" dan interaksinya")
+        }
+        cat(" terhadap ", params$dep_var, "\n\n")
     }
 }
 ```
@@ -66,19 +74,27 @@ if (!is.null(params$input_params)) {
 ## Hipotesis
 
 ```{r hypothesis}
-if (!is.null(params$input_params)) {
-    if (params$input_params$anova_type == "one_way") {
+if (!is.null(params$anova_type)) {
+    if (params$anova_type == "one_way") {
         cat("**H₀ (Hipotesis Nol):** μ₁ = μ₂ = μ₃ = ... = μₖ\n")
         cat("(Semua rata-rata grup sama)\n\n")
         cat("**H₁ (Hipotesis Alternatif):** Minimal ada satu μᵢ ≠ μⱼ\n")
         cat("(Minimal ada satu rata-rata grup yang berbeda)\n\n")
     } else {
         cat("**H₀ (Hipotesis Nol):**\n")
-        cat("- Tidak ada pengaruh faktor utama A\n")
-        cat("- Tidak ada pengaruh faktor utama B\n")
-        cat("- Tidak ada pengaruh interaksi A×B\n\n")
+        cat("- Tidak ada pengaruh faktor utama A (", params$factor1, ")\n")
+        cat("- Tidak ada pengaruh faktor utama B (", params$factor2, ")\n")
+        if (!is.null(params$interaction) && params$interaction) {
+            cat("- Tidak ada pengaruh interaksi A×B\n\n")
+        } else {
+            cat("\n")
+        }
         cat("**H₁ (Hipotesis Alternatif):**\n")
-        cat("- Ada pengaruh minimal satu faktor utama atau interaksi\n\n")
+        cat("- Ada pengaruh minimal satu faktor utama")
+        if (!is.null(params$interaction) && params$interaction) {
+            cat(" atau interaksi")
+        }
+        cat("\n\n")
     }
 }
 ```

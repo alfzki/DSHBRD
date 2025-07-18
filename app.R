@@ -1,6 +1,6 @@
 # NusaStat: Dasbor Interaktif Analisis Kerentanan Sosial & Statistik Indonesia
 # Developed for UAS Komputasi Statistik - Enhanced Version
-# Author: AI Agent Pemrograman R
+# Author: Dasbor ALIVA
 # Date: July 17, 2025
 # Version: 3.0 - Modular Architecture Implementation
 
@@ -94,7 +94,7 @@ server <- function(input, output, session) {
     sovi_data = NULL,
     distance_data = NULL,
     processed_data = NULL,
-    data_update_counter = 0,  # Counter to track data structure changes
+    data_update_counter = 0, # Counter to track data structure changes
     data_initialized = FALSE, # Flag to prevent reinitialization
     user_created_vars = list() # Store user-created variables
   )
@@ -114,7 +114,7 @@ server <- function(input, output, session) {
       cat("MAIN APP: Data already loaded, skipping reload\n")
     }
   })
-  
+
   # CRITICAL: Auto-restore user variables if data gets reloaded
   observe({
     current_data <- values$sovi_data

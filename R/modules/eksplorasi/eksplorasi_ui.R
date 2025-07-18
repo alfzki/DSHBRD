@@ -32,6 +32,10 @@ eksplorasi_ui <- function(id) {
                         class = "btn-sm btn-outline-success", icon = icon("image")
                     ),
                     br(), br(),
+                    downloadButton(ns("download_plot_jpg"), "Unduh Plot (.jpg)",
+                        class = "btn-sm btn-outline-success", icon = icon("image")
+                    ),
+                    br(), br(),
                     downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
                         class = "btn-sm btn-outline-info", icon = icon("file-word")
                     ),

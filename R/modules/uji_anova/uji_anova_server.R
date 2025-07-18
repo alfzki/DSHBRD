@@ -13,24 +13,24 @@ uji_anova_server <- function(id, values) {
         observe({
             # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
-            
+            data_counter <- values$data_update_counter # This creates a reactive dependency
+
             # Debug: Check what data we actually receive
             cat("ANOVA DEBUG: Observer triggered with counter:", data_counter, "\n")
             cat("ANOVA DEBUG: Data dimensions:", nrow(values$sovi_data), "x", ncol(values$sovi_data), "\n")
-            cat("ANOVA DEBUG: All column names:", paste(names(values$sovi_data), collapse=", "), "\n")
-            
+            cat("ANOVA DEBUG: All column names:", paste(names(values$sovi_data), collapse = ", "), "\n")
+
             # Check specifically for categorical columns
             cat_columns <- names(values$sovi_data)[sapply(values$sovi_data, function(x) is.character(x) || is.factor(x))]
-            cat("ANOVA DEBUG: Categorical columns found:", paste(cat_columns, collapse=", "), "\n")
-            
+            cat("ANOVA DEBUG: Categorical columns found:", paste(cat_columns, collapse = ", "), "\n")
+
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
             # Debug logging to console
             cat("ANOVA: Updating variable choices (counter:", data_counter, ")...\n")
             cat("Categorical choices:", names(categorical_choices), "\n")
-            cat("Categorical choice values:", paste(categorical_choices, collapse=", "), "\n")
+            cat("Categorical choice values:", paste(categorical_choices, collapse = ", "), "\n")
 
             updateSelectInput(session, "dep_var", choices = numeric_choices)
             updateSelectInput(session, "factor1", choices = categorical_choices)
@@ -77,6 +77,75 @@ uji_anova_server <- function(id, values) {
                         return()
                     }
                 )
+            } else if (input$anova_type == "two_way") {
+                # Two-way ANOVA
+                req(input$factor2)
+
+                # Check if second factor has enough levels
+                factor2_levels <- unique(values$sovi_data[[input$factor2]])
+                if (length(factor2_levels) < 2) {
+                    showNotification("Faktor 2 harus memiliki minimal 2 level.", type = "error")
+                    return()
+                }
+
+                # Check if factors are different
+                if (input$factor1 == input$factor2) {
+                    showNotification("Faktor 1 dan Faktor 2 harus berbeda.", type = "error")
+                    return()
+                }
+
+                # Build formula based on interaction option
+                if (input$interaction) {
+                    formula_str <- paste(input$dep_var, "~", input$factor1, "*", input$factor2)
+                } else {
+                    formula_str <- paste(input$dep_var, "~", input$factor1, "+", input$factor2)
+                }
+                formula_obj <- as.formula(formula_str)
+
+                tryCatch(
+                    {
+                        model <- aov(formula_obj, data = values$sovi_data)
+                        result <- summary(model)
+                        anova_result(list(
+                            model = model, summary = result, type = "two_way",
+                            interaction = input$interaction
+                        ))
+
+                        # Post-hoc test for two-way ANOVA
+                        # Perform post-hoc for main effects only if significant
+                        anova_table <- result[[1]]
+
+                        # Check significance of factors
+                        factor1_significant <- FALSE
+                        factor2_significant <- FALSE
+
+                        if (!is.na(anova_table$`Pr(>F)`[1]) && anova_table$`Pr(>F)`[1] < 0.05) {
+                            factor1_significant <- TRUE
+                        }
+                        if (nrow(anova_table) >= 2 && !is.na(anova_table$`Pr(>F)`[2]) && anova_table$`Pr(>F)`[2] < 0.05) {
+                            factor2_significant <- TRUE
+                        }
+
+                        # Perform post-hoc tests for significant factors
+                        if (factor1_significant && length(factor1_levels) > 2) {
+                            # Create single-factor model for factor1 post-hoc
+                            factor1_formula <- as.formula(paste(input$dep_var, "~", input$factor1))
+                            factor1_model <- aov(factor1_formula, data = values$sovi_data)
+                            posthoc1 <- TukeyHSD(factor1_model)
+
+                            # Store post-hoc results
+                            posthoc_result(list(
+                                factor1 = posthoc1,
+                                factor1_name = input$factor1,
+                                factor2_name = input$factor2
+                            ))
+                        }
+                    },
+                    error = function(e) {
+                        showNotification(paste("Error dalam Two-Way ANOVA:", e$message), type = "error")
+                        return()
+                    }
+                )
             }
 
             showNotification("ANOVA berhasil dilakukan!", type = "message")
@@ -95,6 +164,16 @@ uji_anova_server <- function(id, values) {
                 cat("One-Way ANOVA\n")
                 cat("Dependent Variable:", input$dep_var, "\n")
                 cat("Factor:", input$factor1, "\n\n")
+            } else if (result$type == "two_way") {
+                cat("Two-Way ANOVA\n")
+                cat("Dependent Variable:", input$dep_var, "\n")
+                cat("Factor 1:", input$factor1, "\n")
+                cat("Factor 2:", input$factor2, "\n")
+                if (result$interaction) {
+                    cat("Interaction:", paste(input$factor1, "*", input$factor2), "\n\n")
+                } else {
+                    cat("Model: Main effects only (no interaction)\n\n")
+                }
             }
 
             print(result$summary)
@@ -105,7 +184,7 @@ uji_anova_server <- function(id, values) {
             req(anova_result())
 
             result <- anova_result()
-            
+
             # Use the interpretation helper function
             interpretation_text <- interpret_anova(
                 anova_result = result$summary,
@@ -117,9 +196,11 @@ uji_anova_server <- function(id, values) {
             interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
             interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
-                       interpretation_html,
-                       "</div>"))
+            HTML(paste0(
+                "<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                interpretation_html,
+                "</div>"
+            ))
         })
 
         # Post-hoc test results
@@ -150,16 +231,52 @@ uji_anova_server <- function(id, values) {
         output$anova_plot <- plotly::renderPlotly({
             req(anova_result())
 
-            # Box plot for one-way ANOVA
-            p <- ggplot(values$sovi_data, aes_string(x = input$factor1, y = input$dep_var)) +
-                geom_boxplot(fill = "lightblue", alpha = 0.7) +
-                geom_jitter(width = 0.2, alpha = 0.5) +
-                labs(
-                    title = paste("Box Plot:", input$dep_var, "by", input$factor1),
-                    x = input$factor1,
-                    y = input$dep_var
-                ) +
-                theme_minimal()
+            result <- anova_result()
+
+            if (result$type == "one_way") {
+                # Box plot for one-way ANOVA
+                p <- ggplot(values$sovi_data, aes_string(x = input$factor1, y = input$dep_var)) +
+                    geom_boxplot(fill = "lightblue", alpha = 0.7) +
+                    geom_jitter(width = 0.2, alpha = 0.5) +
+                    labs(
+                        title = paste("Box Plot:", input$dep_var, "by", input$factor1),
+                        x = input$factor1,
+                        y = input$dep_var
+                    ) +
+                    theme_minimal()
+            } else if (result$type == "two_way") {
+                # Interaction plot for two-way ANOVA
+                if (result$interaction) {
+                    # Interaction plot
+                    p <- ggplot(values$sovi_data, aes_string(
+                        x = input$factor1, y = input$dep_var,
+                        color = input$factor2
+                    )) +
+                        stat_summary(fun = mean, geom = "point", size = 3) +
+                        stat_summary(fun = mean, geom = "line", aes_string(group = input$factor2), size = 1) +
+                        labs(
+                            title = paste("Interaction Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
+                            x = input$factor1,
+                            y = paste("Mean", input$dep_var),
+                            color = input$factor2
+                        ) +
+                        theme_minimal()
+                } else {
+                    # Side-by-side box plots
+                    p <- ggplot(values$sovi_data, aes_string(
+                        x = input$factor1, y = input$dep_var,
+                        fill = input$factor2
+                    )) +
+                        geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
+                        labs(
+                            title = paste("Box Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
+                            x = input$factor1,
+                            y = input$dep_var,
+                            fill = input$factor2
+                        ) +
+                        theme_minimal()
+                }
+            }
 
             plotly::ggplotly(p, tooltip = c("x", "y"))
         })
@@ -271,6 +388,65 @@ uji_anova_server <- function(id, values) {
             }
         )
 
+        # JPG plot download
+        output$download_plot_jpg <- downloadHandler(
+            filename = function() {
+                paste0("plot_anova_", Sys.Date(), ".jpg")
+            },
+            content = function(file) {
+                req(anova_result())
+
+                result <- anova_result()
+
+                if (result$type == "one_way") {
+                    # Box plot for one-way ANOVA
+                    p <- ggplot(values$sovi_data, aes_string(x = input$factor1, y = input$dep_var)) +
+                        geom_boxplot(fill = "lightblue", alpha = 0.7) +
+                        geom_jitter(width = 0.2, alpha = 0.5) +
+                        labs(
+                            title = paste("Box Plot:", input$dep_var, "by", input$factor1),
+                            x = input$factor1,
+                            y = input$dep_var
+                        ) +
+                        theme_minimal()
+                } else if (result$type == "two_way") {
+                    # Interaction plot for two-way ANOVA
+                    if (result$interaction) {
+                        # Interaction plot
+                        p <- ggplot(values$sovi_data, aes_string(
+                            x = input$factor1, y = input$dep_var,
+                            color = input$factor2
+                        )) +
+                            stat_summary(fun = mean, geom = "point", size = 3) +
+                            stat_summary(fun = mean, geom = "line", aes_string(group = input$factor2), size = 1) +
+                            labs(
+                                title = paste("Interaction Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
+                                x = input$factor1,
+                                y = paste("Mean", input$dep_var),
+                                color = input$factor2
+                            ) +
+                            theme_minimal()
+                    } else {
+                        # Side-by-side box plots
+                        p <- ggplot(values$sovi_data, aes_string(
+                            x = input$factor1, y = input$dep_var,
+                            fill = input$factor2
+                        )) +
+                            geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
+                            labs(
+                                title = paste("Box Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
+                                x = input$factor1,
+                                y = input$dep_var,
+                                fill = input$factor2
+                            ) +
+                            theme_minimal()
+                    }
+                }
+
+                ggsave(file, p, width = 12, height = 8, dpi = 300, device = "jpeg")
+            }
+        )
+
         # 2. Comprehensive PDF report
         output$download_report_pdf <- downloadHandler(
             filename = function() {
@@ -298,20 +474,23 @@ uji_anova_server <- function(id, values) {
                 )
 
                 # Render the R Markdown template
-                tryCatch({
-                    rmarkdown::render(
-                        input = "reports/laporan_anova.Rmd",
-                        output_file = file,
-                        output_format = "pdf_document",
-                        params = params,
-                        envir = new.env(parent = globalenv()),
-                        quiet = TRUE
-                    )
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        rmarkdown::render(
+                            input = "reports/laporan_anova.Rmd",
+                            output_file = file,
+                            output_format = "pdf_document",
+                            params = params,
+                            envir = new.env(parent = globalenv()),
+                            quiet = TRUE
+                        )
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
             }
         )
 

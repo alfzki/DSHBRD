@@ -13,7 +13,7 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
     conf_int <- test_result$conf.int
     t_stat <- test_result$statistic
     df <- test_result$parameter
-    
+
     # Calculate effect size (Cohen's d)
     if (test_type == "one_sample") {
         # For one-sample t-test, effect size = (mean - mu) / sd
@@ -22,7 +22,7 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
         # For two-sample t-test, approximate Cohen's d
         effect_size <- abs(t_stat) * sqrt(2 / df)
     }
-    
+
     # Effect size interpretation
     effect_interpretation <- if (effect_size < 0.2) {
         "sangat kecil"
@@ -33,7 +33,7 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
     } else {
         "besar"
     }
-    
+
     # Main interpretation
     if (p_value < alpha) {
         if (test_type == "one_sample") {
@@ -48,9 +48,9 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
                 "- Interval kepercayaan 95%: [", round(conf_int[1], 3), ", ", round(conf_int[2], 3), "]\n",
                 "- Ukuran efek (Cohen's d) ≈ ", round(effect_size, 3), " (", effect_interpretation, ")\n\n",
                 "**Interpretasi Praktis:**\n",
-                "Perbedaan yang ditemukan secara statistik signifikan dengan ukuran efek ", 
+                "Perbedaan yang ditemukan secara statistik signifikan dengan ukuran efek ",
                 effect_interpretation, ". Hasil ini menunjukkan bahwa perbedaan tersebut ",
-                ifelse(effect_size >= 0.5, "cukup substansial", "relatif kecil"), 
+                ifelse(effect_size >= 0.5, "cukup substansial", "relatif kecil"),
                 " dalam konteks praktis."
             )
         } else {
@@ -64,9 +64,9 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
                 "- Interval kepercayaan 95% untuk selisih rata-rata: [", round(conf_int[1], 3), ", ", round(conf_int[2], 3), "]\n",
                 "- Ukuran efek (Cohen's d) ≈ ", round(effect_size, 3), " (", effect_interpretation, ")\n\n",
                 "**Interpretasi Praktis:**\n",
-                "Perbedaan antar kelompok secara statistik signifikan dengan ukuran efek ", 
+                "Perbedaan antar kelompok secara statistik signifikan dengan ukuran efek ",
                 effect_interpretation, ". Hasil ini menunjukkan bahwa perbedaan tersebut ",
-                ifelse(effect_size >= 0.5, "cukup substansial", "relatif kecil"), 
+                ifelse(effect_size >= 0.5, "cukup substansial", "relatif kecil"),
                 " dalam konteks praktis."
             )
         }
@@ -83,7 +83,7 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
                 "- Interval kepercayaan 95%: [", round(conf_int[1], 3), ", ", round(conf_int[2], 3), "]\n",
                 "- Ukuran efek (Cohen's d) ≈ ", round(effect_size, 3), " (", effect_interpretation, ")\n\n",
                 "**Interpretasi Praktis:**\n",
-                "Meskipun tidak signifikan secara statistik, ukuran efek menunjukkan magnitude ", 
+                "Meskipun tidak signifikan secara statistik, ukuran efek menunjukkan magnitude ",
                 effect_interpretation, ". Hal ini mungkin mengindikasikan perlunya ",
                 "sampel yang lebih besar atau ada faktor lain yang perlu dipertimbangkan."
             )
@@ -99,13 +99,13 @@ interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample")
                 "- Interval kepercayaan 95% untuk selisih rata-rata: [", round(conf_int[1], 3), ", ", round(conf_int[2], 3), "]\n",
                 "- Ukuran efek (Cohen's d) ≈ ", round(effect_size, 3), " (", effect_interpretation, ")\n\n",
                 "**Interpretasi Praktis:**\n",
-                "Meskipun tidak signifikan secara statistik, ukuran efek menunjukkan magnitude ", 
+                "Meskipun tidak signifikan secara statistik, ukuran efek menunjukkan magnitude ",
                 effect_interpretation, ". Hal ini mungkin mengindikasikan perlunya ",
                 "sampel yang lebih besar atau ada faktor lain yang perlu dipertimbangkan."
             )
         }
     }
-    
+
     return(interpretation)
 }
 
@@ -119,7 +119,7 @@ interpret_prop_test <- function(test_result, alpha = 0.05) {
     conf_int <- test_result$conf.int
     chi_stat <- test_result$statistic
     sample_prop <- test_result$estimate
-    
+
     if (p_value < alpha) {
         interpretation <- paste0(
             "**Kesimpulan Statistik:**\n",
@@ -153,7 +153,7 @@ interpret_prop_test <- function(test_result, alpha = 0.05) {
             "dengan hipotesis nol yang diajukan."
         )
     }
-    
+
     return(interpretation)
 }
 
@@ -168,7 +168,7 @@ interpret_var_test <- function(test_result, alpha = 0.05) {
     df <- test_result$parameter
     sample_var <- test_result$sample.var
     null_var <- test_result$null.value
-    
+
     if (p_value < alpha) {
         interpretation <- paste0(
             "**Kesimpulan Statistik:**\n",
@@ -182,7 +182,7 @@ interpret_var_test <- function(test_result, alpha = 0.05) {
             "- Statistik Chi-square = ", round(chi_stat, 3), " dengan df = ", df, "\n\n",
             "**Interpretasi Praktis:**\n",
             "Variabilitas data dalam sampel secara signifikan ",
-            ifelse(sample_var > null_var, "lebih besar", "lebih kecil"), 
+            ifelse(sample_var > null_var, "lebih besar", "lebih kecil"),
             " dari yang dihipotesiskan. Hal ini mengindikasikan bahwa ",
             "tingkat keragaman dalam populasi berbeda dari yang diperkirakan."
         )
@@ -203,7 +203,7 @@ interpret_var_test <- function(test_result, alpha = 0.05) {
             "dalam populasi."
         )
     }
-    
+
     return(interpretation)
 }
 
@@ -218,27 +218,27 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
     if (is.null(anova_result) || length(anova_result) == 0) {
         return("Error: ANOVA result is empty or NULL.")
     }
-    
+
     # Extract ANOVA table
     anova_table <- anova_result[[1]]
-    
+
     if (is.null(anova_table) || nrow(anova_table) == 0) {
         return("Error: ANOVA table is empty or NULL.")
     }
-    
+
     interpretations <- c()
-    
+
     if (type == "one_way") {
         # Check if required columns exist
         if (!all(c("Pr(>F)", "F value", "Df", "Sum Sq") %in% names(anova_table))) {
             return("Error: Required columns not found in ANOVA table.")
         }
-        
+
         p_value <- anova_table$`Pr(>F)`[1]
         f_stat <- anova_table$`F value`[1]
         df1 <- anova_table$Df[1]
         df2 <- anova_table$Df[2]
-        
+
         # Check if values are valid
         if (is.null(p_value) || is.na(p_value) || length(p_value) == 0) {
             return("Error: p-value is missing or invalid.")
@@ -246,12 +246,12 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
         if (is.null(f_stat) || is.na(f_stat) || length(f_stat) == 0) {
             return("Error: F-statistic is missing or invalid.")
         }
-        
+
         # Calculate effect size (eta squared)
         ss_factor <- anova_table$`Sum Sq`[1]
         ss_total <- sum(anova_table$`Sum Sq`, na.rm = TRUE)
         eta_squared <- ss_factor / ss_total
-        
+
         # Effect size interpretation
         effect_interpretation <- if (eta_squared < 0.01) {
             "sangat kecil (< 1%)"
@@ -262,7 +262,7 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
         } else {
             "besar (> 14%)"
         }
-        
+
         if (p_value < alpha) {
             interpretation <- paste0(
                 "**Kesimpulan Statistik (One-Way ANOVA):**\n",
@@ -277,9 +277,10 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
                 "**Interpretasi Praktis:**\n",
                 "Faktor yang diuji memiliki pengaruh signifikan terhadap variabel dependen ",
                 "dengan ukuran efek ", effect_interpretation, ". ",
-                ifelse(eta_squared >= 0.06, 
-                       "Perbedaan antar kelompok cukup substansial dan memiliki relevansi praktis.", 
-                       "Meskipun signifikan secara statistik, ukuran efeknya relatif kecil."), 
+                ifelse(eta_squared >= 0.06,
+                    "Perbedaan antar kelompok cukup substansial dan memiliki relevansi praktis.",
+                    "Meskipun signifikan secara statistik, ukuran efeknya relatif kecil."
+                ),
                 "\n\n**Rekomendasi:** Lakukan uji post-hoc (seperti Tukey HSD) untuk ",
                 "mengidentifikasi kelompok mana yang berbeda secara spesifik."
             )
@@ -300,8 +301,141 @@ interpret_anova <- function(anova_result, alpha = 0.05, type = "one_way") {
                 "yang diharapkan secara kebetulan."
             )
         }
+    } else if (type == "two_way") {
+        # Two-way ANOVA interpretation
+        # Extract results for main effects and interaction
+
+        if (nrow(anova_table) < 2) {
+            return("Error: Two-way ANOVA table must have at least 2 rows.")
+        }
+
+        # Main effects
+        factor1_p <- anova_table$`Pr(>F)`[1]
+        factor2_p <- anova_table$`Pr(>F)`[2]
+        factor1_f <- anova_table$`F value`[1]
+        factor2_f <- anova_table$`F value`[2]
+
+        # Check for interaction effect
+        interaction_exists <- nrow(anova_table) >= 3 &&
+            !is.na(anova_table$`Pr(>F)`[3])
+        interaction_p <- if (interaction_exists) anova_table$`Pr(>F)`[3] else NA
+        interaction_f <- if (interaction_exists) anova_table$`F value`[3] else NA
+
+        interpretation_parts <- c()
+
+        interpretation_parts <- c(
+            interpretation_parts,
+            "**Kesimpulan Statistik (Two-Way ANOVA):**\n"
+        )
+
+        # Main effect 1
+        if (!is.na(factor1_p)) {
+            if (factor1_p < alpha) {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek utama Faktor 1**: Signifikan (F = ", round(factor1_f, 3),
+                        ", p = ", round(factor1_p, 4), " < ", alpha, ")"
+                    )
+                )
+            } else {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek utama Faktor 1**: Tidak signifikan (F = ", round(factor1_f, 3),
+                        ", p = ", round(factor1_p, 4), " ≥ ", alpha, ")"
+                    )
+                )
+            }
+        }
+
+        # Main effect 2
+        if (!is.na(factor2_p)) {
+            if (factor2_p < alpha) {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek utama Faktor 2**: Signifikan (F = ", round(factor2_f, 3),
+                        ", p = ", round(factor2_p, 4), " < ", alpha, ")"
+                    )
+                )
+            } else {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek utama Faktor 2**: Tidak signifikan (F = ", round(factor2_f, 3),
+                        ", p = ", round(factor2_p, 4), " ≥ ", alpha, ")"
+                    )
+                )
+            }
+        }
+
+        # Interaction effect
+        if (interaction_exists && !is.na(interaction_p)) {
+            if (interaction_p < alpha) {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek Interaksi**: Signifikan (F = ", round(interaction_f, 3),
+                        ", p = ", round(interaction_p, 4), " < ", alpha, ")"
+                    )
+                )
+            } else {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    paste0(
+                        "• **Efek Interaksi**: Tidak signifikan (F = ", round(interaction_f, 3),
+                        ", p = ", round(interaction_p, 4), " ≥ ", alpha, ")"
+                    )
+                )
+            }
+        }
+
+        interpretation_parts <- c(interpretation_parts, "\n**Interpretasi Praktis:**\n")
+
+        # Practical interpretation
+        significant_effects <- sum(c(
+            !is.na(factor1_p) && factor1_p < alpha,
+            !is.na(factor2_p) && factor2_p < alpha,
+            interaction_exists && !is.na(interaction_p) && interaction_p < alpha
+        ))
+
+        if (significant_effects > 0) {
+            if (interaction_exists && !is.na(interaction_p) && interaction_p < alpha) {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    "Terdapat efek interaksi yang signifikan antara kedua faktor. ",
+                    "Hal ini berarti pengaruh satu faktor terhadap variabel dependen ",
+                    "bergantung pada level faktor lainnya. Interpretasi efek utama ",
+                    "harus dilakukan dengan hati-hati karena adanya interaksi.\n\n",
+                    "**Rekomendasi:** Lakukan analisis simple effects atau interaction plot ",
+                    "untuk memahami pola interaksi yang terjadi."
+                )
+            } else {
+                interpretation_parts <- c(
+                    interpretation_parts,
+                    "Terdapat efek utama yang signifikan dari satu atau kedua faktor ",
+                    "terhadap variabel dependen. ",
+                    ifelse(!is.na(factor1_p) && factor1_p < alpha && !is.na(factor2_p) && factor2_p < alpha,
+                        "Kedua faktor secara independen mempengaruhi variabel dependen.",
+                        "Salah satu faktor memiliki pengaruh signifikan."
+                    ),
+                    "\n\n**Rekomendasi:** Lakukan uji post-hoc untuk faktor yang signifikan ",
+                    "jika memiliki lebih dari 2 level."
+                )
+            }
+        } else {
+            interpretation_parts <- c(
+                interpretation_parts,
+                "Tidak terdapat efek utama maupun efek interaksi yang signifikan. ",
+                "Kedua faktor yang diuji tidak menunjukkan pengaruh terhadap ",
+                "variabel dependen dalam sampel ini."
+            )
+        }
+
+        interpretation <- paste(interpretation_parts, collapse = "")
     }
-    
+
     return(interpretation)
 }
 
@@ -315,111 +449,118 @@ interpret_regression <- function(lm_result, alpha = 0.05) {
     if (is.null(lm_result)) {
         return("Error: Regression result is NULL.")
     }
-    
+
     if (!inherits(lm_result, "lm")) {
         return("Error: Input must be an lm object.")
     }
-    
-    tryCatch({
-        summary_lm <- summary(lm_result)
-        
-        # Model fit statistics
-        r_squared <- summary_lm$r.squared
-        adj_r_squared <- summary_lm$adj.r.squared
-        f_stat <- summary_lm$fstatistic[1]
-        f_p_value <- pf(f_stat, summary_lm$fstatistic[2], summary_lm$fstatistic[3], lower.tail = FALSE)
-        
-        # Coefficients
-        coefficients <- summary_lm$coefficients
-        
-        # Validate extracted values
-        if (is.null(r_squared) || is.na(r_squared) || 
-            is.null(f_stat) || is.na(f_stat) || 
-            is.null(f_p_value) || is.na(f_p_value)) {
-            return("Error: Unable to extract valid statistics from regression model.")
-        }
-    
-    # Model interpretation
-    if (f_p_value < alpha) {
-        model_significance <- paste0(
-            "**Model Regresi Signifikan:**\n",
-            "Dengan F-statistic = ", round(f_stat, 3), 
-            " dan p-value = ", round(f_p_value, 4), " (< α = ", alpha, "), ",
-            "model regresi secara keseluruhan **signifikan secara statistik**.\n\n"
-        )
-    } else {
-        model_significance <- paste0(
-            "**Model Regresi Tidak Signifikan:**\n",
-            "Dengan F-statistic = ", round(f_stat, 3), 
-            " dan p-value = ", round(f_p_value, 4), " (≥ α = ", alpha, "), ",
-            "model regresi secara keseluruhan **tidak signifikan secara statistik**.\n\n"
-        )
-    }
-    
-    # R-squared interpretation
-    r_squared_interpretation <- if (r_squared < 0.25) {
-        "lemah"
-    } else if (r_squared < 0.50) {
-        "sedang"
-    } else if (r_squared < 0.75) {
-        "kuat"
-    } else {
-        "sangat kuat"
-    }
-    
-    model_fit <- paste0(
-        "**Kekuatan Model:**\n",
-        "- R² = ", round(r_squared, 4), " (", round(r_squared * 100, 2), "%)\n",
-        "- Adjusted R² = ", round(adj_r_squared, 4), " (", round(adj_r_squared * 100, 2), "%)\n",
-        "- Kekuatan hubungan: ", r_squared_interpretation, "\n\n",
-        "Model ini menjelaskan ", round(r_squared * 100, 2), 
-        "% dari variasi dalam variabel dependen.\n\n"
-    )
-    
-    # Coefficients interpretation
-    coef_interpretation <- "**Signifikansi Koefisien:**\n"
-    
-    for (i in 1:nrow(coefficients)) {
-        var_name <- rownames(coefficients)[i]
-        coef_value <- coefficients[i, "Estimate"]
-        p_value <- coefficients[i, "Pr(>|t|)"]
-        
-        if (var_name == "(Intercept)") {
-            coef_interpretation <- paste0(coef_interpretation,
-                "- Intercept = ", round(coef_value, 4), 
-                " (p = ", round(p_value, 4), ")\n"
+
+    tryCatch(
+        {
+            summary_lm <- summary(lm_result)
+
+            # Model fit statistics
+            r_squared <- summary_lm$r.squared
+            adj_r_squared <- summary_lm$adj.r.squared
+            f_stat <- summary_lm$fstatistic[1]
+            f_p_value <- pf(f_stat, summary_lm$fstatistic[2], summary_lm$fstatistic[3], lower.tail = FALSE)
+
+            # Coefficients
+            coefficients <- summary_lm$coefficients
+
+            # Validate extracted values
+            if (is.null(r_squared) || is.na(r_squared) ||
+                is.null(f_stat) || is.na(f_stat) ||
+                is.null(f_p_value) || is.na(f_p_value)) {
+                return("Error: Unable to extract valid statistics from regression model.")
+            }
+
+            # Model interpretation
+            if (f_p_value < alpha) {
+                model_significance <- paste0(
+                    "**Model Regresi Signifikan:**\n",
+                    "Dengan F-statistic = ", round(f_stat, 3),
+                    " dan p-value = ", round(f_p_value, 4), " (< α = ", alpha, "), ",
+                    "model regresi secara keseluruhan **signifikan secara statistik**.\n\n"
+                )
+            } else {
+                model_significance <- paste0(
+                    "**Model Regresi Tidak Signifikan:**\n",
+                    "Dengan F-statistic = ", round(f_stat, 3),
+                    " dan p-value = ", round(f_p_value, 4), " (≥ α = ", alpha, "), ",
+                    "model regresi secara keseluruhan **tidak signifikan secara statistik**.\n\n"
+                )
+            }
+
+            # R-squared interpretation
+            r_squared_interpretation <- if (r_squared < 0.25) {
+                "lemah"
+            } else if (r_squared < 0.50) {
+                "sedang"
+            } else if (r_squared < 0.75) {
+                "kuat"
+            } else {
+                "sangat kuat"
+            }
+
+            model_fit <- paste0(
+                "**Kekuatan Model:**\n",
+                "- R² = ", round(r_squared, 4), " (", round(r_squared * 100, 2), "%)\n",
+                "- Adjusted R² = ", round(adj_r_squared, 4), " (", round(adj_r_squared * 100, 2), "%)\n",
+                "- Kekuatan hubungan: ", r_squared_interpretation, "\n\n",
+                "Model ini menjelaskan ", round(r_squared * 100, 2),
+                "% dari variasi dalam variabel dependen.\n\n"
             )
-        } else {
-            significance <- ifelse(p_value < alpha, "signifikan", "tidak signifikan")
-            direction <- ifelse(coef_value > 0, "positif", "negatif")
-            
-            coef_interpretation <- paste0(coef_interpretation,
-                "- ", var_name, ": β = ", round(coef_value, 4), 
-                " (p = ", round(p_value, 4), ") - ", significance, 
-                " dengan hubungan ", direction, "\n"
+
+            # Coefficients interpretation
+            coef_interpretation <- "**Signifikansi Koefisien:**\n"
+
+            for (i in 1:nrow(coefficients)) {
+                var_name <- rownames(coefficients)[i]
+                coef_value <- coefficients[i, "Estimate"]
+                p_value <- coefficients[i, "Pr(>|t|)"]
+
+                if (var_name == "(Intercept)") {
+                    coef_interpretation <- paste0(
+                        coef_interpretation,
+                        "- Intercept = ", round(coef_value, 4),
+                        " (p = ", round(p_value, 4), ")\n"
+                    )
+                } else {
+                    significance <- ifelse(p_value < alpha, "signifikan", "tidak signifikan")
+                    direction <- ifelse(coef_value > 0, "positif", "negatif")
+
+                    coef_interpretation <- paste0(
+                        coef_interpretation,
+                        "- ", var_name, ": β = ", round(coef_value, 4),
+                        " (p = ", round(p_value, 4), ") - ", significance,
+                        " dengan hubungan ", direction, "\n"
+                    )
+                }
+            }
+
+            # Combine all interpretations
+            interpretation <- paste0(
+                model_significance,
+                model_fit,
+                coef_interpretation,
+                "\n**Interpretasi Praktis:**\n",
+                ifelse(f_p_value < alpha,
+                    paste0(
+                        "Model ini dapat digunakan untuk prediksi dengan tingkat kepercayaan ",
+                        r_squared_interpretation, ". "
+                    ),
+                    "Model ini tidak dapat diandalkan untuk prediksi. "
+                ),
+                "Variabel prediktor yang signifikan memiliki pengaruh nyata terhadap ",
+                "variabel dependen dan dapat digunakan untuk interpretasi hubungan kausal."
             )
+
+            return(interpretation)
+        },
+        error = function(e) {
+            return(paste("Error in regression interpretation:", e$message))
         }
-    }
-    
-    # Combine all interpretations
-    interpretation <- paste0(
-        model_significance,
-        model_fit,
-        coef_interpretation,
-        "\n**Interpretasi Praktis:**\n",
-        ifelse(f_p_value < alpha,
-               paste0("Model ini dapat digunakan untuk prediksi dengan tingkat kepercayaan ",
-                      r_squared_interpretation, ". "),
-               "Model ini tidak dapat diandalkan untuk prediksi. "),
-        "Variabel prediktor yang signifikan memiliki pengaruh nyata terhadap ",
-        "variabel dependen dan dapat digunakan untuk interpretasi hubungan kausal."
     )
-    
-    return(interpretation)
-    
-    }, error = function(e) {
-        return(paste("Error in regression interpretation:", e$message))
-    })
 }
 
 #' Interpret Assumption Test Results
@@ -431,11 +572,11 @@ interpret_regression <- function(lm_result, alpha = 0.05) {
 interpret_assumption_test <- function(test_result, test_name, alpha = 0.05) {
     p_value <- test_result$p.value
     statistic <- test_result$statistic
-    
+
     # Base interpretation framework
     if (test_name %in% c("shapiro", "normalitas", "normality")) {
         test_title <- "Uji Normalitas (Shapiro-Wilk)"
-        
+
         if (p_value >= alpha) {
             interpretation <- paste0(
                 "**", test_title, ":**\n",
@@ -461,7 +602,7 @@ interpret_assumption_test <- function(test_result, test_name, alpha = 0.05) {
         }
     } else if (test_name %in% c("levene", "homogenitas", "homogeneity")) {
         test_title <- "Uji Homogenitas Varians (Levene)"
-        
+
         if (p_value >= alpha) {
             interpretation <- paste0(
                 "**", test_title, ":**\n",
@@ -504,7 +645,7 @@ interpret_assumption_test <- function(test_result, test_name, alpha = 0.05) {
             )
         }
     }
-    
+
     return(interpretation)
 }
 
@@ -524,7 +665,7 @@ interpret_with_recommendations <- function(test_result, test_type, context = NUL
         "assumption" = interpret_assumption_test(test_result, context),
         "Interpretasi tidak tersedia untuk jenis uji ini."
     )
-    
+
     # Add general recommendations
     recommendations <- paste0(
         "\n\n**Rekomendasi Umum:**\n",
@@ -533,7 +674,7 @@ interpret_with_recommendations <- function(test_result, test_type, context = NUL
         "3. Replikasi hasil pada sampel atau dataset yang berbeda jika memungkinkan\n",
         "4. Konsultasikan dengan ahli statistik untuk interpretasi yang lebih mendalam"
     )
-    
+
     return(paste0(base_interpretation, recommendations))
 }
 
@@ -546,42 +687,48 @@ interpret_with_recommendations <- function(test_result, test_type, context = NUL
 render_pdf_safely <- function(rmd_content, output_file, title = "Report") {
     temp_rmd <- tempfile(fileext = ".Rmd")
     temp_dir <- tempdir()
-    
-    tryCatch({
-        writeLines(rmd_content, temp_rmd)
-        
-        # Capture and suppress all output including pandoc logs
-        capture.output({
-            suppressMessages(suppressWarnings({
-                output_path <- rmarkdown::render(
-                    input = temp_rmd, 
-                    output_format = rmarkdown::pdf_document(
-                        latex_engine = "xelatex",
-                        keep_tex = FALSE
-                    ), 
-                    quiet = TRUE,
-                    output_dir = temp_dir,
-                    clean = TRUE,
-                    envir = new.env()
-                )
-            }))
-        }, type = "message")
-        
-        if (file.exists(output_path)) {
-            file.copy(output_path, output_file, overwrite = TRUE)
-            # Clean up all temporary files including logs
-            unlink(temp_rmd)
-            unlink(output_path)
-            unlink(list.files(temp_dir, pattern = "^file.*\\.(log|aux|out|tex)$", full.names = TRUE))
-            return(TRUE)
-        } else {
-            stop("PDF output file not generated")
+
+    tryCatch(
+        {
+            writeLines(rmd_content, temp_rmd)
+
+            # Capture and suppress all output including pandoc logs
+            capture.output(
+                {
+                    suppressMessages(suppressWarnings({
+                        output_path <- rmarkdown::render(
+                            input = temp_rmd,
+                            output_format = rmarkdown::pdf_document(
+                                latex_engine = "xelatex",
+                                keep_tex = FALSE
+                            ),
+                            quiet = TRUE,
+                            output_dir = temp_dir,
+                            clean = TRUE,
+                            envir = new.env()
+                        )
+                    }))
+                },
+                type = "message"
+            )
+
+            if (file.exists(output_path)) {
+                file.copy(output_path, output_file, overwrite = TRUE)
+                # Clean up all temporary files including logs
+                unlink(temp_rmd)
+                unlink(output_path)
+                unlink(list.files(temp_dir, pattern = "^file.*\\.(log|aux|out|tex)$", full.names = TRUE))
+                return(TRUE)
+            } else {
+                stop("PDF output file not generated")
+            }
+        },
+        error = function(e) {
+            # Create minimal text file as fallback
+            writeLines(paste("Error generating PDF report for", title, ":", e$message), output_file)
+            return(FALSE)
         }
-    }, error = function(e) {
-        # Create minimal text file as fallback
-        writeLines(paste("Error generating PDF report for", title, ":", e$message), output_file)
-        return(FALSE)
-    })
+    )
 }
 
 #' Robust Word Document Generation Function
@@ -593,38 +740,44 @@ render_pdf_safely <- function(rmd_content, output_file, title = "Report") {
 render_word_safely <- function(rmd_content, output_file, title = "Report") {
     temp_rmd <- tempfile(fileext = ".Rmd")
     temp_dir <- tempdir()
-    
-    tryCatch({
-        writeLines(rmd_content, temp_rmd)
-        
-        # Capture and suppress all output
-        capture.output({
-            suppressMessages(suppressWarnings({
-                output_path <- rmarkdown::render(
-                    input = temp_rmd, 
-                    output_format = rmarkdown::word_document(
-                        reference_docx = NULL
-                    ), 
-                    quiet = TRUE,
-                    output_dir = temp_dir,
-                    clean = TRUE,
-                    envir = new.env()
-                )
-            }))
-        }, type = "message")
-        
-        if (file.exists(output_path)) {
-            file.copy(output_path, output_file, overwrite = TRUE)
-            # Clean up all temporary files
-            unlink(temp_rmd)
-            unlink(output_path)
-            return(TRUE)
-        } else {
-            stop("Word output file not generated")
+
+    tryCatch(
+        {
+            writeLines(rmd_content, temp_rmd)
+
+            # Capture and suppress all output
+            capture.output(
+                {
+                    suppressMessages(suppressWarnings({
+                        output_path <- rmarkdown::render(
+                            input = temp_rmd,
+                            output_format = rmarkdown::word_document(
+                                reference_docx = NULL
+                            ),
+                            quiet = TRUE,
+                            output_dir = temp_dir,
+                            clean = TRUE,
+                            envir = new.env()
+                        )
+                    }))
+                },
+                type = "message"
+            )
+
+            if (file.exists(output_path)) {
+                file.copy(output_path, output_file, overwrite = TRUE)
+                # Clean up all temporary files
+                unlink(temp_rmd)
+                unlink(output_path)
+                return(TRUE)
+            } else {
+                stop("Word output file not generated")
+            }
+        },
+        error = function(e) {
+            # Create minimal text file as fallback
+            writeLines(paste("Error generating Word report for", title, ":", e$message), output_file)
+            return(FALSE)
         }
-    }, error = function(e) {
-        # Create minimal text file as fallback
-        writeLines(paste("Error generating Word report for", title, ":", e$message), output_file)
-        return(FALSE)
-    })
+    )
 }

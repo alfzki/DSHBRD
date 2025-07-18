@@ -160,7 +160,7 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 ### Tutorial 1: Analisis Deskriptif Kepadatan Penduduk
 
 1. **Buka Eksplorasi Data**
-2. **Pilih variabel**: "kepadatan_penduduk"
+2. **Pilih variabel**: "POVERTY"
 3. **Tab Statistik Deskriptif**: Lihat mean, median, range
 4. **Tab Visualisasi**: Lihat distribusi histogram
 5. **Baca interpretasi**: Apakah distribusi normal atau skewed?
@@ -169,7 +169,7 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 ### Tutorial 2: Uji Normalitas Data
 
 1. **Buka Uji Asumsi**
-2. **Tab Uji Normalitas**: Pilih "kepadatan_penduduk"
+2. **Tab Uji Normalitas**: Pilih "POVERTY"
 3. **Lihat hasil Shapiro-Wilk**: p-value dan statistik uji
 4. **Lihat plot**: Q-Q plot dan histogram dengan kurva normal
 5. **Interpretasi**: p < 0.05 → data tidak normal
@@ -178,7 +178,7 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 
 1. **Buka Statistik Inferensia → Uji Beda Rata-rata**
 2. **Pilih "Dua Sampel"**
-3. **Variabel dependen**: "sovi_score"
+3. **Variabel dependen**: "CHILDREN"
 4. **Variabel grup**: "provinsi" (jika tersedia)
 5. **Hipotesis**: "Dua arah"
 6. **Jalankan uji** dan baca interpretasi
@@ -186,8 +186,8 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 ### Tutorial 4: Analisis Regresi Sederhana
 
 1. **Buka Regresi Linear Berganda**
-2. **Variabel dependen**: "sovi_score"
-3. **Variabel independen**: Centang "kepadatan_penduduk"
+2. **Variabel dependen**: "CHILDREN"
+3. **Variabel independen**: Centang "POVERTY"
 4. **Jalankan model**
 5. **Tab Hasil Model**: Lihat koefisien dan R-squared
 6. **Tab Uji Asumsi**: Periksa VIF dan normalitas residual
@@ -195,11 +195,11 @@ NusaStat Dashboard adalah aplikasi web interaktif yang dikembangkan untuk analis
 
 ### Tutorial 5: Model Regresi Berganda Kompleks
 
-1. **Pilih variabel dependen**: "sovi_score"
+1. **Pilih variabel dependen**: "CHILDREN"
 2. **Pilih beberapa variabel independen**:
-   - "kepadatan_penduduk"
-   - "persentase_kemiskinan"
-   - "indeks_pendidikan"
+   - "POVERTY"
+   - "ILLITERATE"
+   - "LOWEDU"
 3. **Jalankan model**
 4. **Evaluasi asumsi**:
    - VIF < 10 (tidak ada multikolinearitas)

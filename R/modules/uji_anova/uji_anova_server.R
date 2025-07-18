@@ -12,12 +12,12 @@ uji_anova_server <- function(id, values) {
         # Update variable choices
         observe({
             if (!is.null(values$sovi_data)) {
-                numeric_vars <- get_numeric_columns(values$sovi_data)
-                categorical_vars <- get_categorical_columns(values$sovi_data)
+                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+                categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
-                updateSelectInput(session, "dep_var", choices = numeric_vars)
-                updateSelectInput(session, "factor1", choices = categorical_vars)
-                updateSelectInput(session, "factor2", choices = categorical_vars)
+                updateSelectInput(session, "dep_var", choices = numeric_choices)
+                updateSelectInput(session, "factor1", choices = categorical_choices)
+                updateSelectInput(session, "factor2", choices = categorical_choices)
             }
         })
 

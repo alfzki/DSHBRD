@@ -29,7 +29,17 @@ beranda_server <- function(id, values) {
                 h4("Sumber Data:"),
                 p("Data yang digunakan dalam dashboard ini berasal dari SUSENAS (Survei Sosial Ekonomi Nasional)
           2017 yang diterbitkan oleh BPS-Statistics Indonesia. Data mencakup indikator kerentanan sosial
-          dari 514 kabupaten/kota di Indonesia.")
+          dari 511 kabupaten/kota di Indonesia dengan 17 variabel meliputi:"),
+                tags$ul(
+                    tags$li("CHILDREN: Persentase populasi berusia di bawah lima tahun"),
+                    tags$li("FEMALE: Persentase populasi perempuan"),
+                    tags$li("ELDERLY: Persentase populasi berusia 65 tahun ke atas"),
+                    tags$li("POVERTY: Persentase penduduk miskin"),
+                    tags$li("ILLITERATE: Persentase populasi yang buta huruf"),
+                    tags$li("NOELECTRIC: Persentase rumah tangga tanpa akses listrik"),
+                    tags$li("TAPWATER: Persentase rumah tangga yang menggunakan air ledeng/pipa"),
+                    tags$li("Dan 10 indikator kerentanan sosial lainnya")
+                )
             )
         })
 
@@ -56,26 +66,27 @@ beranda_server <- function(id, values) {
         output$metadata_table <- DT::renderDT({
             metadata <- data.frame(
                 Variabel = c(
-                    "kepadatan_penduduk", "rasio_ketergantungan", "persentase_lansia",
-                    "persentase_balita", "persentase_disabilitas", "persentase_buta_huruf",
-                    "persentase_kemiskinan", "persentase_pengangguran", "indeks_kesehatan",
-                    "indeks_pendidikan", "indeks_ekonomi", "akses_listrik", "akses_air_bersih",
-                    "akses_sanitasi", "sovi_score"
+                    "DISTRICTCODE", "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE",
+                    "NOELECTRIC", "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING",
+                    "DPRONE", "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
                 ),
                 Deskripsi = c(
-                    "Kepadatan penduduk per km²", "Rasio ketergantungan (%)",
-                    "Persentase populasi lansia", "Persentase populasi balita",
-                    "Persentase populasi disabilitas", "Persentase buta huruf",
-                    "Persentase kemiskinan", "Persentase pengangguran",
-                    "Indeks kesehatan", "Indeks pendidikan", "Indeks ekonomi",
-                    "Persentase akses listrik", "Persentase akses air bersih",
-                    "Persentase akses sanitasi", "Skor kerentanan sosial"
+                    "Kode Wilayah Kabupaten/Kota", "Persentase Populasi Balita",
+                    "Persentase Populasi Perempuan", "Persentase Populasi Lansia ≥65 tahun",
+                    "Persentase Rumah Tangga Kepala Keluarga Perempuan", "Rata-rata Jumlah Anggota Rumah Tangga",
+                    "Persentase Rumah Tangga Tanpa Listrik", "Persentase Populasi Berpendidikan Rendah",
+                    "Persentase Pertumbuhan Populasi", "Persentase Penduduk Miskin",
+                    "Persentase Populasi Buta Huruf", "Persentase RT Tanpa Pelatihan Bencana",
+                    "Persentase RT di Area Rawan Bencana", "Persentase Rumah Tangga Menyewa",
+                    "Persentase RT Tanpa Sistem Drainase", "Persentase RT Menggunakan Air Ledeng",
+                    "Jumlah Total Populasi"
                 ),
                 Satuan = c(
-                    "jiwa/km²", "%", "%", "%", "%", "%", "%", "%",
-                    "0-100", "0-100", "0-100", "%", "%", "%", "0-100"
+                    "kode", "%", "%", "%", "%", "orang",
+                    "%", "%", "%", "%", "%", "%",
+                    "%", "%", "%", "%", "jiwa"
                 ),
-                Sumber = rep("SUSENAS 2017", 15)
+                Sumber = rep("SUSENAS 2017, BPS-Statistics Indonesia", 17)
             )
 
             DT::datatable(metadata,
@@ -111,15 +122,17 @@ NusaStat adalah dashboard interaktif untuk analisis kerentanan sosial dan statis
 
 ## Sumber Data
 
-Data berasal dari SUSENAS 2017, BPS-Statistics Indonesia, mencakup 514 kabupaten/kota.
+Data berasal dari SUSENAS 2017, BPS-Statistics Indonesia, mencakup 511 kabupaten/kota dengan 17 variabel kerentanan sosial.
 
 ## Metadata Variabel
 
 ```{r echo=FALSE}
 metadata <- data.frame(
-  Variabel = c("kepadatan_penduduk", "rasio_ketergantungan", "persentase_lansia"),
-  Deskripsi = c("Kepadatan penduduk per km²", "Rasio ketergantungan (%)", "Persentase populasi lansia"),
-  Satuan = c("jiwa/km²", "%", "%")
+  Variabel = c("CHILDREN", "FEMALE", "ELDERLY", "POVERTY", "ILLITERATE", "NOELECTRIC"),
+  Deskripsi = c("Persentase Populasi Balita", "Persentase Populasi Perempuan",
+                "Persentase Populasi Lansia ≥65 tahun", "Persentase Penduduk Miskin",
+                "Persentase Populasi Buta Huruf", "Persentase Rumah Tangga Tanpa Listrik"),
+  Satuan = c("%", "%", "%", "%", "%", "%")
 )
 knitr::kable(metadata)
 ```

@@ -143,18 +143,95 @@ options(
 # =====================
 
 #' Load SOVI data from CSV file
-#' @return data.frame containing SOVI data
+#' @return data.frame containing SOVI data with added categorical variables
 load_sovi_data <- function() {
     file_path <- here::here("data", "sovi_data.csv")
 
     if (file.exists(file_path)) {
         data <- readr::read_csv(file_path, show_col_types = FALSE)
+
+        # Add district names based on DISTRICTCODE (basic naming for now)
+        data <- data %>%
+            mutate(
+                # Create readable district names
+                district = paste("Kabupaten/Kota", sprintf("%04d", DISTRICTCODE)),
+
+                # Create region based on district code patterns
+                region = case_when(
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("11", "12", "13", "14", "15", "16", "17", "18", "19") ~ "Sumatera",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("31", "32", "33", "34", "35", "36") ~ "Jawa-Bali",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("51", "52", "53", "61", "62", "63", "64") ~ "Kalimantan-Sulawesi",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("71", "72", "73", "74", "75", "76", "81", "82", "91", "92", "94") ~ "Indonesia Timur",
+                    TRUE ~ "Lainnya"
+                ),
+                # Create island grouping
+                island = case_when(
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("11", "12", "13", "14", "15", "16", "17", "18", "19") ~ "Sumatera",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("31", "32", "33", "34", "35", "36") ~ "Jawa-Bali",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("51", "52", "53") ~ "Kalimantan",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("61", "62", "63", "64") ~ "Sulawesi",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("71", "72", "73", "74", "75", "76") ~ "Nusa Tenggara",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("81", "82") ~ "Maluku",
+                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("91", "92", "94") ~ "Papua",
+                    TRUE ~ "Lainnya"
+                ),
+                # Create province grouping (simplified version)
+                province = case_when(
+                    substr(as.character(DISTRICTCODE), 1, 2) == "11" ~ "Aceh",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "12" ~ "Sumatera Utara",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "13" ~ "Sumatera Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "14" ~ "Riau",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "15" ~ "Jambi",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "16" ~ "Sumatera Selatan",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "17" ~ "Bengkulu",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "18" ~ "Lampung",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "19" ~ "Kepulauan Bangka Belitung",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "21" ~ "Kepulauan Riau",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "31" ~ "DKI Jakarta",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "32" ~ "Jawa Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "33" ~ "Jawa Tengah",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "34" ~ "DI Yogyakarta",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "35" ~ "Jawa Timur",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "36" ~ "Banten",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "51" ~ "Bali",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "52" ~ "Nusa Tenggara Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "53" ~ "Nusa Tenggara Timur",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "61" ~ "Kalimantan Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "62" ~ "Kalimantan Tengah",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "63" ~ "Kalimantan Selatan",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "64" ~ "Kalimantan Timur",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "65" ~ "Kalimantan Utara",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "71" ~ "Sulawesi Utara",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "72" ~ "Sulawesi Tengah",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "73" ~ "Sulawesi Selatan",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "74" ~ "Sulawesi Tenggara",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "75" ~ "Gorontalo",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "76" ~ "Sulawesi Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "81" ~ "Maluku",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "82" ~ "Maluku Utara",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "91" ~ "Papua Barat",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "92" ~ "Papua",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "94" ~ "Papua Tengah",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "95" ~ "Papua Pegunungan",
+                    substr(as.character(DISTRICTCODE), 1, 2) == "96" ~ "Papua Selatan",
+                    TRUE ~ "Lainnya"
+                )
+            ) %>%
+            # Convert categorical variables to factors
+            mutate(
+                region = as.factor(region),
+                island = as.factor(island),
+                province = as.factor(province)
+            )
+
         cat("SOVI data loaded successfully:", nrow(data), "rows,", ncol(data), "columns\n")
+        cat("Added categorical variables: region, island, province, district\n")
         return(data)
     } else {
-        # Create sample data if file doesn't exist
-        cat("SOVI data file not found. Creating sample data...\n")
-        return(create_sample_sovi_data())
+        stop(
+            "SOVI data file not found at: ", file_path,
+            "\nPlease ensure sovi_data.csv exists in the data/ directory."
+        )
     }
 }
 
@@ -168,92 +245,75 @@ load_distance_data <- function() {
         cat("Distance data loaded successfully:", nrow(data), "rows,", ncol(data), "columns\n")
         return(data)
     } else {
-        # Create sample data if file doesn't exist
-        cat("Distance data file not found. Creating sample data...\n")
-        return(create_sample_distance_data())
+        stop(
+            "Distance data file not found at: ", file_path,
+            "\nPlease ensure distance.csv exists in the data/ directory."
+        )
     }
 }
 
-#' Create sample SOVI data for demonstration
-#' @return data.frame with sample SOVI data
-create_sample_sovi_data <- function() {
-    set.seed(123)
-    n <- 514 # Number of districts/regencies in Indonesia
-
-    # Generate sample data
-    sovi_data <- data.frame(
-        kode_wilayah = sprintf("%04d", 1:n),
-        nama_wilayah = paste("Kabupaten", 1:n),
-        provinsi = rep(paste("Provinsi", 1:34), length.out = n),
-
-        # Social vulnerability indicators (continuous variables)
-        kepadatan_penduduk = round(rnorm(n, 500, 200), 0),
-        rasio_ketergantungan = round(rnorm(n, 45, 10), 2),
-        persentase_lansia = round(rnorm(n, 8, 2), 2),
-        persentase_balita = round(rnorm(n, 7, 2), 2),
-        persentase_disabilitas = round(rnorm(n, 3, 1), 2),
-        persentase_buta_huruf = round(rnorm(n, 5, 2), 2),
-        persentase_kemiskinan = round(rnorm(n, 12, 4), 2),
-        persentase_pengangguran = round(rnorm(n, 8, 3), 2),
-        indeks_kesehatan = round(rnorm(n, 70, 10), 2),
-        indeks_pendidikan = round(rnorm(n, 75, 8), 2),
-        indeks_ekonomi = round(rnorm(n, 65, 12), 2),
-        akses_listrik = round(rnorm(n, 95, 5), 2),
-        akses_air_bersih = round(rnorm(n, 85, 10), 2),
-        akses_sanitasi = round(rnorm(n, 80, 15), 2),
-
-        # Derived indices
-        sovi_score = round(rnorm(n, 50, 15), 2),
-        vulnerability_level = sample(c("Rendah", "Sedang", "Tinggi"), n, replace = TRUE, prob = c(0.3, 0.4, 0.3))
-    )
-
-    # Ensure realistic ranges
-    sovi_data$kepadatan_penduduk <- pmax(50, sovi_data$kepadatan_penduduk)
-    sovi_data$rasio_ketergantungan <- pmax(20, pmin(80, sovi_data$rasio_ketergantungan))
-    sovi_data$persentase_lansia <- pmax(2, pmin(20, sovi_data$persentase_lansia))
-    sovi_data$persentase_balita <- pmax(3, pmin(15, sovi_data$persentase_balita))
-    sovi_data$persentase_disabilitas <- pmax(0.5, pmin(10, sovi_data$persentase_disabilitas))
-    sovi_data$persentase_buta_huruf <- pmax(0, pmin(20, sovi_data$persentase_buta_huruf))
-    sovi_data$persentase_kemiskinan <- pmax(2, pmin(30, sovi_data$persentase_kemiskinan))
-    sovi_data$persentase_pengangguran <- pmax(1, pmin(20, sovi_data$persentase_pengangguran))
-    sovi_data$indeks_kesehatan <- pmax(40, pmin(90, sovi_data$indeks_kesehatan))
-    sovi_data$indeks_pendidikan <- pmax(50, pmin(95, sovi_data$indeks_pendidikan))
-    sovi_data$indeks_ekonomi <- pmax(30, pmin(85, sovi_data$indeks_ekonomi))
-    sovi_data$akses_listrik <- pmax(70, pmin(100, sovi_data$akses_listrik))
-    sovi_data$akses_air_bersih <- pmax(50, pmin(100, sovi_data$akses_air_bersih))
-    sovi_data$akses_sanitasi <- pmax(30, pmin(100, sovi_data$akses_sanitasi))
-    sovi_data$sovi_score <- pmax(0, pmin(100, sovi_data$sovi_score))
-
-    return(sovi_data)
-}
-
-#' Create sample distance data for demonstration
-#' @return data.frame with sample distance data
-create_sample_distance_data <- function() {
-    set.seed(456)
-    n <- 514
-
-    distance_data <- data.frame(
-        kode_wilayah = sprintf("%04d", 1:n),
-        jarak_ke_ibukota_provinsi = round(rnorm(n, 150, 80), 0),
-        jarak_ke_pusat_kesehatan = round(rnorm(n, 25, 15), 0),
-        jarak_ke_pusat_pendidikan = round(rnorm(n, 20, 10), 0),
-        jarak_ke_pusat_ekonomi = round(rnorm(n, 35, 20), 0),
-        waktu_tempuh_ibukota = round(rnorm(n, 3, 1.5), 1)
-    )
-
-    # Ensure realistic ranges
-    distance_data$jarak_ke_ibukota_provinsi <- pmax(10, distance_data$jarak_ke_ibukota_provinsi)
-    distance_data$jarak_ke_pusat_kesehatan <- pmax(1, distance_data$jarak_ke_pusat_kesehatan)
-    distance_data$jarak_ke_pusat_pendidikan <- pmax(1, distance_data$jarak_ke_pusat_pendidikan)
-    distance_data$jarak_ke_pusat_ekonomi <- pmax(1, distance_data$jarak_ke_pusat_ekonomi)
-    distance_data$waktu_tempuh_ibukota <- pmax(0.5, distance_data$waktu_tempuh_ibukota)
-
-    return(distance_data)
-}
+# Note: Dummy data creation functions removed - app now requires real data files
+# The app will load real sovi_data.csv and distance.csv files only
+# If these files are missing, the app will show an error message
 
 # Utility Functions
 # =================
+
+# Variable labels for better UI display
+SOVI_VARIABLE_LABELS <- list(
+    # Numeric variables with descriptions
+    "CHILDREN" = "Persentase Populasi Balita (CHILDREN)",
+    "FEMALE" = "Persentase Populasi Perempuan (FEMALE)",
+    "ELDERLY" = "Persentase Populasi Lansia ≥65 tahun (ELDERLY)",
+    "FHEAD" = "Persentase Rumah Tangga Kepala Keluarga Perempuan (FHEAD)",
+    "FAMILYSIZE" = "Rata-rata Jumlah Anggota Rumah Tangga (FAMILYSIZE)",
+    "NOELECTRIC" = "Persentase Rumah Tangga Tanpa Listrik (NOELECTRIC)",
+    "LOWEDU" = "Persentase Populasi Berpendidikan Rendah (LOWEDU)",
+    "GROWTH" = "Persentase Pertumbuhan Populasi (GROWTH)",
+    "POVERTY" = "Persentase Penduduk Miskin (POVERTY)",
+    "ILLITERATE" = "Persentase Populasi Buta Huruf (ILLITERATE)",
+    "NOTRAINING" = "Persentase RT Tanpa Pelatihan Bencana (NOTRAINING)",
+    "DPRONE" = "Persentase RT di Area Rawan Bencana (DPRONE)",
+    "RENTED" = "Persentase Rumah Tangga Menyewa (RENTED)",
+    "NOSEWER" = "Persentase RT Tanpa Sistem Drainase (NOSEWER)",
+    "TAPWATER" = "Persentase RT Menggunakan Air Ledeng (TAPWATER)",
+    "POPULATION" = "Jumlah Total Populasi (POPULATION)",
+    "DISTRICTCODE" = "Kode Wilayah (DISTRICTCODE)",
+
+    # Categorical variables
+    "region" = "Wilayah Regional",
+    "island" = "Kelompok Pulau",
+    "province" = "Provinsi"
+)
+
+#' Get variable choices with labels for UI dropdowns
+#' @param data data.frame
+#' @param var_type character either "numeric", "categorical", or "all"
+#' @return named vector suitable for selectInput choices
+get_variable_choices <- function(data, var_type = "all") {
+    if (is.null(data)) {
+        return(character(0))
+    }
+
+    if (var_type == "numeric") {
+        vars <- get_numeric_columns(data)
+    } else if (var_type == "categorical") {
+        vars <- get_categorical_columns(data)
+    } else {
+        vars <- names(data)
+    }
+
+    # Create named vector with labels
+    choices <- setNames(vars, sapply(vars, function(x) {
+        if (x %in% names(SOVI_VARIABLE_LABELS)) {
+            SOVI_VARIABLE_LABELS[[x]]
+        } else {
+            x
+        }
+    }))
+
+    return(choices)
+}
 
 #' Get numeric columns from a dataframe
 #' @param data data.frame
@@ -358,38 +418,42 @@ validate_data <- function(data, data_name = "data") {
     return(TRUE)
 }
 
-# Initialize sample data files if they don't exist
-initialize_sample_data <- function() {
-    # Create data directory if it doesn't exist
-    if (!dir.exists(here::here("data"))) {
-        dir.create(here::here("data"), recursive = TRUE)
-    }
-
+# Data validation on startup
+validate_data_files <- function() {
     sovi_path <- here::here("data", "sovi_data.csv")
     distance_path <- here::here("data", "distance.csv")
 
+    missing_files <- c()
+
     if (!file.exists(sovi_path)) {
-        sample_sovi <- create_sample_sovi_data()
-        readr::write_csv(sample_sovi, sovi_path)
-        cat("Sample SOVI data created at:", sovi_path, "\n")
+        missing_files <- c(missing_files, "sovi_data.csv")
     }
 
     if (!file.exists(distance_path)) {
-        sample_distance <- create_sample_distance_data()
-        readr::write_csv(sample_distance, distance_path)
-        cat("Sample distance data created at:", distance_path, "\n")
+        missing_files <- c(missing_files, "distance.csv")
+    }
+
+    if (length(missing_files) > 0) {
+        cat("WARNING: Missing required data files:\n")
+        for (file in missing_files) {
+            cat("  -", file, "\n")
+        }
+        cat("Please ensure these files exist in the data/ directory.\n")
+        cat("The dashboard may not function correctly without these files.\n")
+    } else {
+        cat("All required data files found.\n")
     }
 }
 
-# Create sample data files on startup
-initialize_sample_data()
+# Validate data files on startup
+validate_data_files()
 
 # Print startup message
 cat("==========================================\n")
-cat("NusaStat Dashboard initialized successfully!\n")
+cat("NusaStat Dashboard initialized!\n")
 cat("==========================================\n")
 cat("Required packages loaded:", length(required_packages), "\n")
-cat("Sample data files created in 'data/' directory\n")
+cat("Real data files expected in 'data/' directory\n")
 cat("Ready to launch the application!\n")
 cat("Application URL: http://127.0.0.1:3838\n")
 cat("==========================================\n")

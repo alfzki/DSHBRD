@@ -12,8 +12,8 @@ eksplorasi_server <- function(id, values) {
         # Update variable choices
         observe({
             if (!is.null(values$sovi_data)) {
-                numeric_vars <- get_numeric_columns(values$sovi_data)
-                updateSelectInput(session, "select_var", choices = numeric_vars)
+                numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+                updateSelectInput(session, "select_var", choices = numeric_choices)
             }
         })
 

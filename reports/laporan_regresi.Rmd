@@ -1,0 +1,378 @@
+---
+title: "Laporan Regresi Linear - NusaStat Dashboard"
+subtitle: "Multiple Linear Regression"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  word_document:
+    reference_docx: NULL
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+params:
+  variabel_dependen: "Variabel Terikat"
+  variabel_independen: NULL
+  hasil_regresi: NULL
+  uji_asumsi: NULL
+  interpretasi: NULL
+  plot_paths: NULL
+  model_formula: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(flextable)
+library(dplyr)
+```
+
+# Laporan Analisis Regresi Linear Berganda
+
+## Informasi Analisis
+
+**Variabel Terikat (Y):** `r params$variabel_dependen`
+
+**Variabel Bebas (X):** `r if(!is.null(params$variabel_independen)) paste(params$variabel_independen, collapse = ", ") else "Tidak tersedia"`
+
+**Model:** `r params$model_formula %||% "Y ~ X1 + X2 + ..."`
+
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
+
+**Metode:** Ordinary Least Squares (OLS)
+
+---
+
+## Model Regresi
+
+```{r model-info}
+if (!is.null(params$model_formula)) {
+    cat("**Persamaan Model:**\n\n")
+    cat(params$model_formula, "\n\n")
+} else {
+    cat("**Persamaan Model:** Y = β₀ + β₁X₁ + β₂X₂ + ... + βₖXₖ + ε\n\n")
+}
+
+if (!is.null(params$variabel_independen)) {
+    cat("**Jumlah Variabel Bebas:**", length(params$variabel_independen), "\n\n")
+
+    var_df <- data.frame(
+        No = 1:length(params$variabel_independen),
+        `Variabel Bebas` = params$variabel_independen,
+        check.names = FALSE
+    )
+
+    ft <- flextable(var_df) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+}
+```
+
+---
+
+## Ringkasan Model
+
+```{r model-summary}
+if (!is.null(params$hasil_regresi)) {
+    summary_reg <- summary(params$hasil_regresi)
+
+    model_stats <- data.frame(
+        Statistik = c("R-squared", "Adjusted R-squared", "F-statistic", "p-value (F-stat)", "Residual Standard Error", "Degrees of Freedom"),
+        Nilai = c(
+            round(summary_reg$r.squared, 4),
+            round(summary_reg$adj.r.squared, 4),
+            round(summary_reg$fstatistic[1], 4),
+            format(pf(summary_reg$fstatistic[1], summary_reg$fstatistic[2], summary_reg$fstatistic[3], lower.tail = FALSE), scientific = TRUE, digits = 4),
+            round(summary_reg$sigma, 4),
+            paste(summary_reg$df[2], "on", summary_reg$df[1], "and", summary_reg$df[2], "DF")
+        )
+    )
+
+    ft <- flextable(model_stats) %>%
+        set_header_labels(
+            Statistik = "Statistik Model",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Ringkasan model tidak tersedia.")
+}
+```
+
+---
+
+## Koefisien Regresi
+
+```{r coefficients-table}
+if (!is.null(params$hasil_regresi)) {
+    summary_reg <- summary(params$hasil_regresi)
+    coeffs <- summary_reg$coefficients
+
+    coeff_df <- data.frame(
+        Variabel = rownames(coeffs),
+        Koefisien = round(coeffs[, "Estimate"], 6),
+        `Std. Error` = round(coeffs[, "Std. Error"], 6),
+        `t-value` = round(coeffs[, "t value"], 4),
+        `p-value` = format(coeffs[, "Pr(>|t|)"], scientific = TRUE, digits = 4),
+        Signifikansi = ifelse(coeffs[, "Pr(>|t|)"] < 0.001, "***",
+            ifelse(coeffs[, "Pr(>|t|)"] < 0.01, "**",
+                ifelse(coeffs[, "Pr(>|t|)"] < 0.05, "*",
+                    ifelse(coeffs[, "Pr(>|t|)"] < 0.1, ".", "")
+                )
+            )
+        ),
+        check.names = FALSE
+    )
+
+    ft <- flextable(coeff_df) %>%
+        set_header_labels(
+            Variabel = "Variabel",
+            Koefisien = "Koefisien (β)",
+            `Std. Error` = "Std. Error",
+            `t-value` = "t-statistic",
+            `p-value` = "p-value",
+            Signifikansi = "Sig."
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header") %>%
+        footnote(i = 1, j = 6, value = as_paragraph("Signifikansi: '***' p<0.001, '**' p<0.01, '*' p<0.05, '.' p<0.1"), ref_symbols = "")
+
+    ft
+} else {
+    cat("Tabel koefisien tidak tersedia.")
+}
+```
+
+---
+
+## Persamaan Regresi Estimasi
+
+```{r regression-equation}
+if (!is.null(params$hasil_regresi)) {
+    coeffs <- coef(params$hasil_regresi)
+    intercept <- round(coeffs[1], 4)
+
+    equation <- paste("Ŷ =", intercept)
+
+    for (i in 2:length(coeffs)) {
+        coeff_val <- round(coeffs[i], 4)
+        var_name <- names(coeffs)[i]
+
+        if (coeff_val >= 0) {
+            equation <- paste(equation, "+", coeff_val, "*", var_name)
+        } else {
+            equation <- paste(equation, "-", abs(coeff_val), "*", var_name)
+        }
+    }
+
+    cat("**Persamaan Regresi Estimasi:**\n\n")
+    cat(equation, "\n\n")
+
+    cat("**Keterangan:**\n")
+    cat("- Ŷ: Nilai prediksi", params$variabel_dependen, "\n")
+    cat("- Koefisien menunjukkan perubahan rata-rata Y untuk setiap unit perubahan X\n")
+}
+```
+
+---
+
+## Uji Asumsi Regresi
+
+```{r assumptions-tests}
+if (!is.null(params$uji_asumsi)) {
+    cat("### Hasil Uji Asumsi\n\n")
+
+    assumption_df <- data.frame(
+        `Jenis Uji` = c("Normalitas Residual (Shapiro-Wilk)", "Heteroskedastisitas (Breusch-Pagan)", "Multikolinearitas (VIF)"),
+        `Hasil` = c(
+            if (!is.null(params$uji_asumsi$normality)) {
+                paste(
+                    "W =", round(params$uji_asumsi$normality$statistic, 4),
+                    ", p-value =", format(params$uji_asumsi$normality$p.value, scientific = TRUE, digits = 4)
+                )
+            } else {
+                "Tidak tersedia"
+            },
+            if (!is.null(params$uji_asumsi$heteroscedasticity)) {
+                paste(
+                    "LM =", round(params$uji_asumsi$heteroscedasticity$statistic, 4),
+                    ", p-value =", format(params$uji_asumsi$heteroscedasticity$p.value, scientific = TRUE, digits = 4)
+                )
+            } else {
+                "Tidak tersedia"
+            },
+            if (!is.null(params$uji_asumsi$multicollinearity)) {
+                paste("Max VIF =", round(max(params$uji_asumsi$multicollinearity), 2))
+            } else {
+                "Tidak tersedia"
+            }
+        ),
+        `Interpretasi` = c(
+            if (!is.null(params$uji_asumsi$normality)) {
+                ifelse(params$uji_asumsi$normality$p.value > 0.05, "Residual berdistribusi normal", "Residual tidak berdistribusi normal")
+            } else {
+                "Tidak tersedia"
+            },
+            if (!is.null(params$uji_asumsi$heteroscedasticity)) {
+                ifelse(params$uji_asumsi$heteroscedasticity$p.value > 0.05, "Homoskedastisitas terpenuhi", "Heteroskedastisitas terdeteksi")
+            } else {
+                "Tidak tersedia"
+            },
+            if (!is.null(params$uji_asumsi$multicollinearity)) {
+                ifelse(max(params$uji_asumsi$multicollinearity) < 5, "Tidak ada masalah multikolinearitas serius", "Multikolinearitas terdeteksi")
+            } else {
+                "Tidak tersedia"
+            }
+        ),
+        check.names = FALSE
+    )
+
+    ft <- flextable(assumption_df) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Hasil uji asumsi tidak tersedia.")
+}
+```
+
+---
+
+## Plot Diagnostik
+
+```{r diagnostic-plots, fig.cap="Plot Diagnostik Regresi", out.width="100%"}
+if (!is.null(params$plot_paths) && !is.null(params$plot_paths$diagnostic)) {
+    if (file.exists(params$plot_paths$diagnostic)) {
+        knitr::include_graphics(params$plot_paths$diagnostic)
+    }
+} else {
+    cat("Plot diagnostik tidak tersedia.")
+}
+```
+
+---
+
+## Interpretasi dan Kesimpulan
+
+```{r interpretation}
+if (!is.null(params$interpretasi)) {
+    cat(params$interpretasi)
+} else if (!is.null(params$hasil_regresi)) {
+    summary_reg <- summary(params$hasil_regresi)
+
+    cat("### Interpretasi Model\n\n")
+
+    cat("**1. Koefisien Determinasi (R²):**\n")
+    cat("- R² =", round(summary_reg$r.squared, 4), "\n")
+    cat(
+        "- Artinya", round(summary_reg$r.squared * 100, 2), "% variabilitas", params$variabel_dependen,
+        "dapat dijelaskan oleh variabel bebas dalam model.\n\n"
+    )
+
+    cat("**2. Signifikansi Model:**\n")
+    f_pval <- pf(summary_reg$fstatistic[1], summary_reg$fstatistic[2], summary_reg$fstatistic[3], lower.tail = FALSE)
+    cat("- F-statistic =", round(summary_reg$fstatistic[1], 4), "\n")
+    cat("- p-value =", format(f_pval, scientific = TRUE, digits = 4), "\n")
+    if (f_pval < 0.05) {
+        cat("- Model secara keseluruhan signifikan pada α = 0.05\n\n")
+    } else {
+        cat("- Model secara keseluruhan tidak signifikan pada α = 0.05\n\n")
+    }
+
+    cat("**3. Interpretasi Koefisien:**\n")
+    coeffs <- summary_reg$coefficients
+    for (i in 2:nrow(coeffs)) {
+        var_name <- rownames(coeffs)[i]
+        coeff_val <- coeffs[i, "Estimate"]
+        p_val <- coeffs[i, "Pr(>|t|)"]
+
+        cat(
+            "- ", var_name, ": Setiap kenaikan 1 unit akan mengubah", params$variabel_dependen,
+            "sebesar", round(coeff_val, 4), "unit"
+        )
+        if (p_val < 0.05) {
+            cat(" (signifikan)\n")
+        } else {
+            cat(" (tidak signifikan)\n")
+        }
+    }
+}
+```
+
+### Validitas Model
+
+```{r model-validity}
+if (!is.null(params$uji_asumsi)) {
+    cat("**Evaluasi Asumsi:**\n\n")
+
+    assumptions_met <- 0
+    total_assumptions <- 0
+
+    if (!is.null(params$uji_asumsi$normality)) {
+        total_assumptions <- total_assumptions + 1
+        if (params$uji_asumsi$normality$p.value > 0.05) {
+            assumptions_met <- assumptions_met + 1
+            cat("✓ Asumsi normalitas residual terpenuhi\n")
+        } else {
+            cat("✗ Asumsi normalitas residual tidak terpenuhi\n")
+        }
+    }
+
+    if (!is.null(params$uji_asumsi$heteroscedasticity)) {
+        total_assumptions <- total_assumptions + 1
+        if (params$uji_asumsi$heteroscedasticity$p.value > 0.05) {
+            assumptions_met <- assumptions_met + 1
+            cat("✓ Asumsi homoskedastisitas terpenuhi\n")
+        } else {
+            cat("✗ Asumsi homoskedastisitas tidak terpenuhi\n")
+        }
+    }
+
+    if (!is.null(params$uji_asumsi$multicollinearity)) {
+        total_assumptions <- total_assumptions + 1
+        if (max(params$uji_asumsi$multicollinearity) < 5) {
+            assumptions_met <- assumptions_met + 1
+            cat("✓ Tidak ada masalah multikolinearitas serius\n")
+        } else {
+            cat("✗ Terdeteksi masalah multikolinearitas\n")
+        }
+    }
+
+    cat("\n**Status Asumsi:**", assumptions_met, "dari", total_assumptions, "asumsi terpenuhi\n")
+}
+```
+
+### Rekomendasi
+
+```{r recommendations}
+if (!is.null(params$hasil_regresi)) {
+    summary_reg <- summary(params$hasil_regresi)
+    r_squared <- summary_reg$r.squared
+
+    cat("**Rekomendasi Penggunaan Model:**\n\n")
+
+    if (r_squared > 0.7) {
+        cat("- Model memiliki daya prediksi yang baik (R² > 0.7)\n")
+    } else if (r_squared > 0.5) {
+        cat("- Model memiliki daya prediksi yang cukup baik (R² > 0.5)\n")
+    } else {
+        cat("- Model memiliki daya prediksi yang terbatas (R² ≤ 0.5)\n")
+    }
+
+    cat("- Validasi model dengan data baru disarankan\n")
+    cat("- Pertimbangkan transformasi variabel jika asumsi tidak terpenuhi\n")
+    cat("- Evaluasi kemungkinan variabel bebas tambahan yang relevan\n")
+}
+```
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

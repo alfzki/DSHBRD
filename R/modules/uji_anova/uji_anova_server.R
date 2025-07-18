@@ -84,7 +84,7 @@ uji_anova_server <- function(id, values) {
             print(result$summary)
         })
 
-        # ANOVA interpretation
+        # ANOVA interpretation with enhanced analysis
         output$interpretation <- renderUI({
             req(anova_result())
 
@@ -97,17 +97,89 @@ uji_anova_server <- function(id, values) {
                 p_value <- anova_table$`Pr(>F)`[1]
                 f_stat <- anova_table$`F value`[1]
 
-                interpretation <- interpret_p_value(
+                # Calculate effect size (eta squared)
+                ss_factor <- anova_table$`Sum Sq`[1]
+                ss_total <- sum(anova_table$`Sum Sq`, na.rm = TRUE)
+                eta_squared <- ss_factor / ss_total
+
+                # Interpret effect size
+                effect_size_interpretation <- if (eta_squared < 0.01) {
+                    "sangat kecil (< 1%)"
+                } else if (eta_squared < 0.06) {
+                    "kecil (1-6%)"
+                } else if (eta_squared < 0.14) {
+                    "sedang (6-14%)"
+                } else {
+                    "besar (> 14%)"
+                }
+
+                # Count groups and observations
+                group_counts <- table(values$sovi_data[[input$factor1]])
+                n_groups <- length(group_counts)
+
+                # Statistical interpretation
+                base_interpretation <- interpret_p_value(
                     p_value,
                     h0 = paste("Semua rata-rata grup", input$factor1, "sama"),
                     h1 = paste("Minimal ada satu rata-rata grup", input$factor1, "yang berbeda")
                 )
 
+                # Dynamic contextual interpretation
+                confidence_level <- ifelse(p_value < 0.001, "sangat tinggi",
+                    ifelse(p_value < 0.01, "tinggi",
+                        ifelse(p_value < 0.05, "cukup", "rendah")
+                    )
+                )
+
+                practical_recommendation <- if (p_value < 0.05) {
+                    if (eta_squared > 0.06) {
+                        paste(
+                            "Perbedaan antar grup memiliki signifikansi praktis yang berarti.",
+                            "Disarankan untuk melakukan analisis lebih lanjut pada grup-grup spesifik",
+                            "yang berbeda menggunakan uji post-hoc."
+                        )
+                    } else {
+                        paste(
+                            "Meskipun secara statistik signifikan, ukuran efek relatif kecil.",
+                            "Pertimbangkan relevansi praktis dari perbedaan yang ditemukan."
+                        )
+                    }
+                } else {
+                    paste(
+                        "Tidak ada bukti yang cukup untuk menyimpulkan adanya perbedaan antar grup.",
+                        "Pastikan ukuran sampel memadai dan pertimbangkan faktor lain yang mungkin mempengaruhi."
+                    )
+                }
+
                 interpretations <- list(
-                    h4("Interpretasi ANOVA Satu Arah:"),
-                    p(interpretation),
-                    p(paste("F-statistic:", format_number(f_stat, 4))),
-                    p(paste("Derajat kebebasan:", anova_table$Df[1], "dan", anova_table$Df[2]))
+                    h4("Interpretasi Komprehensif ANOVA Satu Arah:"),
+                    div(
+                        class = "alert alert-info",
+                        strong("Kesimpulan Statistik: "), base_interpretation
+                    ),
+                    h5("Detail Analisis:"),
+                    tags$ul(
+                        tags$li(paste("F-statistic:", format_number(f_stat, 4))),
+                        tags$li(paste("Derajat kebebasan:", anova_table$Df[1], "dan", anova_table$Df[2])),
+                        tags$li(paste("Tingkat kepercayaan:", confidence_level)),
+                        tags$li(paste(
+                            "Ukuran efek (η²):", format_number(eta_squared, 4),
+                            paste0("(", effect_size_interpretation, ")")
+                        )),
+                        tags$li(paste("Jumlah grup:", n_groups)),
+                        tags$li(paste("Total observasi:", sum(group_counts)))
+                    ),
+                    h5("Rekomendasi Praktis:"),
+                    div(class = "alert alert-warning", practical_recommendation),
+                    if (p_value < 0.05 && n_groups > 2) {
+                        div(
+                            class = "alert alert-success",
+                            strong("Langkah selanjutnya: "),
+                            "Karena ANOVA menunjukkan perbedaan signifikan dan terdapat lebih dari 2 grup, ",
+                            "lakukan uji post-hoc (tab Post-Hoc Test) untuk mengidentifikasi ",
+                            "pasangan grup mana yang berbeda secara signifikan."
+                        )
+                    }
                 )
             }
 
@@ -156,33 +228,192 @@ uji_anova_server <- function(id, values) {
             plotly::ggplotly(p, tooltip = c("x", "y"))
         })
 
-        # Download handler
-        output$download_results <- downloadHandler(
+        # Enhanced Download Handlers
+
+        # 1. Individual interpretation download (Word)
+        output$download_interpretation <- downloadHandler(
             filename = function() {
-                paste0("anova_results_", Sys.Date(), ".pdf")
+                paste0("interpretasi_anova_", Sys.Date(), ".docx")
             },
             content = function(file) {
+                req(anova_result())
+
+                result <- anova_result()
+                anova_table <- result$summary[[1]]
+
+                if (result$type == "one_way") {
+                    p_value <- anova_table$`Pr(>F)`[1]
+                    f_stat <- anova_table$`F value`[1]
+
+                    # Calculate effect size
+                    ss_factor <- anova_table$`Sum Sq`[1]
+                    ss_total <- sum(anova_table$`Sum Sq`, na.rm = TRUE)
+                    eta_squared <- ss_factor / ss_total
+
+                    effect_size_interpretation <- if (eta_squared < 0.01) {
+                        "sangat kecil (< 1%)"
+                    } else if (eta_squared < 0.06) {
+                        "kecil (1-6%)"
+                    } else if (eta_squared < 0.14) {
+                        "sedang (6-14%)"
+                    } else {
+                        "besar (> 14%)"
+                    }
+
+                    group_counts <- table(values$sovi_data[[input$factor1]])
+                    n_groups <- length(group_counts)
+
+                    base_interpretation <- interpret_p_value(
+                        p_value,
+                        h0 = paste("Semua rata-rata grup", input$factor1, "sama"),
+                        h1 = paste("Minimal ada satu rata-rata grup", input$factor1, "yang berbeda")
+                    )
+
+                    confidence_level <- ifelse(p_value < 0.001, "sangat tinggi",
+                        ifelse(p_value < 0.01, "tinggi",
+                            ifelse(p_value < 0.05, "cukup", "rendah")
+                        )
+                    )
+
+                    practical_recommendation <- if (p_value < 0.05) {
+                        if (eta_squared > 0.06) {
+                            paste(
+                                "Perbedaan antar grup memiliki signifikansi praktis yang berarti.",
+                                "Disarankan untuk melakukan analisis lebih lanjut pada grup-grup spesifik",
+                                "yang berbeda menggunakan uji post-hoc."
+                            )
+                        } else {
+                            paste(
+                                "Meskipun secara statistik signifikan, ukuran efek relatif kecil.",
+                                "Pertimbangkan relevansi praktis dari perbedaan yang ditemukan."
+                            )
+                        }
+                    } else {
+                        paste(
+                            "Tidak ada bukti yang cukup untuk menyimpulkan adanya perbedaan antar grup.",
+                            "Pastikan ukuran sampel memadai dan pertimbangkan faktor lain yang mungkin mempengaruhi."
+                        )
+                    }
+
+                    # Create Word document
+                    doc <- officer::read_docx()
+
+                    doc <- doc %>%
+                        officer::body_add_par("INTERPRETASI HASIL ANOVA", style = "heading 1") %>%
+                        officer::body_add_par(paste("Tanggal Analisis:", Sys.Date()), style = "Normal") %>%
+                        officer::body_add_par("", style = "Normal") %>%
+                        officer::body_add_par("KESIMPULAN STATISTIK", style = "heading 2") %>%
+                        officer::body_add_par(base_interpretation, style = "Normal") %>%
+                        officer::body_add_par("", style = "Normal") %>%
+                        officer::body_add_par("DETAIL ANALISIS", style = "heading 2") %>%
+                        officer::body_add_par(paste("• F-statistic:", format_number(f_stat, 4)), style = "Normal") %>%
+                        officer::body_add_par(paste("• Derajat kebebasan:", anova_table$Df[1], "dan", anova_table$Df[2]), style = "Normal") %>%
+                        officer::body_add_par(paste("• Tingkat kepercayaan:", confidence_level), style = "Normal") %>%
+                        officer::body_add_par(paste(
+                            "• Ukuran efek (η²):", format_number(eta_squared, 4),
+                            paste0("(", effect_size_interpretation, ")")
+                        ), style = "Normal") %>%
+                        officer::body_add_par(paste("• Jumlah grup:", n_groups), style = "Normal") %>%
+                        officer::body_add_par(paste("• Total observasi:", sum(group_counts)), style = "Normal") %>%
+                        officer::body_add_par("", style = "Normal") %>%
+                        officer::body_add_par("REKOMENDASI PRAKTIS", style = "heading 2") %>%
+                        officer::body_add_par(practical_recommendation, style = "Normal")
+
+                    if (p_value < 0.05 && n_groups > 2) {
+                        doc <- doc %>%
+                            officer::body_add_par("", style = "Normal") %>%
+                            officer::body_add_par("LANGKAH SELANJUTNYA", style = "heading 2") %>%
+                            officer::body_add_par(paste(
+                                "Karena ANOVA menunjukkan perbedaan signifikan dan terdapat lebih dari 2 grup,",
+                                "lakukan uji post-hoc untuk mengidentifikasi",
+                                "pasangan grup mana yang berbeda secara signifikan."
+                            ), style = "Normal")
+                    }
+
+                    print(doc, target = file)
+                }
+            }
+        )
+
+        # 2. Comprehensive PDF report
+        output$download_report_pdf <- downloadHandler(
+            filename = function() {
+                paste0("laporan_anova_", Sys.Date(), ".pdf")
+            },
+            content = function(file) {
+                req(anova_result())
+
+                result <- anova_result()
+                anova_table <- result$summary[[1]]
+
+                # Prepare parameters for R Markdown template
+                params <- list(
+                    data = values$sovi_data,
+                    anova_result = result,
+                    anova_table = anova_table,
+                    dep_var = input$dep_var,
+                    factor1 = input$factor1,
+                    factor2 = input$factor2,
+                    anova_type = input$anova_type,
+                    interaction = input$interaction,
+                    posthoc_result = posthoc_result(),
+                    analysis_date = Sys.Date()
+                )
+
+                # Render the R Markdown template
+                rmarkdown::render(
+                    input = "reports/laporan_anova.Rmd",
+                    output_file = file,
+                    params = params,
+                    envir = new.env(parent = globalenv()),
+                    quiet = TRUE
+                )
+            }
+        )
+
+        # 3. Comprehensive Word report
+        output$download_report_word <- downloadHandler(
+            filename = function() {
+                paste0("laporan_anova_", Sys.Date(), ".docx")
+            },
+            content = function(file) {
+                req(anova_result())
+
+                result <- anova_result()
+                anova_table <- result$summary[[1]]
+
+                # Prepare parameters for R Markdown template
+                params <- list(
+                    data = values$sovi_data,
+                    anova_result = result,
+                    anova_table = anova_table,
+                    dep_var = input$dep_var,
+                    factor1 = input$factor1,
+                    factor2 = input$factor2,
+                    anova_type = input$anova_type,
+                    interaction = input$interaction,
+                    posthoc_result = posthoc_result(),
+                    analysis_date = Sys.Date()
+                )
+
+                # Create temporary Rmd file for Word output
                 temp_rmd <- tempfile(fileext = ".Rmd")
+                file.copy("reports/laporan_anova.Rmd", temp_rmd)
 
-                anova_type <- ifelse(input$anova_type == "one_way", "Satu Arah", "Dua Arah")
-
-                rmd_content <- paste0('---
-title: "Hasil ANOVA ', anova_type, '"
-output: pdf_document
-date: "`r Sys.Date()`"
----
-
-# ANOVA ', anova_type, "
-
-Hasil analisis varians untuk menguji perbedaan rata-rata antar grup.
-
-## Interpretasi
-
-Berdasarkan hasil ANOVA, dapat disimpulkan apakah terdapat perbedaan signifikan antar grup.
-")
-
+                # Modify YAML header for Word output
+                rmd_content <- readLines(temp_rmd)
+                yaml_end <- which(rmd_content == "---")[2]
+                rmd_content[2] <- "output: word_document"
                 writeLines(rmd_content, temp_rmd)
-                rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
+
+                # Render the R Markdown template
+                rmarkdown::render(
+                    input = temp_rmd,
+                    output_file = file,
+                    params = params,
+                    envir = new.env(parent = globalenv()),
+                    quiet = TRUE
+                )
             }
         )
     })

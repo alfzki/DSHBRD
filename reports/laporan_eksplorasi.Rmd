@@ -1,0 +1,150 @@
+---
+title: "Laporan Eksplorasi Data - NusaStat Dashboard"
+subtitle: "`r params$var_terpilih`"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  word_document:
+    reference_docx: NULL
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+params:
+  var_terpilih: "Variabel"
+  data_summary: NULL
+  plot_path: NULL
+  interpretasi: NULL
+  dataset_info: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(flextable)
+library(dplyr)
+```
+
+# Laporan Eksplorasi Data
+
+## Informasi Analisis
+
+**Variabel yang Dianalisis:** `r params$var_terpilih`
+
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
+
+**Sumber Data:** SUSENAS 2017, BPS-Statistics Indonesia
+
+---
+
+## Ringkasan Dataset
+
+```{r dataset-info}
+if (!is.null(params$dataset_info)) {
+    cat("Jumlah Observasi:", params$dataset_info$n_obs, "\n")
+    cat("Jumlah Variabel:", params$dataset_info$n_vars, "\n")
+    cat("Jumlah Variabel Numerik:", params$dataset_info$n_numeric, "\n")
+    cat("Jumlah Variabel Kategorik:", params$dataset_info$n_categorical, "\n")
+}
+```
+
+---
+
+## Statistik Deskriptif
+
+```{r summary-stats}
+if (!is.null(params$data_summary)) {
+    # Convert summary to data frame for better formatting
+    summary_df <- data.frame(
+        Statistik = c("Minimum", "Q1", "Median", "Mean", "Q3", "Maximum"),
+        Nilai = as.numeric(params$data_summary[c("Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.")])
+    )
+
+    ft <- flextable(summary_df) %>%
+        set_header_labels(
+            Statistik = "Statistik Deskriptif",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header") %>%
+        colformat_double(j = "Nilai", digits = 4)
+
+    ft
+} else {
+    cat("Data summary tidak tersedia.")
+}
+```
+
+---
+
+## Visualisasi Data
+
+```{r plot-display, fig.cap="Distribusi Variabel", out.width="100%"}
+if (!is.null(params$plot_path) && file.exists(params$plot_path)) {
+    knitr::include_graphics(params$plot_path)
+} else {
+    cat("Plot tidak tersedia.")
+}
+```
+
+---
+
+## Interpretasi dan Kesimpulan
+
+```{r interpretation}
+if (!is.null(params$interpretasi)) {
+    cat(params$interpretasi)
+} else {
+    cat("Interpretasi tidak tersedia.")
+}
+```
+
+### Karakteristik Distribusi
+
+Berdasarkan statistik deskriptif dan visualisasi di atas, dapat disimpulkan bahwa:
+
+```{r characteristics}
+if (!is.null(params$data_summary)) {
+    mean_val <- params$data_summary["Mean"]
+    median_val <- params$data_summary["Median"]
+
+    if (abs(mean_val - median_val) < 0.1 * median_val) {
+        cat("1. Distribusi data cenderung simetris (rata-rata ≈ median)\n")
+    } else if (mean_val > median_val) {
+        cat("1. Distribusi data cenderung skewed ke kanan (rata-rata > median)\n")
+    } else {
+        cat("1. Distribusi data cenderung skewed ke kiri (rata-rata < median)\n")
+    }
+
+    q1 <- params$data_summary["1st Qu."]
+    q3 <- params$data_summary["3rd Qu."]
+    iqr <- q3 - q1
+
+    cat("2. Rentang interkuartil (IQR):", round(iqr, 4), "\n")
+    cat(
+        "3. Variabilitas data:",
+        if (iqr < 0.5 * median_val) "rendah" else if (iqr > 1.5 * median_val) "tinggi" else "sedang", "\n"
+    )
+}
+```
+
+---
+
+## Metode Analisis
+
+**Statistik Deskriptif yang Digunakan:**
+
+- **Mean (Rata-rata):** Ukuran tendensi sentral yang sensitif terhadap outlier
+- **Median:** Ukuran tendensi sentral yang robust terhadap outlier
+- **Quartile (Q1, Q3):** Ukuran posisi yang membagi data menjadi empat bagian
+- **Minimum dan Maximum:** Nilai ekstrem dalam dataset
+- **Histogram:** Visualisasi distribusi frekuensi data
+
+**Interpretasi:**
+
+- Perbandingan mean dan median memberikan informasi tentang bentuk distribusi
+- IQR (Interquartile Range) menggambarkan variabilitas data
+- Histogram menunjukkan pola distribusi dan kemungkinan adanya outlier
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

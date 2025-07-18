@@ -79,16 +79,33 @@ regresi_ui <- function(id) {
         ),
         fluidRow(
             box(
-                title = "Download Hasil",
+                title = tags$span(icon("download"), "Unduh Laporan"),
                 status = "success",
                 solidHeader = TRUE,
                 width = 12,
-                p("Download hasil analisis regresi dalam format PDF:"),
-                downloadButton(
-                    ns("download_results"),
-                    "Download Hasil Regresi",
-                    icon = icon("download"),
-                    class = "btn-success"
+                collapsible = TRUE,
+                fluidRow(
+                    column(
+                        width = 4,
+                        h5("Interpretasi Individual"),
+                        downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
+                            class = "btn-outline-info", icon = icon("file-word"), width = "100%"
+                        )
+                    ),
+                    column(
+                        width = 4,
+                        h5("Laporan PDF"),
+                        downloadButton(ns("download_report_pdf"), "Unduh Laporan PDF",
+                            class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                        )
+                    ),
+                    column(
+                        width = 4,
+                        h5("Laporan Word"),
+                        downloadButton(ns("download_report_word"), "Unduh Laporan Word",
+                            class = "btn-success", icon = icon("file-word"), width = "100%"
+                        )
+                    )
                 )
             )
         )

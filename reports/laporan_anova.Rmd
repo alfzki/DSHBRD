@@ -1,0 +1,262 @@
+---
+title: "Laporan ANOVA - NusaStat Dashboard"
+subtitle: "`r params$jenis_anova`"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  word_document:
+    reference_docx: NULL
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+params:
+  jenis_anova: "One-Way ANOVA"
+  variabel_dependen: "Variabel"
+  faktor: "Faktor"
+  hasil_anova: NULL
+  posthoc_results: NULL
+  interpretasi: NULL
+  plot_path: NULL
+  input_params: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(flextable)
+library(dplyr)
+```
+
+# Laporan Analysis of Variance (ANOVA)
+
+## Informasi Analisis
+
+**Jenis Analisis:** `r params$jenis_anova`
+
+**Variabel Terikat:** `r params$variabel_dependen`
+
+**Faktor:** `r params$faktor`
+
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
+
+**Tingkat Signifikansi (α):** `r if(!is.null(params$input_params)) params$input_params$alpha else "0.05"`
+
+---
+
+## Deskripsi Model
+
+```{r model-description}
+if (!is.null(params$input_params)) {
+    if (params$input_params$anova_type == "one_way") {
+        cat("**Model:** ", params$variabel_dependen, " ~ ", params$faktor, "\n\n")
+        cat("**Tipe ANOVA:** Satu Arah (One-Way ANOVA)\n\n")
+        cat(
+            "**Tujuan:** Menguji apakah terdapat perbedaan rata-rata ", params$variabel_dependen,
+            " antar kategori ", params$faktor, "\n\n"
+        )
+    } else {
+        cat("**Model:** ", params$variabel_dependen, " ~ ", params$faktor, "\n\n")
+        cat("**Tipe ANOVA:** Dua Arah (Two-Way ANOVA)\n\n")
+        cat("**Tujuan:** Menguji pengaruh dua faktor dan interaksinya terhadap ", params$variabel_dependen, "\n\n")
+    }
+}
+```
+
+---
+
+## Hipotesis
+
+```{r hypothesis}
+if (!is.null(params$input_params)) {
+    if (params$input_params$anova_type == "one_way") {
+        cat("**H₀ (Hipotesis Nol):** μ₁ = μ₂ = μ₃ = ... = μₖ\n")
+        cat("(Semua rata-rata grup sama)\n\n")
+        cat("**H₁ (Hipotesis Alternatif):** Minimal ada satu μᵢ ≠ μⱼ\n")
+        cat("(Minimal ada satu rata-rata grup yang berbeda)\n\n")
+    } else {
+        cat("**H₀ (Hipotesis Nol):**\n")
+        cat("- Tidak ada pengaruh faktor utama A\n")
+        cat("- Tidak ada pengaruh faktor utama B\n")
+        cat("- Tidak ada pengaruh interaksi A×B\n\n")
+        cat("**H₁ (Hipotesis Alternatif):**\n")
+        cat("- Ada pengaruh minimal satu faktor utama atau interaksi\n\n")
+    }
+}
+```
+
+---
+
+## Hasil ANOVA
+
+```{r anova-table}
+if (!is.null(params$hasil_anova)) {
+    # Convert ANOVA results to flextable
+    anova_summary <- params$hasil_anova$summary[[1]]
+
+    anova_df <- data.frame(
+        Sumber = rownames(anova_summary),
+        Df = anova_summary$Df,
+        `Sum Sq` = round(anova_summary$`Sum Sq`, 4),
+        `Mean Sq` = round(anova_summary$`Mean Sq`, 4),
+        `F value` = round(anova_summary$`F value`, 4),
+        `Pr(>F)` = format(anova_summary$`Pr(>F)`, scientific = TRUE, digits = 4),
+        check.names = FALSE
+    )
+
+    ft <- flextable(anova_df) %>%
+        set_header_labels(
+            Sumber = "Sumber Variasi",
+            Df = "df",
+            `Sum Sq` = "Sum of Squares",
+            `Mean Sq` = "Mean Square",
+            `F value` = "F-statistic",
+            `Pr(>F)` = "p-value"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Hasil ANOVA tidak tersedia.")
+}
+```
+
+---
+
+## Post-Hoc Test (Tukey HSD)
+
+```{r posthoc-results}
+if (!is.null(params$posthoc_results)) {
+    cat("**Uji Post-Hoc Tukey HSD dilakukan karena ANOVA menunjukkan hasil signifikan.**\n\n")
+
+    # Extract Tukey HSD results
+    tukey_data <- params$posthoc_results[[1]]
+
+    posthoc_df <- data.frame(
+        Perbandingan = rownames(tukey_data),
+        Diff = round(tukey_data[, "diff"], 4),
+        `Lower CI` = round(tukey_data[, "lwr"], 4),
+        `Upper CI` = round(tukey_data[, "upr"], 4),
+        `p adj` = format(tukey_data[, "p adj"], scientific = TRUE, digits = 4),
+        check.names = FALSE
+    )
+
+    ft <- flextable(posthoc_df) %>%
+        set_header_labels(
+            Perbandingan = "Perbandingan Grup",
+            Diff = "Selisih Rata-rata",
+            `Lower CI` = "CI Bawah",
+            `Upper CI` = "CI Atas",
+            `p adj` = "p-value (adjusted)"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Post-hoc test tidak dilakukan atau tidak tersedia.")
+}
+```
+
+---
+
+## Visualisasi
+
+```{r plot-display, fig.cap="Box Plot - Perbandingan Antar Grup", out.width="100%"}
+if (!is.null(params$plot_path) && file.exists(params$plot_path)) {
+    knitr::include_graphics(params$plot_path)
+} else {
+    cat("Plot tidak tersedia.")
+}
+```
+
+---
+
+## Interpretasi dan Kesimpulan
+
+```{r interpretation}
+if (!is.null(params$interpretasi)) {
+    cat(params$interpretasi)
+} else if (!is.null(params$hasil_anova)) {
+    anova_summary <- params$hasil_anova$summary[[1]]
+    f_stat <- anova_summary$`F value`[1]
+    p_val <- anova_summary$`Pr(>F)`[1]
+    alpha <- params$input_params$alpha %||% 0.05
+
+    cat("### Keputusan Statistik\n\n")
+
+    if (p_val < alpha) {
+        cat("**Keputusan:** Tolak H₀\n\n")
+        cat("**F-statistic =", round(f_stat, 4), "**\n\n")
+        cat("**p-value =", format(p_val, scientific = TRUE, digits = 4), "**\n\n")
+        cat(
+            "**Kesimpulan:** Pada tingkat signifikansi α =", alpha,
+            ", terdapat perbedaan rata-rata yang signifikan antar grup."
+        )
+    } else {
+        cat("**Keputusan:** Gagal menolak H₀\n\n")
+        cat("**F-statistic =", round(f_stat, 4), "**\n\n")
+        cat("**p-value =", format(p_val, scientific = TRUE, digits = 4), "**\n\n")
+        cat(
+            "**Kesimpulan:** Pada tingkat signifikansi α =", alpha,
+            ", tidak terdapat perbedaan rata-rata yang signifikan antar grup."
+        )
+    }
+}
+```
+
+### Asumsi ANOVA
+
+ANOVA memerlukan beberapa asumsi yang harus dipenuhi:
+
+1. **Independensi:** Observasi dalam setiap grup harus independen
+2. **Normalitas:** Residual harus berdistribusi normal
+3. **Homogenitas Varians:** Varians antar grup harus homogen (homoscedasticity)
+
+### Interpretasi Post-Hoc
+
+```{r posthoc-interpretation}
+if (!is.null(params$posthoc_results)) {
+    tukey_data <- params$posthoc_results[[1]]
+    significant_pairs <- tukey_data[tukey_data[, "p adj"] < 0.05, ]
+
+    if (nrow(significant_pairs) > 0) {
+        cat("**Perbandingan yang menunjukkan perbedaan signifikan:**\n\n")
+        for (i in 1:nrow(significant_pairs)) {
+            pair_name <- rownames(significant_pairs)[i]
+            diff_val <- round(significant_pairs[i, "diff"], 4)
+            p_adj <- format(significant_pairs[i, "p adj"], scientific = TRUE, digits = 4)
+            cat("- ", pair_name, ": selisih =", diff_val, ", p =", p_adj, "\n")
+        }
+    } else {
+        cat("Tidak ada perbandingan berpasangan yang menunjukkan perbedaan signifikan.")
+    }
+}
+```
+
+### Rekomendasi
+
+```{r recommendations}
+if (!is.null(params$hasil_anova)) {
+    anova_summary <- params$hasil_anova$summary[[1]]
+    p_val <- anova_summary$`Pr(>F)`[1]
+    alpha <- params$input_params$alpha %||% 0.05
+
+    if (p_val < alpha) {
+        cat("- ANOVA menunjukkan perbedaan signifikan antar grup\n")
+        cat("- Lakukan uji post-hoc untuk mengidentifikasi grup mana yang berbeda\n")
+        cat("- Pertimbangkan ukuran efek untuk menilai kepentingan praktis\n")
+        cat("- Validasi asumsi ANOVA (normalitas, homogenitas varians)\n")
+    } else {
+        cat("- Tidak terdapat perbedaan signifikan antar grup\n")
+        cat("- Pertimbangkan untuk memperbesar ukuran sampel\n")
+        cat("- Evaluasi kembali desain penelitian atau kategorisasi grup\n")
+        cat("- Pastikan asumsi ANOVA terpenuhi\n")
+    }
+}
+```
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

@@ -23,13 +23,26 @@ eksplorasi_ui <- function(id) {
                         choices = NULL, width = "100%"
                     ),
                     hr(),
-                    h5("Unduhan:"),
+                    h5("Unduhan Individual:"),
                     downloadButton(ns("download_summary"), "Unduh Ringkasan (.pdf)",
                         class = "btn-sm btn-outline-primary", icon = icon("file-pdf")
                     ),
                     br(), br(),
                     downloadButton(ns("download_plot"), "Unduh Plot (.png)",
                         class = "btn-sm btn-outline-success", icon = icon("image")
+                    ),
+                    br(), br(),
+                    downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
+                        class = "btn-sm btn-outline-info", icon = icon("file-word")
+                    ),
+                    hr(),
+                    h5("Laporan Lengkap:"),
+                    downloadButton(ns("download_report_pdf"), "Unduh Laporan (PDF)",
+                        class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                    ),
+                    br(), br(),
+                    downloadButton(ns("download_report_word"), "Unduh Laporan (Word)",
+                        class = "btn-success", icon = icon("file-word"), width = "100%"
                     )
                 )
             ),

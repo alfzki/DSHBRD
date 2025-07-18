@@ -32,8 +32,26 @@ uji_asumsi_ui <- function(id) {
                         choices = NULL, width = "100%"
                     ),
                     hr(),
-                    downloadButton(ns("download_results"), "Unduh Hasil (.pdf)",
-                        class = "btn-primary", icon = icon("download")
+                    box(
+                        title = tags$span(icon("download"), "Unduh Laporan"),
+                        status = "info",
+                        solidHeader = TRUE,
+                        width = NULL,
+                        collapsible = TRUE,
+                        collapsed = TRUE,
+                        h6("Interpretasi Individual"),
+                        downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
+                            class = "btn-outline-info btn-sm", icon = icon("file-word"), width = "100%"
+                        ),
+                        br(), br(),
+                        h6("Laporan Lengkap"),
+                        downloadButton(ns("download_report_pdf"), "Unduh Laporan PDF",
+                            class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                        ),
+                        br(), br(),
+                        downloadButton(ns("download_report_word"), "Unduh Laporan Word",
+                            class = "btn-success", icon = icon("file-word"), width = "100%"
+                        )
                     )
                 )
             ),

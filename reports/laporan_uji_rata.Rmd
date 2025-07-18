@@ -1,0 +1,197 @@
+---
+title: "Laporan Uji Rata-Rata - NusaStat Dashboard"
+subtitle: "`r params$jenis_uji`"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  word_document:
+    reference_docx: NULL
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+params:
+  jenis_uji: "Uji t"
+  variabel: "Variabel"
+  hasil_uji: NULL
+  interpretasi: NULL
+  input_params: NULL
+  plot_path: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(flextable)
+library(dplyr)
+```
+
+# Laporan Uji Beda Rata-Rata
+
+## Informasi Analisis
+
+**Jenis Uji:** `r params$jenis_uji`
+
+**Variabel yang Dianalisis:** `r params$variabel`
+
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
+
+**Tingkat Signifikansi (α):** `r if(!is.null(params$input_params)) params$input_params$alpha else "0.05"`
+
+---
+
+## Parameter Uji
+
+```{r test-params}
+if (!is.null(params$input_params)) {
+    param_df <- data.frame(
+        Parameter = c("Jenis Uji", "Variabel", "Hipotesis Alternatif", "Tingkat Signifikansi"),
+        Nilai = c(
+            params$input_params$test_type %||% "One Sample t-test",
+            params$variabel,
+            params$input_params$alternative %||% "two.sided",
+            params$input_params$alpha %||% "0.05"
+        )
+    )
+
+    ft <- flextable(param_df) %>%
+        set_header_labels(
+            Parameter = "Parameter Uji",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+}
+```
+
+---
+
+## Hipotesis
+
+```{r hypothesis}
+if (!is.null(params$input_params)) {
+    if (params$input_params$test_type == "one_sample") {
+        cat("**H₀ (Hipotesis Nol):** μ = ", params$input_params$mu0 %||% "0", "\n\n")
+        alt_text <- switch(params$input_params$alternative %||% "two.sided",
+            "two.sided" = paste("μ ≠", params$input_params$mu0 %||% "0"),
+            "greater" = paste("μ >", params$input_params$mu0 %||% "0"),
+            "less" = paste("μ <", params$input_params$mu0 %||% "0")
+        )
+        cat("**H₁ (Hipotesis Alternatif):** ", alt_text, "\n\n")
+    } else {
+        cat("**H₀ (Hipotesis Nol):** μ₁ = μ₂ (tidak ada perbedaan rata-rata)\n\n")
+        alt_text <- switch(params$input_params$alternative %||% "two.sided",
+            "two.sided" = "μ₁ ≠ μ₂ (ada perbedaan rata-rata)",
+            "greater" = "μ₁ > μ₂ (rata-rata grup 1 lebih besar)",
+            "less" = "μ₁ < μ₂ (rata-rata grup 1 lebih kecil)"
+        )
+        cat("**H₁ (Hipotesis Alternatif):** ", alt_text, "\n\n")
+    }
+}
+```
+
+---
+
+## Hasil Uji Statistik
+
+```{r test-results}
+if (!is.null(params$hasil_uji)) {
+    hasil_df <- data.frame(
+        Statistik = c("t-statistic", "Derajat Kebebasan", "p-value", "Confidence Interval (95%)"),
+        Nilai = c(
+            round(params$hasil_uji$statistic, 4),
+            round(params$hasil_uji$parameter, 0),
+            format(params$hasil_uji$p.value, scientific = TRUE, digits = 4),
+            paste(round(params$hasil_uji$conf.int[1], 4), "-", round(params$hasil_uji$conf.int[2], 4))
+        )
+    )
+
+    ft <- flextable(hasil_df) %>%
+        set_header_labels(
+            Statistik = "Statistik Uji",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Hasil uji tidak tersedia.")
+}
+```
+
+---
+
+## Visualisasi
+
+```{r plot-display, fig.cap="Visualisasi Data", out.width="100%"}
+if (!is.null(params$plot_path) && file.exists(params$plot_path)) {
+    knitr::include_graphics(params$plot_path)
+} else {
+    cat("Plot tidak tersedia.")
+}
+```
+
+---
+
+## Interpretasi dan Kesimpulan
+
+```{r interpretation}
+if (!is.null(params$interpretasi)) {
+    cat(params$interpretasi)
+} else if (!is.null(params$hasil_uji)) {
+    alpha <- params$input_params$alpha %||% 0.05
+    p_val <- params$hasil_uji$p.value
+
+    cat("### Keputusan Statistik\n\n")
+
+    if (p_val < alpha) {
+        cat("**Keputusan:** Tolak H₀\n\n")
+        cat(
+            "**Kesimpulan:** Pada tingkat signifikansi α =", alpha,
+            ", terdapat bukti yang cukup untuk menolak hipotesis nol."
+        )
+    } else {
+        cat("**Keputusan:** Gagal menolak H₀\n\n")
+        cat(
+            "**Kesimpulan:** Pada tingkat signifikansi α =", alpha,
+            ", tidak terdapat bukti yang cukup untuk menolak hipotesis nol."
+        )
+    }
+
+    cat("\n\n**p-value =", format(p_val, scientific = TRUE, digits = 4), "**")
+}
+```
+
+### Asumsi Uji
+
+Uji t memerlukan beberapa asumsi yang harus dipenuhi:
+
+1. **Normalitas:** Data harus berdistribusi normal atau ukuran sampel cukup besar (n ≥ 30)
+2. **Independensi:** Observasi harus independen satu sama lain
+3. **Homogenitas Varians:** Untuk uji dua sampel, varians kedua grup harus homogen
+
+### Rekomendasi
+
+```{r recommendations}
+if (!is.null(params$hasil_uji)) {
+    p_val <- params$hasil_uji$p.value
+    alpha <- params$input_params$alpha %||% 0.05
+
+    if (p_val < alpha) {
+        cat("- Hasil menunjukkan perbedaan yang signifikan secara statistik\n")
+        cat("- Disarankan untuk melakukan analisis lebih lanjut untuk memahami praktikalitas perbedaan\n")
+        cat("- Pertimbangkan ukuran efek (effect size) untuk menilai kepentingan praktis\n")
+    } else {
+        cat("- Tidak terdapat perbedaan yang signifikan secara statistik\n")
+        cat("- Pertimbangkan untuk memperbesar ukuran sampel jika diperlukan\n")
+        cat("- Evaluasi kembali desain penelitian atau hipotesis yang diajukan\n")
+    }
+}
+```
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

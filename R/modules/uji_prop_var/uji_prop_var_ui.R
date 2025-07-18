@@ -71,8 +71,36 @@ uji_prop_var_ui <- function(id) {
                     h4("Interpretasi:"),
                     uiOutput(ns("interpretation")),
                     br(),
-                    downloadButton(ns("download_results"), "Unduh Hasil (.pdf)",
-                        class = "btn-primary", icon = icon("download")
+                    box(
+                        title = tags$span(icon("download"), "Unduh Laporan"),
+                        status = "info",
+                        solidHeader = TRUE,
+                        width = NULL,
+                        collapsible = TRUE,
+                        collapsed = TRUE,
+                        fluidRow(
+                            column(
+                                width = 4,
+                                h6("Interpretasi"),
+                                downloadButton(ns("download_interpretation"), "Unduh (.docx)",
+                                    class = "btn-outline-info btn-sm", icon = icon("file-word"), width = "100%"
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                h6("Laporan PDF"),
+                                downloadButton(ns("download_report_pdf"), "Unduh PDF",
+                                    class = "btn-primary btn-sm", icon = icon("file-pdf"), width = "100%"
+                                )
+                            ),
+                            column(
+                                width = 4,
+                                h6("Laporan Word"),
+                                downloadButton(ns("download_report_word"), "Unduh Word",
+                                    class = "btn-success btn-sm", icon = icon("file-word"), width = "100%"
+                                )
+                            )
+                        )
                     )
                 )
             )

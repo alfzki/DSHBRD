@@ -66,7 +66,60 @@ load_data_simple <- function() {
     }
 }
 
+# Variable labels for better UI display (simplified version)
+SOVI_VARIABLE_LABELS_SIMPLE <- list(
+    # Numeric variables with descriptions
+    "CHILDREN" = "Persentase Populasi Balita (CHILDREN)",
+    "FEMALE" = "Persentase Populasi Perempuan (FEMALE)",
+    "ELDERLY" = "Persentase Populasi Lansia ≥65 tahun (ELDERLY)",
+    "FHEAD" = "Persentase Rumah Tangga Kepala Keluarga Perempuan (FHEAD)",
+    "FAMILYSIZE" = "Rata-rata Jumlah Anggota Rumah Tangga (FAMILYSIZE)",
+    "NOELECTRIC" = "Persentase Rumah Tangga Tanpa Listrik (NOELECTRIC)",
+    "LOWEDU" = "Persentase Populasi Berpendidikan Rendah (LOWEDU)",
+    "GROWTH" = "Persentase Pertumbuhan Populasi (GROWTH)",
+    "POVERTY" = "Persentase Penduduk Miskin (POVERTY)",
+    "ILLITERATE" = "Persentase Populasi Buta Huruf (ILLITERATE)",
+    "NOTRAINING" = "Persentase RT Tanpa Pelatihan Bencana (NOTRAINING)",
+    "DPRONE" = "Persentase RT di Area Rawan Bencana (DPRONE)",
+    "RENTED" = "Persentase Rumah Tangga Menyewa (RENTED)",
+    "NOSEWER" = "Persentase RT Tanpa Sistem Drainase (NOSEWER)",
+    "TAPWATER" = "Persentase RT Menggunakan Air Ledeng (TAPWATER)",
+    "POPULATION" = "Jumlah Total Populasi (POPULATION)",
+    "DISTRICTCODE" = "Kode Wilayah (DISTRICTCODE)",
+
+    # Basic sample data variables
+    "variable1" = "Variabel 1 (variable1)",
+    "variable2" = "Variabel 2 (variable2)",
+    "variable3" = "Variabel 3 (variable3)",
+    "id" = "ID (id)"
+)
+
 # Utility functions
+get_variable_choices_simple <- function(data, var_type = "all") {
+    if (is.null(data)) {
+        return(character(0))
+    }
+
+    if (var_type == "numeric") {
+        vars <- get_numeric_columns_simple(data)
+    } else if (var_type == "categorical") {
+        vars <- get_categorical_columns_simple(data)
+    } else {
+        vars <- names(data)
+    }
+
+    # Create named vector with labels
+    choices <- setNames(vars, sapply(vars, function(x) {
+        if (x %in% names(SOVI_VARIABLE_LABELS_SIMPLE)) {
+            SOVI_VARIABLE_LABELS_SIMPLE[[x]]
+        } else {
+            x
+        }
+    }))
+
+    return(choices)
+}
+
 get_numeric_columns_simple <- function(data) {
     if (is.null(data)) {
         return(character(0))

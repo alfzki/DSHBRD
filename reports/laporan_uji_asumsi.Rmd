@@ -1,0 +1,317 @@
+---
+title: "Laporan Uji Asumsi - NusaStat Dashboard"
+subtitle: "Uji Normalitas dan Homogenitas"
+author: "NusaStat Dashboard"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  word_document:
+    reference_docx: NULL
+  pdf_document:
+    latex_engine: xelatex
+    keep_tex: false
+params:
+  variabel_normal: "Variabel"
+  variabel_homogen: "Variabel"
+  grup_homogen: "Grup"
+  hasil_normalitas: NULL
+  hasil_homogenitas: NULL
+  interpretasi_normal: NULL
+  interpretasi_homogen: NULL
+  plot_path: NULL
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+library(flextable)
+library(dplyr)
+```
+
+# Laporan Uji Asumsi Statistik
+
+## Informasi Analisis
+
+**Variabel untuk Uji Normalitas:** `r params$variabel_normal`
+
+**Variabel untuk Uji Homogenitas:** `r params$variabel_homogen`
+
+**Variabel Grup:** `r params$grup_homogen`
+
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
+
+**Tingkat Signifikansi (α):** 0.05
+
+---
+
+## Tujuan Uji Asumsi
+
+Uji asumsi statistik merupakan langkah penting sebelum melakukan analisis inferensial. Tujuan utama melakukan uji asumsi adalah:
+
+1. **Uji Normalitas:** Memastikan data berdistribusi normal untuk penggunaan uji parametrik
+2. **Uji Homogenitas:** Memastikan varians antar grup homogen untuk uji beda rata-rata
+
+---
+
+## Uji Normalitas
+
+### Hipotesis
+
+**H₀:** Data berdistribusi normal  
+**H₁:** Data tidak berdistribusi normal
+
+### Metode
+
+**Shapiro-Wilk Test** - Uji normalitas yang powerful untuk ukuran sampel kecil hingga sedang
+
+### Hasil Uji Normalitas
+
+```{r normality-results}
+if (!is.null(params$hasil_normalitas)) {
+    norm_df <- data.frame(
+        Statistik = c("W-statistic", "p-value", "Keputusan"),
+        Nilai = c(
+            round(params$hasil_normalitas$statistic, 6),
+            format(params$hasil_normalitas$p.value, scientific = TRUE, digits = 4),
+            ifelse(params$hasil_normalitas$p.value < 0.05, "Tolak H₀", "Gagal tolak H₀")
+        )
+    )
+
+    ft <- flextable(norm_df) %>%
+        set_header_labels(
+            Statistik = "Statistik Uji",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Hasil uji normalitas tidak tersedia.")
+}
+```
+
+### Interpretasi Uji Normalitas
+
+```{r normality-interpretation}
+if (!is.null(params$hasil_normalitas)) {
+    p_val <- params$hasil_normalitas$p.value
+    w_stat <- params$hasil_normalitas$statistic
+
+    cat("**Statistik W =", round(w_stat, 6), "**\n\n")
+    cat("**p-value =", format(p_val, scientific = TRUE, digits = 4), "**\n\n")
+
+    if (p_val < 0.05) {
+        cat("**Kesimpulan:** Pada tingkat signifikansi α = 0.05, data **tidak berdistribusi normal** (p < 0.05).\n\n")
+        cat("**Implikasi:**\n")
+        cat("- Disarankan menggunakan uji non-parametrik\n")
+        cat("- Pertimbangkan transformasi data\n")
+        cat("- Evaluasi adanya outlier\n")
+    } else {
+        cat("**Kesimpulan:** Pada tingkat signifikansi α = 0.05, data **berdistribusi normal** (p ≥ 0.05).\n\n")
+        cat("**Implikasi:**\n")
+        cat("- Dapat menggunakan uji parametrik\n")
+        cat("- Asumsi normalitas terpenuhi\n")
+        cat("- Data sesuai untuk analisis inferensial parametrik\n")
+    }
+} else if (!is.null(params$interpretasi_normal)) {
+    cat(params$interpretasi_normal)
+} else {
+    cat("Interpretasi uji normalitas tidak tersedia.")
+}
+```
+
+---
+
+## Uji Homogenitas Varians
+
+### Hipotesis
+
+**H₀:** Varians antar grup homogen (σ₁² = σ₂² = ... = σₖ²)  
+**H₁:** Varians antar grup tidak homogen (minimal ada satu varians yang berbeda)
+
+### Metode
+
+**Levene's Test** - Uji homogenitas varians yang robust terhadap deviasi dari normalitas
+
+### Hasil Uji Homogenitas
+
+```{r homogeneity-results}
+if (!is.null(params$hasil_homogenitas)) {
+    homog_df <- data.frame(
+        Statistik = c("F-statistic", "df1", "df2", "p-value", "Keputusan"),
+        Nilai = c(
+            round(params$hasil_homogenitas$statistic, 4),
+            params$hasil_homogenitas$parameter[1],
+            params$hasil_homogenitas$parameter[2],
+            format(params$hasil_homogenitas$p.value, scientific = TRUE, digits = 4),
+            ifelse(params$hasil_homogenitas$p.value < 0.05, "Tolak H₀", "Gagal tolak H₀")
+        )
+    )
+
+    ft <- flextable(homog_df) %>%
+        set_header_labels(
+            Statistik = "Statistik Uji",
+            Nilai = "Nilai"
+        ) %>%
+        theme_vanilla() %>%
+        autofit() %>%
+        align(align = "center", part = "header")
+
+    ft
+} else {
+    cat("Hasil uji homogenitas tidak tersedia.")
+}
+```
+
+### Interpretasi Uji Homogenitas
+
+```{r homogeneity-interpretation}
+if (!is.null(params$hasil_homogenitas)) {
+    p_val <- params$hasil_homogenitas$p.value
+    f_stat <- params$hasil_homogenitas$statistic
+
+    cat("**F-statistic =", round(f_stat, 4), "**\n\n")
+    cat("**p-value =", format(p_val, scientific = TRUE, digits = 4), "**\n\n")
+
+    if (p_val < 0.05) {
+        cat("**Kesimpulan:** Pada tingkat signifikansi α = 0.05, varians antar grup **tidak homogen** (p < 0.05).\n\n")
+        cat("**Implikasi:**\n")
+        cat("- Asumsi homogenitas varians dilanggar\n")
+        cat("- Pertimbangkan uji Welch t-test untuk dua grup\n")
+        cat("- Gunakan koreksi untuk ANOVA jika lebih dari dua grup\n")
+        cat("- Pertimbangkan transformasi data\n")
+    } else {
+        cat("**Kesimpulan:** Pada tingkat signifikansi α = 0.05, varians antar grup **homogen** (p ≥ 0.05).\n\n")
+        cat("**Implikasi:**\n")
+        cat("- Asumsi homogenitas varians terpenuhi\n")
+        cat("- Dapat menggunakan pooled variance t-test\n")
+        cat("- ANOVA standar dapat digunakan\n")
+        cat("- Analisis parametrik dapat dilanjutkan\n")
+    }
+} else if (!is.null(params$interpretasi_homogen)) {
+    cat(params$interpretasi_homogen)
+} else {
+    cat("Interpretasi uji homogenitas tidak tersedia.")
+}
+```
+
+---
+
+## Visualisasi
+
+```{r plot-display, fig.cap="Plot Uji Normalitas", out.width="100%"}
+if (!is.null(params$plot_path) && file.exists(params$plot_path)) {
+    knitr::include_graphics(params$plot_path)
+} else {
+    cat("Plot tidak tersedia.")
+}
+```
+
+---
+
+## Ringkasan dan Rekomendasi
+
+### Status Asumsi
+
+```{r assumption-summary}
+status_normal <- "Tidak diuji"
+status_homogen <- "Tidak diuji"
+
+if (!is.null(params$hasil_normalitas)) {
+    status_normal <- ifelse(params$hasil_normalitas$p.value >= 0.05, "✓ Terpenuhi", "✗ Tidak terpenuhi")
+}
+
+if (!is.null(params$hasil_homogenitas)) {
+    status_homogen <- ifelse(params$hasil_homogenitas$p.value >= 0.05, "✓ Terpenuhi", "✗ Tidak terpenuhi")
+}
+
+summary_df <- data.frame(
+    Asumsi = c("Normalitas", "Homogenitas Varians"),
+    Status = c(status_normal, status_homogen),
+    Metode = c("Shapiro-Wilk Test", "Levene's Test")
+)
+
+ft <- flextable(summary_df) %>%
+    set_header_labels(
+        Asumsi = "Asumsi",
+        Status = "Status",
+        Metode = "Metode Uji"
+    ) %>%
+    theme_vanilla() %>%
+    autofit() %>%
+    align(align = "center", part = "header")
+
+ft
+```
+
+### Rekomendasi Analisis Lanjutan
+
+```{r recommendations}
+cat("**Berdasarkan hasil uji asumsi, rekomendasi analisis lanjutan:**\n\n")
+
+normal_ok <- FALSE
+homogen_ok <- FALSE
+
+if (!is.null(params$hasil_normalitas)) {
+    normal_ok <- params$hasil_normalitas$p.value >= 0.05
+}
+
+if (!is.null(params$hasil_homogenitas)) {
+    homogen_ok <- params$hasil_homogenitas$p.value >= 0.05
+}
+
+if (normal_ok && homogen_ok) {
+    cat("✓ **Semua asumsi terpenuhi** - Dapat menggunakan uji parametrik standar:\n")
+    cat("  - Independent t-test untuk dua grup\n")
+    cat("  - One-way ANOVA untuk lebih dari dua grup\n")
+    cat("  - Paired t-test untuk data berpasangan\n")
+} else if (normal_ok && !homogen_ok) {
+    cat("⚠ **Normalitas terpenuhi, homogenitas tidak** - Gunakan:\n")
+    cat("  - Welch's t-test (unequal variances)\n")
+    cat("  - Welch's ANOVA\n")
+    cat("  - Pertimbangkan transformasi data\n")
+} else if (!normal_ok && homogen_ok) {
+    cat("⚠ **Homogenitas terpenuhi, normalitas tidak** - Gunakan:\n")
+    cat("  - Mann-Whitney U test (dua grup)\n")
+    cat("  - Kruskal-Wallis test (lebih dari dua grup)\n")
+    cat("  - Pertimbangkan transformasi data\n")
+} else if (!normal_ok && !homogen_ok) {
+    cat("✗ **Kedua asumsi tidak terpenuhi** - Gunakan uji non-parametrik:\n")
+    cat("  - Mann-Whitney U test (dua grup)\n")
+    cat("  - Kruskal-Wallis test (lebih dari dua grup)\n")
+    cat("  - Transformasi data sangat disarankan\n")
+} else {
+    cat("⚠ **Hasil uji tidak lengkap** - Lakukan uji asumsi lengkap sebelum analisis inferensial\n")
+}
+
+cat("\n**Catatan Tambahan:**\n")
+cat("- Untuk sampel besar (n > 30), Central Limit Theorem dapat mengatasi masalah normalitas\n")
+cat("- Outlier dapat mempengaruhi hasil uji asumsi\n")
+cat("- Bootstrap methods dapat digunakan sebagai alternatif robust\n")
+```
+
+---
+
+## Metode Alternatif
+
+### Transformasi Data
+
+Jika asumsi tidak terpenuhi, pertimbangkan transformasi berikut:
+
+1. **Log Transformation:** ln(x) atau log₁₀(x) untuk data positif skewed
+2. **Square Root:** √x untuk data count atau positif skewed ringan  
+3. **Box-Cox Transformation:** Transformasi optimal berdasarkan parameter λ
+4. **Rank Transformation:** Menggunakan ranking sebagai alternatif non-parametrik
+
+### Uji Non-Parametrik
+
+Alternatif robust jika asumsi parametrik tidak terpenuhi:
+
+1. **Mann-Whitney U (Wilcoxon Rank-Sum):** Alternatif t-test untuk dua grup
+2. **Kruskal-Wallis:** Alternatif ANOVA untuk lebih dari dua grup
+3. **Wilcoxon Signed-Rank:** Alternatif paired t-test
+4. **Friedman Test:** Alternatif repeated measures ANOVA
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

@@ -63,15 +63,54 @@ manajemen_data_ui <- function(id) {
         ),
         fluidRow(
             column(
-                width = 6,
-                downloadButton(ns("download_result"), "Unduh Hasil (.csv)",
-                    class = "btn-primary", icon = icon("download")
+                width = 12,
+                box(
+                    title = tags$span(icon("comment"), "Interpretasi"),
+                    status = "info",
+                    solidHeader = TRUE,
+                    width = NULL,
+                    verbatimTextOutput(ns("interpretation"))
                 )
-            ),
+            )
+        ),
+        fluidRow(
             column(
-                width = 6,
-                downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.txt)",
-                    class = "btn-info", icon = icon("file-text")
+                width = 12,
+                box(
+                    title = tags$span(icon("download"), "Unduh Hasil"),
+                    status = "success",
+                    solidHeader = TRUE,
+                    width = NULL,
+                    fluidRow(
+                        column(
+                            width = 3,
+                            h6("Data Hasil"),
+                            downloadButton(ns("download_result"), "Unduh Data (.csv)",
+                                class = "btn-outline-primary", icon = icon("file-csv"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 3,
+                            h6("Interpretasi"),
+                            downloadButton(ns("download_interpretation"), "Unduh Interpretasi (.docx)",
+                                class = "btn-outline-info", icon = icon("file-word"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 3,
+                            h6("Laporan PDF"),
+                            downloadButton(ns("download_report_pdf"), "Unduh Laporan PDF",
+                                class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                            )
+                        ),
+                        column(
+                            width = 3,
+                            h6("Laporan Word"),
+                            downloadButton(ns("download_report_word"), "Unduh Laporan Word",
+                                class = "btn-success", icon = icon("file-word"), width = "100%"
+                            )
+                        )
+                    )
                 )
             )
         )

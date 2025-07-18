@@ -104,9 +104,9 @@ server <- function(input, output, session) {
                 values$data <- load_data_simple()
 
                 # Update variable choices
-                numeric_vars <- get_numeric_columns_simple(values$data)
-                updateSelectInput(session, "variable", choices = numeric_vars)
-                updateSelectInput(session, "test_variable", choices = numeric_vars)
+                numeric_choices <- get_variable_choices_simple(values$data, "numeric")
+                updateSelectInput(session, "variable", choices = numeric_choices)
+                updateSelectInput(session, "test_variable", choices = numeric_choices)
 
                 showNotification("Data berhasil dimuat!", type = "message")
             },
@@ -120,9 +120,9 @@ server <- function(input, output, session) {
     observe({
         values$data <- load_data_simple()
         if (!is.null(values$data)) {
-            numeric_vars <- get_numeric_columns_simple(values$data)
-            updateSelectInput(session, "variable", choices = numeric_vars)
-            updateSelectInput(session, "test_variable", choices = numeric_vars)
+            numeric_choices <- get_variable_choices_simple(values$data, "numeric")
+            updateSelectInput(session, "variable", choices = numeric_choices)
+            updateSelectInput(session, "test_variable", choices = numeric_choices)
         }
     })
 

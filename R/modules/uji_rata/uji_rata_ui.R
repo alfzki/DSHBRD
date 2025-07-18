@@ -54,6 +54,19 @@ uji_rata_ui <- function(id) {
                     ),
                     actionButton(ns("run_test"), "Jalankan Uji",
                         class = "btn-success", icon = icon("play"), width = "100%"
+                    ),
+                    hr(),
+                    h5("Download Options:"),
+                    downloadButton(ns("download_interpretation"), "Interpretasi (.docx)",
+                        class = "btn-sm btn-outline-info", icon = icon("file-word"), width = "100%"
+                    ),
+                    br(), br(),
+                    downloadButton(ns("download_report_pdf"), "Laporan Lengkap (PDF)",
+                        class = "btn-primary", icon = icon("file-pdf"), width = "100%"
+                    ),
+                    br(), br(),
+                    downloadButton(ns("download_report_word"), "Laporan Lengkap (Word)",
+                        class = "btn-success", icon = icon("file-word"), width = "100%"
                     )
                 )
             ),
@@ -67,11 +80,7 @@ uji_rata_ui <- function(id) {
                     verbatimTextOutput(ns("test_results")),
                     br(),
                     h4("Interpretasi:"),
-                    uiOutput(ns("interpretation")),
-                    br(),
-                    downloadButton(ns("download_results"), "Unduh Hasil (.pdf)",
-                        class = "btn-primary", icon = icon("download")
-                    )
+                    uiOutput(ns("interpretation"))
                 )
             )
         )

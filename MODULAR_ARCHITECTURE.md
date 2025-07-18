@@ -140,9 +140,6 @@ module_server <- function(id, values) {
 The `load_modules.R` file provides:
 
 1. **load_all_modules()**: Sources all UI and server modules
-2. **get_available_modules()**: Returns list of available modules
-3. **check_module_integrity()**: Validates individual module structure
-4. **validate_all_modules()**: Validates all modules are complete
 
 ## Usage
 

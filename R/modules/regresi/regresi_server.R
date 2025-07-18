@@ -50,13 +50,11 @@ regresi_server <- function(id, values) {
 
                     # VIF test (only if more than 1 independent variable)
                     if (length(input$indep_vars) > 1) {
-                        library(car)
                         vif_values <- vif(model)
                         assumptions$vif <- vif_values
                     }
 
                     # Breusch-Pagan test for heteroscedasticity
-                    library(lmtest)
                     bp_test <- bptest(model)
                     assumptions$breusch_pagan <- bp_test
 

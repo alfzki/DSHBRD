@@ -127,7 +127,7 @@ check_and_install_pandoc <- function() {
 }
 
 # Check and install pandoc if needed
-pandoc_available <- check_and_install_pandoc()
+check_and_install_pandoc()
 
 # Global Settings
 # ===============
@@ -366,27 +366,6 @@ format_number <- function(x, digits = 2) {
         return(format(round(x, digits), nsmall = digits))
     }
     return(as.character(x))
-}
-
-#' Create a professional-looking box for UI
-#' @param title character box title
-#' @param content UI content
-#' @param status character box status (default: "primary")
-#' @param width integer box width (default: 12)
-#' @return UI box element
-create_info_box <- function(title, content, status = "primary", width = 12) {
-    fluidRow(
-        column(
-            width = width,
-            box(
-                title = title,
-                status = status,
-                solidHeader = TRUE,
-                width = NULL,
-                content
-            )
-        )
-    )
 }
 
 # Data validation functions

@@ -15,16 +15,14 @@ tryCatch(
     }
 )
 
-# Test 2: Load UI and Server modules
+# Test 2: Load modular components
 cat("\n=== Testing Modules ===\n")
 tryCatch(
     {
-        source("R/ui_modules.R")
-        cat("✓ UI modules loaded\n")
-        source("R/server_modules.R")
-        cat("✓ Server modules loaded\n")
-        source("R/additional_server_modules.R")
-        cat("✓ Additional server modules loaded\n")
+        source("R/load_modules.R")
+        cat("✓ Module loading system loaded\n")
+        load_all_modules()
+        cat("✓ All modules loaded successfully\n")
     },
     error = function(e) {
         cat("✗ Error loading modules:", e$message, "\n")

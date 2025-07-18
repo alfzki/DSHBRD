@@ -65,28 +65,38 @@ beranda_server <- function(id, values) {
         # Metadata table
         output$metadata_table <- DT::renderDT({
             metadata <- data.frame(
-                Variabel = c(
-                    "DISTRICTCODE", "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE",
-                    "NOELECTRIC", "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING",
-                    "DPRONE", "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
+                "Nama Variabel di Dashboard" = c(
+                    "Region", "Pulau", "Provinsi", "Nama Kabupaten/Kota",
+                    "Persentase Populasi Balita", "Persentase Populasi Wanita", "Persentase Populasi Lansia",
+                    "Persentase Kepala Keluarga Wanita", "Rata-rata Anggota Keluarga", "Persentase Tanpa Listrik",
+                    "Persentase Pendidikan Rendah", "Pertumbuhan Populasi", "Tingkat Kemiskinan",
+                    "Tingkat Buta Huruf", "Tanpa Pelatihan Bencana", "Tinggal di Area Rawan Bencana",
+                    "Status Kepemilikan Rumah (Sewa)", "Tanpa Saluran Pembuangan", "Akses Air Pipa",
+                    "Jumlah Populasi"
                 ),
-                Deskripsi = c(
-                    "Kode Wilayah Kabupaten/Kota", "Persentase Populasi Balita",
-                    "Persentase Populasi Perempuan", "Persentase Populasi Lansia ≥65 tahun",
-                    "Persentase Rumah Tangga Kepala Keluarga Perempuan", "Rata-rata Jumlah Anggota Rumah Tangga",
-                    "Persentase Rumah Tangga Tanpa Listrik", "Persentase Populasi Berpendidikan Rendah",
-                    "Persentase Pertumbuhan Populasi", "Persentase Penduduk Miskin",
-                    "Persentase Populasi Buta Huruf", "Persentase RT Tanpa Pelatihan Bencana",
-                    "Persentase RT di Area Rawan Bencana", "Persentase Rumah Tangga Menyewa",
-                    "Persentase RT Tanpa Sistem Drainase", "Persentase RT Menggunakan Air Ledeng",
-                    "Jumlah Total Populasi"
+                "Nama Asli" = c(
+                    "region", "island", "province", "district",
+                    "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE", "NOELECTRIC",
+                    "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING", "DPRONE",
+                    "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
                 ),
-                Satuan = c(
-                    "kode", "%", "%", "%", "%", "orang",
+                "Deskripsi" = c(
+                    "Wilayah geografis besar (Barat/Timur)", "Nama pulau utama", "Nama provinsi", "Nama kabupaten/kota",
+                    "Persentase populasi berusia di bawah lima tahun", "Persentase populasi perempuan", "Persentase populasi berusia 65 tahun ke atas",
+                    "Persentase rumah tangga dengan kepala keluarga perempuan", "Rata-rata jumlah anggota rumah tangga", "Persentase rumah tangga tanpa akses listrik sebagai sumber penerangan",
+                    "Persentase populasi 15 tahun ke atas dengan pendidikan rendah", "Persentase perubahan (pertumbuhan) populasi", "Persentase penduduk miskin",
+                    "Persentase populasi yang buta huruf", "Persentase rumah tangga yang tidak pernah mendapat pelatihan bencana", "Persentase rumah tangga yang tinggal di area rawan bencana",
+                    "Persentase rumah tangga yang menyewa rumah", "Persentase rumah tangga tanpa sistem drainase/saluran pembuangan", "Persentase rumah tangga yang menggunakan air ledeng/pipa",
+                    "Jumlah total populasi"
+                ),
+                "Satuan" = c(
+                    "-", "-", "-", "-",
+                    "%", "%", "%", "%", "Orang", "%",
                     "%", "%", "%", "%", "%", "%",
-                    "%", "%", "%", "%", "jiwa"
+                    "%", "%", "%", "Jiwa"
                 ),
-                Sumber = rep("SUSENAS 2017, BPS-Statistics Indonesia", 17)
+                "Sumber" = rep("SUSENAS 2017, BPS-Statistics Indonesia", 20),
+                check.names = FALSE
             )
 
             DT::datatable(metadata,

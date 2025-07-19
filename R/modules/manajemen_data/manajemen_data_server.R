@@ -187,16 +187,10 @@ manajemen_data_server <- function(id, values) {
                     # Atomic update - assign the entire data frame
                     values$sovi_data <- new_data
 
-                    # CRITICAL: Save user variable to app state for auto-restoration
+                    # (OPSIONAL) Anda masih bisa menyimpan nama variabel yang dibuat pengguna ke dalam 'values'
+                    # untuk referensi di dalam sesi, jika diperlukan di modul lain.
                     values$user_created_vars[[var_name]] <- as.factor(categorized_data)
-                    cat("MANAJEMEN DATA: Saved user variable to app state:", var_name, "\n")
-
-                    # Save user variable to global state for preservation
-                    if (!exists(".app_state", envir = .GlobalEnv)) {
-                        .GlobalEnv$.app_state <- list(user_variables = list())
-                    }
-                    .GlobalEnv$.app_state$user_variables[[var_name]] <- as.factor(categorized_data)
-                    cat("SAVED TO GLOBAL STATE: Variable", var_name, "with", length(categorized_data), "values\n")
+                    cat("MANAJEMEN DATA: Variabel pengguna disimpan ke dalam state sesi:", var_name, "\n")
 
                     # Debug logging
                     cat("Manajemen Data: Saved new categorical variable:", var_name, "\n")
@@ -232,13 +226,17 @@ manajemen_data_server <- function(id, values) {
                     return()
                 }
                 req(processed_result())
-                
-                tryCatch({
-                    readr::write_csv(processed_result(), file)
-                }, error = function(e) {
-                    showNotification("Gagal mengunduh file CSV. Silakan coba lagi.", 
-                                   type = "error", duration = 5)
-                })
+
+                tryCatch(
+                    {
+                        readr::write_csv(processed_result(), file)
+                    },
+                    error = function(e) {
+                        showNotification("Gagal mengunduh file CSV. Silakan coba lagi.",
+                            type = "error", duration = 5
+                        )
+                    }
+                )
             }
         )
 
@@ -307,7 +305,7 @@ manajemen_data_server <- function(id, values) {
                 req(processed_result(), input$select_var)
 
                 temp_rmd <- tempfile(fileext = ".Rmd")
-                
+
                 var_name <- input$select_var
                 n_cat <- input$num_kategori
                 method_text <- ifelse(input$method == "interval", "interval sama", "kuantil")

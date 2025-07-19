@@ -1,7 +1,7 @@
 ---
-title: "Laporan ANOVA - NusaStat Dashboard"
+title: "Laporan ANOVA - Dashboard ALIVA"
 subtitle: "`r params$jenis_anova`"
-author: "NusaStat Dashboard"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   word_document:

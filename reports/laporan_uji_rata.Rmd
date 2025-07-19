@@ -1,7 +1,7 @@
 ---
-title: "Laporan Uji Rata-Rata - NusaStat Dashboard"
+title: "Laporan Uji Rata-Rata - Dashboard ALIVA"
 subtitle: "`r params$jenis_uji`"
-author: "NusaStat Dashboard"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   word_document:

@@ -544,7 +544,7 @@ Variabel ", input$select_var, " menunjukkan distribusi dengan karakteristik stat
 
                 # Create Word document using officer
                 doc <- officer::read_docx()
-                doc <- officer::body_add_par(doc, "NusaStat Dashboard", style = "heading 1")
+                doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
                 doc <- officer::body_add_par(doc, "Interpretasi Eksplorasi Data", style = "heading 2")
                 doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
                 doc <- officer::body_add_par(doc, "")

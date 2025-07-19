@@ -250,7 +250,7 @@ manajemen_data_server <- function(id, values) {
 
                     # Create Word document using officer
                     doc <- officer::read_docx()
-                    doc <- officer::body_add_par(doc, "NusaStat Dashboard", style = "heading 1")
+                    doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
                     doc <- officer::body_add_par(doc, "Interpretasi Kategorisasi Data", style = "heading 2")
                     doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
                     doc <- officer::body_add_par(doc, paste("Variabel:", var_name))

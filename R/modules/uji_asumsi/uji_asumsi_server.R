@@ -213,7 +213,7 @@ uji_asumsi_server <- function(id, values) {
                     
                     # Create Word document using officer
                     doc <- officer::read_docx()
-                    doc <- officer::body_add_par(doc, "NusaStat Dashboard", style = "heading 1")
+                    doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
                     doc <- officer::body_add_par(doc, "Interpretasi Uji Asumsi", style = "heading 2")
                     doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
                     doc <- officer::body_add_par(doc, paste("Variabel:", input$var_normal))
@@ -271,8 +271,8 @@ uji_asumsi_server <- function(id, values) {
                 }
 
                 rmd_content <- '---
-title: "Laporan Uji Asumsi - NusaStat Dashboard"
-author: "NusaStat Dashboard"
+title: "Laporan Uji Asumsi - Dashboard ALIVA"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
 output:
   pdf_document:
@@ -362,8 +362,8 @@ Laporan ini menyajikan hasil uji asumsi yang diperlukan untuk analisis statistik
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
                 rmd_content <- '---
-title: "Laporan Uji Asumsi - NusaStat Dashboard"
-author: "NusaStat Dashboard"
+title: "Laporan Uji Asumsi - Dashboard ALIVA"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
 output:
   word_document:

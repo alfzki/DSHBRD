@@ -227,7 +227,7 @@ uji_prop_var_server <- function(id, values) {
 
                 # Create Word document using officer
                 doc <- officer::read_docx()
-                doc <- officer::body_add_par(doc, "NusaStat Dashboard", style = "heading 1")
+                doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
                 doc <- officer::body_add_par(doc, paste("Interpretasi", test_title), style = "heading 2")
                 doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
                 doc <- officer::body_add_par(doc, "")
@@ -252,8 +252,8 @@ uji_prop_var_server <- function(id, values) {
                 )
 
                 rmd_content <- paste0('---
-title: "', test_title, ' - NusaStat Dashboard"
-author: "NusaStat Dashboard"
+title: "', test_title, ' - Dashboard ALIVA"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
 output:
   pdf_document:
@@ -323,8 +323,8 @@ Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak
                 )
 
                 rmd_content <- paste0('---
-title: "', test_title, ' - NusaStat Dashboard"
-author: "NusaStat Dashboard"
+title: "', test_title, ' - Dashboard ALIVA"
+author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
 output:
   word_document:

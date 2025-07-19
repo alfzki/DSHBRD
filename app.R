@@ -1,34 +1,17 @@
-# ==============================================================================
-# APLIKASI UTAMA DASHBOARD ALIVA
-# ==============================================================================
-#
-# Tujuan: Aplikasi utama untuk Dashboard Analisis Kerentanan Sosial Indonesia
-# Penulis: Tim Dashboard ALIVA
-# Terakhir Diperbarui: Juli 2025
-# Versi: 3.0 - Implementasi Arsitektur Modular
-#
-# Deskripsi:
-# ALIVA adalah dashboard interaktif untuk analisis kerentanan sosial dan
-# statistik Indonesia yang dikembangkan menggunakan R Shiny dengan
-# arsitektur modular.
-#
-# Fitur Utama:
-# - Manajemen data dengan kategorisasi variabel
-# - Eksplorasi data dengan visualisasi interaktif
-# - Uji asumsi statistik (normalitas & homogenitas)
-# - Uji statistik inferensia (t-test, ANOVA, proporsi, varians)
-# - Analisis regresi linear berganda
-# - Export laporan dalam berbagai format
-# ==============================================================================
+# NusaStat: Dasbor Interaktif Analisis Kerentanan Sosial & Statistik Indonesia
+# Developed for UAS Komputasi Statistik - Enhanced Version
+# Author: Dasbor ALIVA
+# Date: July 17, 2025
+# Version: 3.0 - Modular Architecture Implementation
 
-# Memuat pustaka dan konfigurasi global yang diperlukan
+# Load required libraries and global configurations
 source("global.R")
 
-# Memuat komponen modular
+# Load modular components
 source("R/load_modules.R")
 load_all_modules()
 
-# Definisi antarmuka pengguna (UI)
+# Define UI
 ui <- dashboardPage(
   title = "ALIVA Dashboard",
   skin = "blue",
@@ -104,54 +87,54 @@ ui <- dashboardPage(
   )
 )
 
-# Definisi logika server
+# Define server logic
 server <- function(input, output, session) {
-  # Inisialisasi nilai reaktif untuk berbagi data antar modul
+  # Initialize reactive values
   values <- reactiveValues(
     sovi_data = NULL,
     distance_data = NULL,
     processed_data = NULL,
-    data_update_counter = 0, # Penghitung untuk melacak perubahan struktur data
-    data_initialized = FALSE, # Flag untuk mencegah inisialisasi ulang
-    user_created_vars = list() # Menyimpan variabel buatan pengguna
+    data_update_counter = 0, # Counter to track data structure changes
+    data_initialized = FALSE, # Flag to prevent reinitialization
+    user_created_vars = list() # Store user-created variables
   )
 
-  # Memuat data saat startup HANYA SEKALI - menggunakan trigger yang lebih handal
+  # Load data on startup ONCE - using a more reliable trigger
   observe({
     if (is.null(values$sovi_data) && !values$data_initialized) {
-      cat("APLIKASI UTAMA: ===== PEMUATAN DATA AWAL DIMULAI =====\n")
+      cat("MAIN APP: ===== INITIAL DATA LOADING TRIGGERED =====\n")
       values$sovi_data <- load_sovi_data()
       values$distance_data <- load_distance_data()
       values$processed_data <- values$sovi_data
       values$data_initialized <- TRUE
-      cat("APLIKASI UTAMA: ===== PEMUATAN DATA AWAL SELESAI =====\n")
+      cat("MAIN APP: ===== INITIAL DATA LOADING COMPLETED =====\n")
     } else if (values$data_initialized) {
-      cat("APLIKASI UTAMA: Flag inisialisasi data sudah diatur, mencegah reload\n")
+      cat("MAIN APP: Data initialization flag set, preventing reload\n")
     } else {
-      cat("APLIKASI UTAMA: Data sudah dimuat, melewati reload\n")
+      cat("MAIN APP: Data already loaded, skipping reload\n")
     }
   })
 
-  # PENTING: Pemulihan otomatis variabel pengguna jika data dimuat ulang
+  # CRITICAL: Auto-restore user variables if data gets reloaded
   observe({
     current_data <- values$sovi_data
     if (!is.null(current_data) && length(values$user_created_vars) > 0) {
-      # Periksa apakah ada variabel pengguna yang hilang dari data saat ini
+      # Check if any user variables are missing from current data
       missing_vars <- setdiff(names(values$user_created_vars), names(current_data))
       if (length(missing_vars) > 0) {
-        cat("APLIKASI UTAMA: Pemulihan otomatis", length(missing_vars), "variabel pengguna yang hilang\n")
+        cat("MAIN APP: Auto-restoring", length(missing_vars), "missing user variables\n")
         for (var_name in missing_vars) {
           current_data[[var_name]] <- values$user_created_vars[[var_name]]
-          cat("APLIKASI UTAMA: Variabel dipulihkan:", var_name, "\n")
+          cat("MAIN APP: Restored variable:", var_name, "\n")
         }
         values$sovi_data <- current_data
         values$data_update_counter <- values$data_update_counter + 1
-        cat("APLIKASI UTAMA: Pemulihan otomatis selesai, counter bertambah menjadi:", values$data_update_counter, "\n")
+        cat("MAIN APP: Auto-restore complete, counter incremented to:", values$data_update_counter, "\n")
       }
     }
   })
 
-  # Pemanggilan server modul
+  # Call server modules
   beranda_server("beranda", values)
   manajemen_data_server("manajemen_data", values)
   eksplorasi_server("eksplorasi", values)
@@ -162,5 +145,5 @@ server <- function(input, output, session) {
   regresi_server("regresi", values)
 }
 
-# Menjalankan aplikasi
+# Run the application
 shinyApp(ui = ui, server = server)

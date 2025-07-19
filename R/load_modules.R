@@ -1,47 +1,28 @@
-# ==============================================================================
-# HELPER PEMUATAN SEMUA MODUL
-# ==============================================================================
-#
-# Tujuan: Script helper untuk memuat semua komponen UI dan server modular
-# Penulis: Tim Dashboard ALIVA
-# Terakhir Diperbarui: Juli 2025
-#
-# Deskripsi:
-# Script ini memuat semua komponen modular yang diperlukan untuk dashboard
-# ALIVA. Harus dipanggil setelah global.R dimuat untuk memastikan semua
-# dependensi tersedia.
-#
-# Arsitektur Modular:
-# - Memuat file utilitas terlebih dahulu
-# - Memuat modul UI dari setiap fitur
-# - Memuat modul server dari setiap fitur
-# - Pemisahan concern berdasarkan fungsionalitas
-# ==============================================================================
+# Load All Modules Helper Script
+# This script loads all modular UI and server components for ALIVA Dashboard
 
-#' Memuat Semua Modul UI dan Server untuk Dashboard ALIVA
+#' Load all UI and server modules for ALIVA Dashboard
 #'
-#' @description Fungsi ini memuat semua komponen modular yang diperlukan untuk
-#'              dashboard. Harus dipanggil setelah global.R dimuat untuk memastikan
-#'              semua dependensi tersedia.
-#' @details Memuat file dari direktori R/modules mengikuti arsitektur modular
-#'          baru yang memisahkan concern berdasarkan fungsionalitas.
-#' @return Tidak ada nilai kembali, fungsi ini memuat file ke environment global
-#' @author Tim Dashboard ALIVA
+#' This function sources all the modular components needed for the dashboard.
+#' It should be called after global.R is loaded to ensure all dependencies are available.
+#'
+#' @description Sources all UI and server module files from the R/modules directory
+#' following the new modular architecture that separates concerns by functionality.
 load_all_modules <- function() {
-    # Memuat fungsi utilitas terlebih dahulu
+    # Load utility functions first
     utils_dir <- file.path("R", "utils")
     if (dir.exists(utils_dir)) {
         utils_files <- list.files(utils_dir, pattern = "\\.R$", full.names = TRUE)
         for (util_file in utils_files) {
             source(util_file)
-            cat(paste("✓ Utilitas dimuat:", basename(util_file), "\n"))
+            cat(paste("✓ Loaded utility:", basename(util_file), "\n"))
         }
     }
 
-    # Mendefinisikan direktori dasar modul
+    # Define the base modules directory
     modules_dir <- file.path("R", "modules")
 
-    # Mendefinisikan semua nama modul
+    # Define all module names
     module_names <- c(
         "beranda",
         "manajemen_data",
@@ -53,31 +34,31 @@ load_all_modules <- function() {
         "regresi"
     )
 
-    # Memuat modul UI
-    cat("Memuat modul UI...\n")
+    # Load UI modules
+    cat("Loading UI modules...\n")
     for (module in module_names) {
         ui_file <- file.path(modules_dir, module, paste0(module, "_ui.R"))
         if (file.exists(ui_file)) {
             source(ui_file)
-            cat(paste("✓ UI dimuat:", module, "\n"))
+            cat(paste("✓ Loaded UI:", module, "\n"))
         } else {
-            cat(paste("⚠ File UI tidak ditemukan:", ui_file, "\n"))
+            cat(paste("⚠ UI file not found:", ui_file, "\n"))
         }
     }
 
-    # Memuat modul Server
-    cat("\nMemuat modul Server...\n")
+    # Load Server modules
+    cat("\nLoading Server modules...\n")
     for (module in module_names) {
         server_file <- file.path(modules_dir, module, paste0(module, "_server.R"))
         if (file.exists(server_file)) {
             source(server_file)
-            cat(paste("✓ Server dimuat:", module, "\n"))
+            cat(paste("✓ Loaded Server:", module, "\n"))
         } else {
-            cat(paste("⚠ File Server tidak ditemukan:", server_file, "\n"))
+            cat(paste("⚠ Server file not found:", server_file, "\n"))
         }
     }
 
-    cat("\n✅ Semua modul berhasil dimuat!\n")
-    cat("📊 Arsitektur modular diimplementasikan dengan pemisahan concern.\n")
-    cat("🔧 Setiap modul sekarang menangani fungsionalitas spesifik secara independen.\n\n")
+    cat("\n✅ All modules loaded successfully!\n")
+    cat("📊 Modular architecture implemented with separation of concerns.\n")
+    cat("🔧 Each module now handles specific functionality independently.\n\n")
 }

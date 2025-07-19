@@ -1,12 +1,28 @@
-# Beranda UI Module
-# Home page user interface for ALIVA: Alif's Vulnerability Analytics Dashboard
+# ==============================================================================
+# MODUL UI BERANDA
+# ==============================================================================
+#
+# Tujuan: Antarmuka pengguna untuk halaman beranda/landing dashboard
+# Penulis: Tim Dashboard ALIVA
+# Terakhir Diperbarui: Juli 2025
+#
+# Deskripsi:
+# Modul ini menyediakan antarmuka utama halaman beranda yang mencakup
+# sambutan, informasi dataset, metadata variabel, dan navigasi awal.
+#
+# Komponen UI:
+# - Kotak sambutan dengan panduan navigasi
+# - Informasi dataset dan statistik
+# - Tabel metadata variabel yang komprehensif
+# - Akses unduhan informasi dashboard
+# ==============================================================================
 
-#' Beranda UI Module
+#' Modul UI Beranda
 #'
-#' Creates the user interface for the home/landing page of the dashboard
-#'
-#' @param id Module ID for namespacing
-#' @return UI elements for the beranda tab
+#' @description Membuat antarmuka pengguna untuk halaman beranda/landing dashboard
+#' @param id Character. ID modul untuk namespacing
+#' @return Elemen UI untuk tab beranda
+#' @author Tim Dashboard ALIVA
 beranda_ui <- function(id) {
     ns <- NS(id)
     tabItem(

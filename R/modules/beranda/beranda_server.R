@@ -1,70 +1,90 @@
-# Beranda Server Module
-# Server logic for the home page of ALIVA Dashboard
+# ==============================================================================
+# MODUL SERVER BERANDA
+# ==============================================================================
+#
+# Tujuan: Logika server untuk halaman beranda/landing dashboard
+# Penulis: Tim Dashboard ALIVA
+# Terakhir Diperbarui: Juli 2025
+#
+# Deskripsi:
+# Modul ini menyediakan antarmuka sambutan utama dan informasi dataset
+# termasuk tabel metadata dan ringkasan sistem
+#
+# Fitur:
+# - Konten sambutan dan panduan navigasi
+# - Informasi dataset dan statistik
+# - Tabel metadata komprehensif
+# - Akses informasi cepat
+# ==============================================================================
 
-#' Beranda Server Module
+#' Modul Server Beranda
 #'
-#' Server logic for the home/landing page functionality
-#'
-#' @param id Module ID for namespacing
-#' @param values Reactive values object containing shared data
+#' @description Logika server untuk halaman beranda dan ringkasan sistem
+#' @param id Character. ID modul untuk namespacing
+#' @param values Reactive values. Objek yang berisi data aplikasi bersama
+#' @return Fungsi server modul Shiny
+#' @author Tim Dashboard ALIVA
 beranda_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Welcome content
+        # ==============================================================================
+        # WELCOME CONTENT SECTION
+        # ==============================================================================
+
+        # Generate welcome content and feature overview
         output$welcome_content <- renderUI({
-            tagList(
-                h3("ALIVA: Alif Vulnerability Analytics Dashboard"),
-                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
-          data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
-                hr(),
-                h4("Fitur Utama:"),
-                tags$ul(
-                    tags$li("Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
-                    tags$li("Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
-                    tags$li("Uji Asumsi: Uji normalitas dan homogenitas varians"),
-                    tags$li("Statistik Inferensia: Uji beda rata-rata, proporsi, varians, dan ANOVA"),
-                    tags$li("Regresi Linear Berganda: Model prediktif dengan uji asumsi lengkap"),
-                    tags$li("Unduhan: Semua hasil dapat diunduh dalam format PDF, Word, atau CSV")
-                ),
-                hr(),
-                h4("Sumber Data:"),
-                p("Data yang digunakan dalam dashboard ini berasal dari SUSENAS (Survei Sosial Ekonomi Nasional)
-          2017 yang diterbitkan oleh BPS-Statistics Indonesia. Data mencakup indikator kerentanan sosial
-          dari 511 kabupaten/kota di Indonesia dengan 17 variabel meliputi:"),
-                tags$ul(
-                    tags$li("CHILDREN: Persentase populasi berusia di bawah lima tahun"),
-                    tags$li("FEMALE: Persentase populasi perempuan"),
-                    tags$li("ELDERLY: Persentase populasi berusia 65 tahun ke atas"),
-                    tags$li("POVERTY: Persentase penduduk miskin"),
-                    tags$li("ILLITERATE: Persentase populasi yang buta huruf"),
-                    tags$li("NOELECTRIC: Persentase rumah tangga tanpa akses listrik"),
-                    tags$li("TAPWATER: Persentase rumah tangga yang menggunakan air ledeng/pipa"),
-                    tags$li("Dan 10 indikator kerentanan sosial lainnya")
-                )
-            )
+            create_welcome_content()
         })
 
-        # Dataset information
+        # ==============================================================================
+        # DATASET INFORMATION SECTION
+        # ==============================================================================
+
+        # Display dynamic dataset statistics
         output$dataset_info <- renderUI({
+            # Check if data is available
             if (is.null(values$sovi_data)) {
-                return(p("Data sedang dimuat..."))
+                return(div(
+                    class = "alert alert-info",
+                    icon("info-circle"),
+                    "Data sedang dimuat..."
+                ))
             }
 
-            tagList(
-                h5("Informasi Dataset SOVI:"),
-                p(paste("Jumlah observasi:", nrow(values$sovi_data))),
-                p(paste("Jumlah variabel:", ncol(values$sovi_data))),
-                p(paste("Variabel numerik:", length(get_numeric_columns(values$sovi_data)))),
-                p(paste("Variabel kategorik:", length(get_categorical_columns(values$sovi_data)))),
-                hr(),
-                h5("Informasi Dataset Distance:"),
-                p(paste("Jumlah observasi:", nrow(values$distance_data))),
-                p(paste("Jumlah variabel:", ncol(values$distance_data)))
-            )
+            # Generate dataset information UI
+            create_dataset_info_ui(values$sovi_data, values$distance_data)
         })
 
-        # Metadata table
+
+        # ==============================================================================
+        # METADATA TABLE SECTION
+        # ==============================================================================
+
+        # Generate comprehensive metadata table
         output$metadata_table <- DT::renderDT({
-            metadata <- data.frame(
+            metadata <- create_metadata_dataframe()
+
+            DT::datatable(
+                metadata,
+                options = list(
+                    pageLength = 10,
+                    scrollX = TRUE,
+                    searchHighlight = TRUE,
+                    language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Indonesia.json")
+                ),
+                class = "table-striped table-hover table-condensed",
+                rownames = FALSE,
+                filter = "top"
+            ) %>%
+                DT::formatStyle(
+                    columns = "Nama Variabel di Dashboard",
+                    backgroundColor = "#f8f9fa",
+                    fontWeight = "bold"
+                )
+        })
+
+        # Create metadata dataframe
+        create_metadata_dataframe <- function() {
+            data.frame(
                 "Nama Variabel di Dashboard" = c(
                     "Region", "Pulau", "Provinsi", "Nama Kabupaten/Kota",
                     "Persentase Populasi Balita", "Persentase Populasi Wanita", "Persentase Populasi Lansia",
@@ -81,7 +101,7 @@ beranda_server <- function(id, values) {
                     "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
                 ),
                 "Deskripsi" = c(
-                    "Wilayah geografis besar (Barat/Timur)", "Nama pulau utama", "Nama provinsi", "Nama kabupaten/kota",
+                    "Wilayah geografis besar Indonesia", "Nama pulau utama Indonesia", "Nama provinsi Indonesia", "Nama kabupaten/kota",
                     "Persentase populasi berusia di bawah lima tahun", "Persentase populasi perempuan", "Persentase populasi berusia 65 tahun ke atas",
                     "Persentase rumah tangga dengan kepala keluarga perempuan", "Rata-rata jumlah anggota rumah tangga", "Persentase rumah tangga tanpa akses listrik sebagai sumber penerangan",
                     "Persentase populasi 15 tahun ke atas dengan pendidikan rendah", "Persentase perubahan (pertumbuhan) populasi", "Persentase penduduk miskin",
@@ -98,12 +118,11 @@ beranda_server <- function(id, values) {
                 "Sumber" = rep("SUSENAS 2017, BPS-Statistics Indonesia", 20),
                 check.names = FALSE
             )
+        }
 
-            DT::datatable(metadata,
-                options = list(pageLength = 10, scrollX = TRUE),
-                class = "table-striped table-hover"
-            )
-        })
+        # ==============================================================================
+        # DOWNLOAD HANDLERS
+        # ==============================================================================
 
         # Download handler for dashboard info
         output$download_info <- downloadHandler(
@@ -464,4 +483,118 @@ ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari e
             }
         )
     })
+}
+
+# ==============================================================================
+# HELPER FUNCTIONS FOR UI CREATION
+# ==============================================================================
+
+# Create welcome content UI
+create_welcome_content <- function() {
+    tagList(
+        div(
+            class = "jumbotron", style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px; margin-bottom: 20px;",
+            h2("🇮🇩 ALIVA: Alif Vulnerability Analytics Dashboard",
+                style = "font-weight: bold; margin-bottom: 15px;"
+            ),
+            p("Selamat datang di ALIVA Dashboard! Platform analisis statistik komprehensif untuk data kerentanan sosial Indonesia.",
+                style = "font-size: 1.1em; margin-bottom: 0;"
+            )
+        ),
+        div(
+            class = "row",
+            div(
+                class = "col-md-6",
+                div(
+                    class = "card border-primary", style = "margin-bottom: 20px;",
+                    div(
+                        class = "card-header bg-primary text-white",
+                        h4("🎯 Fitur Utama", style = "margin: 0;")
+                    ),
+                    div(
+                        class = "card-body",
+                        tags$ul(
+                            class = "list-group list-group-flush",
+                            tags$li(class = "list-group-item", "📊 Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
+                            tags$li(class = "list-group-item", "📈 Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
+                            tags$li(class = "list-group-item", "🔍 Uji Asumsi: Normalitas dan homogenitas varians"),
+                            tags$li(class = "list-group-item", "📊 Statistik Inferensia: Uji t, ANOVA, proporsi, varians"),
+                            tags$li(class = "list-group-item", "🔬 Regresi Linear Berganda: Model prediktif lengkap"),
+                            tags$li(class = "list-group-item", "📄 Export: PDF, Word, dan CSV untuk semua hasil")
+                        )
+                    )
+                )
+            ),
+            div(
+                class = "col-md-6",
+                div(
+                    class = "card border-success", style = "margin-bottom: 20px;",
+                    div(
+                        class = "card-header bg-success text-white",
+                        h4("📚 Sumber Data", style = "margin: 0;")
+                    ),
+                    div(
+                        class = "card-body",
+                        p("Data bersumber dari SUSENAS (Survei Sosial Ekonomi Nasional) 2017 oleh BPS-Statistics Indonesia."),
+                        tags$strong("Cakupan Data:"),
+                        tags$ul(
+                            tags$li("511 kabupaten/kota di Indonesia"),
+                            tags$li("17 variabel kerentanan sosial"),
+                            tags$li("Indikator demografis, ekonomi, dan infrastruktur"),
+                            tags$li("Tingkat kabupaten/kota untuk analisis spasial")
+                        )
+                    )
+                )
+            )
+        )
+    )
+}
+
+# Create dataset information UI
+create_dataset_info_ui <- function(sovi_data, distance_data) {
+    tagList(
+        div(
+            class = "row",
+            div(
+                class = "col-md-6",
+                div(
+                    class = "card border-info",
+                    div(
+                        class = "card-header bg-info text-white",
+                        h5("📊 Dataset SOVI (Vulnerability)", style = "margin: 0;")
+                    ),
+                    div(
+                        class = "card-body",
+                        tags$ul(
+                            class = "list-unstyled",
+                            tags$li(tags$strong("Jumlah Observasi: "), nrow(sovi_data)),
+                            tags$li(tags$strong("Jumlah Variabel: "), ncol(sovi_data)),
+                            tags$li(tags$strong("Variabel Numerik: "), length(get_numeric_columns(sovi_data))),
+                            tags$li(tags$strong("Variabel Kategorik: "), length(get_categorical_columns(sovi_data)))
+                        )
+                    )
+                )
+            ),
+            div(
+                class = "col-md-6",
+                div(
+                    class = "card border-warning",
+                    div(
+                        class = "card-header bg-warning text-dark",
+                        h5("🗺️ Dataset Distance (Spatial)", style = "margin: 0;")
+                    ),
+                    div(
+                        class = "card-body",
+                        tags$ul(
+                            class = "list-unstyled",
+                            tags$li(tags$strong("Jumlah Observasi: "), nrow(distance_data)),
+                            tags$li(tags$strong("Jumlah Variabel: "), ncol(distance_data)),
+                            tags$li(tags$strong("Matrix Type: "), "Distance Matrix"),
+                            tags$li(tags$strong("Spatial Unit: "), "Kabupaten/Kota")
+                        )
+                    )
+                )
+            )
+        )
+    )
 }

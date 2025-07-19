@@ -1,10 +1,28 @@
-# Global configurations and functions for ALIVA Dashboard
-# This file contains package installations, data loading, and utility functions
+# ==============================================================================
+# KONFIGURASI GLOBAL DAN FUNGSI ALIVA DASHBOARD
+# ==============================================================================
+#
+# Tujuan: Konfigurasi global, pemuatan pustaka, dan fungsi utilitas
+# Penulis: Tim Dashboard ALIVA
+# Terakhir Diperbarui: Juli 2025
+#
+# Deskripsi:
+# File ini berisi instalasi paket, pemuatan data, dan fungsi utilitas yang
+# digunakan di seluruh aplikasi dashboard ALIVA untuk analisis kerentanan
+# sosial Indonesia.
+#
+# Komponen Utama:
+# - Instalasi dan pemuatan paket yang diperlukan
+# - Fungsi pemuatan data SOVI dan jarak
+# - Fungsi utilitas untuk manipulasi data dan UI
+# - Validasi data dan helper functions
+# ==============================================================================
 
-# Package Installation and Loading
-# =================================
+# ==============================================================================
+# INSTALASI DAN PEMUATAN PAKET
+# ==============================================================================
 
-# List of required packages
+# Daftar paket yang diperlukan
 required_packages <- c(
     # Core Shiny packages
     "shiny", "shinydashboard", "shinyWidgets", "shinythemes", "shinyjs",
@@ -25,10 +43,10 @@ required_packages <- c(
     "here", "glue", "scales", "RColorBrewer", "viridis"
 )
 
-# Set CRAN mirror
+# Penetapan mirror CRAN
 options(repos = c(CRAN = "https://cran.rstudio.com/"))
 
-# Function to check and install packages
+# Fungsi untuk memeriksa dan menginstal paket yang hilang
 install_if_missing <- function(packages) {
     new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
     if (length(new_packages)) {
@@ -37,35 +55,42 @@ install_if_missing <- function(packages) {
     }
 }
 
-# Install missing packages
+# Menginstal paket yang hilang
 install_if_missing(required_packages)
 
-# Load all required packages
+# Memuat semua paket yang diperlukan
 lapply(required_packages, function(pkg) {
     suppressPackageStartupMessages(library(pkg, character.only = TRUE))
 })
 
-# Load utility functions
-# ======================
+# ==============================================================================
+# PEMUATAN FUNGSI UTILITAS
+# ==============================================================================
 
-# Source interpretation helpers for statistical analysis
+# Sumber helper interpretasi untuk analisis statistik
 source("R/utils/interpretation_helpers.R")
 
-# Global Settings
-# ===============
+# ==============================================================================
+# PENGATURAN GLOBAL
+# ==============================================================================
 
-# Set options for better performance
+# Pengaturan opsi untuk performa yang lebih baik
 options(
     shiny.maxRequestSize = 50 * 1024^2, # 50MB file upload limit
     dplyr.summarise.inform = FALSE,
     warn = -1 # Suppress warnings for cleaner output
 )
 
-# Data Loading Functions
-# =====================
+# ==============================================================================
+# FUNGSI PEMUATAN DATA
+# ==============================================================================
 
-#' Load SOVI data from CSV file
-#' @return data.frame containing SOVI data with added categorical variables
+#' Memuat Data SOVI dari File CSV
+#'
+#' @description Memuat data kerentanan sosial (SOVI) dari file CSV dan menambahkan
+#'              variabel kategoris untuk analisis lebih lanjut
+#' @return data.frame berisi data SOVI dengan variabel kategoris tambahan
+#' @author Tim Dashboard ALIVA
 load_sovi_data <- function() {
     file_path <- here::here("data", "sovi_data.csv")
 
@@ -176,8 +201,11 @@ load_sovi_data <- function() {
     }
 }
 
-#' Load distance data from CSV file
-#' @return data.frame containing distance data
+#' Memuat Data Jarak dari File CSV
+#'
+#' @description Memuat data jarak antar kabupaten/kota dari file CSV
+#' @return data.frame berisi data jarak
+#' @author Tim Dashboard ALIVA
 load_distance_data <- function() {
     file_path <- here::here("data", "distance.csv")
 
@@ -193,14 +221,15 @@ load_distance_data <- function() {
     }
 }
 
-# Note: Dummy data creation functions removed - app now requires real data files
-# The app will load real sovi_data.csv and distance.csv files only
-# If these files are missing, the app will show an error message
+# Catatan: Fungsi pembuatan data dummy telah dihapus - aplikasi sekarang memerlukan file data asli
+# Aplikasi akan memuat file sovi_data.csv dan distance.csv yang sesungguhnya
+# Jika file ini hilang, aplikasi akan menampilkan pesan kesalahan
 
-# Utility Functions
-# =================
+# ==============================================================================
+# FUNGSI UTILITAS
+# ==============================================================================
 
-# Variable labels for better UI display
+# Label variabel untuk tampilan UI yang lebih baik
 SOVI_VARIABLE_LABELS <- list(
     # Numeric variables with descriptions
     "CHILDREN" = "Persentase Populasi Balita (CHILDREN)",
@@ -227,10 +256,13 @@ SOVI_VARIABLE_LABELS <- list(
     "province" = "Provinsi"
 )
 
-#' Get variable choices with labels for UI dropdowns
-#' @param data data.frame
-#' @param var_type character either "numeric", "categorical", or "all"
-#' @return named vector suitable for selectInput choices
+#' Mendapatkan Pilihan Variabel dengan Label untuk Dropdown UI
+#'
+#' @description Menghasilkan pilihan variabel berlabel untuk input dropdown di UI
+#' @param data data.frame Dataset yang akan dianalisis
+#' @param var_type character Tipe variabel: "numeric", "categorical", atau "all"
+#' @return named vector yang sesuai untuk pilihan selectInput
+#' @author Tim Dashboard ALIVA
 get_variable_choices <- function(data, var_type = "all") {
     if (is.null(data)) {
         return(character(0))
@@ -256,9 +288,12 @@ get_variable_choices <- function(data, var_type = "all") {
     return(choices)
 }
 
-#' Get numeric columns from a dataframe
-#' @param data data.frame
-#' @return character vector of numeric column names
+#' Mendapatkan Kolom Numerik dari Data Frame
+#'
+#' @description Mengidentifikasi dan mengembalikan nama kolom numerik dari dataset
+#' @param data data.frame Dataset yang akan dianalisis
+#' @return character vector berisi nama kolom numerik
+#' @author Tim Dashboard ALIVA
 get_numeric_columns <- function(data) {
     if (is.null(data)) {
         return(character(0))
@@ -268,9 +303,12 @@ get_numeric_columns <- function(data) {
         names()
 }
 
-#' Get categorical columns from a dataframe
-#' @param data data.frame
-#' @return character vector of categorical column names
+#' Mendapatkan Kolom Kategoris dari Data Frame
+#'
+#' @description Mengidentifikasi dan mengembalikan nama kolom kategoris dari dataset
+#' @param data data.frame Dataset yang akan dianalisis
+#' @return character vector berisi nama kolom kategoris
+#' @author Tim Dashboard ALIVA
 get_categorical_columns <- function(data) {
     if (is.null(data)) {
         return(character(0))
@@ -278,16 +316,19 @@ get_categorical_columns <- function(data) {
     categorical_vars <- sapply(data, function(x) is.character(x) || is.factor(x)) %>%
         .[. == TRUE] %>%
         names()
-    # Exclude 'district' as it is not a valid grouping variable for statistical tests
+    # Mengecualikan 'district' karena bukan variabel pengelompokan yang valid untuk uji statistik
     return(categorical_vars[categorical_vars != "district"])
 }
 
-#' Interpret p-value for statistical tests
-#' @param p_val numeric p-value
-#' @param alpha numeric significance level (default: 0.05)
-#' @param h0 character null hypothesis
-#' @param h1 character alternative hypothesis
-#' @return character interpretation
+#' Interpretasi Nilai P untuk Uji Statistik
+#'
+#' @description Memberikan interpretasi hasil uji statistik berdasarkan nilai p
+#' @param p_val numeric Nilai p dari uji statistik
+#' @param alpha numeric Tingkat signifikansi (default: 0.05)
+#' @param h0 character Hipotesis nol
+#' @param h1 character Hipotesis alternatif
+#' @return character Interpretasi hasil uji
+#' @author Tim Dashboard ALIVA
 interpret_p_value <- function(p_val, alpha = 0.05, h0 = "H0", h1 = "H1") {
     if (is.na(p_val)) {
         return("P-value tidak dapat dihitung.")
@@ -300,10 +341,13 @@ interpret_p_value <- function(p_val, alpha = 0.05, h0 = "H0", h1 = "H1") {
     }
 }
 
-#' Format numbers for display
-#' @param x numeric vector
-#' @param digits integer number of decimal places
-#' @return character vector of formatted numbers
+#' Format Angka untuk Tampilan
+#'
+#' @description Memformat angka untuk ditampilkan dengan jumlah desimal tertentu
+#' @param x numeric vector Vektor angka yang akan diformat
+#' @param digits integer Jumlah tempat desimal (default: 2)
+#' @return character vector Angka yang telah diformat
+#' @author Tim Dashboard ALIVA
 format_number <- function(x, digits = 2) {
     if (is.numeric(x)) {
         return(format(round(x, digits), nsmall = digits))
@@ -311,13 +355,17 @@ format_number <- function(x, digits = 2) {
     return(as.character(x))
 }
 
-# Data validation functions
-# ========================
+# ==============================================================================
+# FUNGSI VALIDASI DATA
+# ==============================================================================
 
-#' Validate that data is loaded
-#' @param data data.frame to validate
-#' @param data_name character name of the data for error messages
-#' @return logical TRUE if valid, FALSE otherwise
+#' Validasi Bahwa Data Telah Dimuat
+#'
+#' @description Memvalidasi bahwa dataset telah dimuat dengan benar
+#' @param data data.frame Dataset yang akan divalidasi
+#' @param data_name character Nama data untuk pesan kesalahan
+#' @return logical TRUE jika valid, FALSE jika tidak
+#' @author Tim Dashboard ALIVA
 validate_data <- function(data, data_name = "data") {
     if (is.null(data)) {
         showNotification(

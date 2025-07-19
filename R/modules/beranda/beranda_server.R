@@ -1,600 +1,401 @@
-# ==============================================================================
-# MODUL SERVER BERANDA
-# ==============================================================================
-#
-# Tujuan: Logika server untuk halaman beranda/landing dashboard
-# Penulis: Tim Dashboard ALIVA
-# Terakhir Diperbarui: Juli 2025
-#
-# Deskripsi:
-# Modul ini menyediakan antarmuka sambutan utama dan informasi dataset
-# termasuk tabel metadata dan ringkasan sistem
-#
-# Fitur:
-# - Konten sambutan dan panduan navigasi
-# - Informasi dataset dan statistik
-# - Tabel metadata komprehensif
-# - Akses informasi cepat
-# ==============================================================================
+# Beranda Server Module
+# Server logic for the home page of ALIVA Dashboard
 
-#' Modul Server Beranda
+#' Beranda Server Module
 #'
-#' @description Logika server untuk halaman beranda dan ringkasan sistem
-#' @param id Character. ID modul untuk namespacing
-#' @param values Reactive values. Objek yang berisi data aplikasi bersama
-#' @return Fungsi server modul Shiny
-#' @author Tim Dashboard ALIVA
+#' Server logic for the home/landing page functionality
+#'
+#' @param id Module ID for namespacing
+#' @param values Reactive values object containing shared data
 beranda_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # ==============================================================================
-        # WELCOME CONTENT SECTION
-        # ==============================================================================
-
-        # Generate welcome content and feature overview
+        # Welcome content
         output$welcome_content <- renderUI({
-            create_welcome_content()
+            tagList(
+                h3("ALIVA: Alif Vulnerability Analytics Dashboard"),
+                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
+          data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
+                hr(),
+                h4("Fitur Utama:"),
+                tags$ul(
+                    tags$li("Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
+                    tags$li("Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
+                    tags$li("Uji Asumsi: Uji normalitas dan homogenitas varians"),
+                    tags$li("Statistik Inferensia: Uji beda rata-rata, proporsi, varians, dan ANOVA"),
+                    tags$li("Regresi Linear Berganda: Model prediktif dengan uji asumsi lengkap"),
+                    tags$li("Unduhan: Semua hasil dapat diunduh dalam format PDF, Word, atau CSV")
+                ),
+                hr(),
+                h4("Sumber Data:"),
+                p("Data yang digunakan dalam dashboard ini berasal dari SUSENAS (Survei Sosial Ekonomi Nasional)
+          2017 yang diterbitkan oleh BPS-Statistics Indonesia. Data mencakup indikator kerentanan sosial
+          dari 511 kabupaten/kota di Indonesia dengan 17 variabel meliputi:"),
+                tags$ul(
+                    tags$li("CHILDREN: Persentase populasi berusia di bawah lima tahun"),
+                    tags$li("FEMALE: Persentase populasi perempuan"),
+                    tags$li("ELDERLY: Persentase populasi berusia 65 tahun ke atas"),
+                    tags$li("POVERTY: Persentase penduduk miskin"),
+                    tags$li("ILLITERATE: Persentase populasi yang buta huruf"),
+                    tags$li("NOELECTRIC: Persentase rumah tangga tanpa akses listrik"),
+                    tags$li("TAPWATER: Persentase rumah tangga yang menggunakan air ledeng/pipa"),
+                    tags$li("Dan 10 indikator kerentanan sosial lainnya")
+                )
+            )
         })
 
-        # ==============================================================================
-        # DATASET INFORMATION SECTION
-        # ==============================================================================
-
-        # Display dynamic dataset statistics
+        # Dataset information
         output$dataset_info <- renderUI({
-            # Check if data is available
             if (is.null(values$sovi_data)) {
-                return(div(
-                    class = "alert alert-info",
-                    icon("info-circle"),
-                    "Data sedang dimuat..."
-                ))
+                return(p("Data sedang dimuat..."))
             }
 
-            # Generate dataset information UI
-            create_dataset_info_ui(values$sovi_data, values$distance_data)
+            tagList(
+                h5("Informasi Dataset SOVI:"),
+                p(paste("Jumlah observasi:", nrow(values$sovi_data))),
+                p(paste("Jumlah variabel:", ncol(values$sovi_data))),
+                p(paste("Variabel numerik:", length(get_numeric_columns(values$sovi_data)))),
+                p(paste("Variabel kategorik:", length(get_categorical_columns(values$sovi_data)))),
+                hr(),
+                h5("Informasi Dataset Distance:"),
+                p(paste("Jumlah observasi:", nrow(values$distance_data))),
+                p(paste("Jumlah variabel:", ncol(values$distance_data)))
+            )
         })
 
-
-        # ==============================================================================
-        # METADATA TABLE SECTION
-        # ==============================================================================
-
-        # Generate comprehensive metadata table
+        # Metadata table
         output$metadata_table <- DT::renderDT({
-            metadata <- create_metadata_dataframe()
-
-            DT::datatable(
-                metadata,
-                options = list(
-                    pageLength = 10,
-                    scrollX = TRUE,
-                    searchHighlight = TRUE,
-                    language = list(url = "//cdn.datatables.net/plug-ins/1.10.11/i18n/Indonesia.json")
-                ),
-                class = "table-striped table-hover table-condensed",
-                rownames = FALSE,
-                filter = "top"
-            ) %>%
-                DT::formatStyle(
-                    columns = "Nama Variabel di Dashboard",
-                    backgroundColor = "#f8f9fa",
-                    fontWeight = "bold"
-                )
-        })
-
-        # Create metadata dataframe
-        create_metadata_dataframe <- function() {
-            data.frame(
+            metadata <- data.frame(
                 "Nama Variabel di Dashboard" = c(
                     "Region", "Pulau", "Provinsi", "Nama Kabupaten/Kota",
                     "Persentase Populasi Balita", "Persentase Populasi Wanita", "Persentase Populasi Lansia",
-                    "Persentase Kepala Keluarga Wanita", "Rata-rata Anggota Keluarga", "Persentase Tanpa Listrik",
-                    "Persentase Pendidikan Rendah", "Pertumbuhan Populasi", "Tingkat Kemiskinan",
-                    "Tingkat Buta Huruf", "Tanpa Pelatihan Bencana", "Tinggal di Area Rawan Bencana",
-                    "Status Kepemilikan Rumah (Sewa)", "Tanpa Saluran Pembuangan", "Akses Air Pipa",
-                    "Jumlah Populasi"
+                    "Persentase Kepala Keluarga Wanita", "Rata-rata Ukuran Keluarga", "Persentase Rumah Tangga Tanpa Listrik",
+                    "Persentase Pendidikan Rendah", "Persentase Pertumbuhan Populasi", "Persentase Penduduk Miskin",
+                    "Persentase Populasi Buta Huruf", "Persentase Tanpa Pelatihan Bencana", "Persentase Daerah Rawan Bencana",
+                    "Persentase Rumah Sewa", "Persentase Tanpa Sistem Saluran Pembuangan", "Persentase Menggunakan Air Ledeng", "Total Populasi"
                 ),
-                "Nama Asli" = c(
+                "Nama Variabel Asli" = c(
                     "region", "island", "province", "district",
                     "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE", "NOELECTRIC",
                     "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING", "DPRONE",
                     "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
                 ),
                 "Deskripsi" = c(
-                    "Wilayah geografis besar Indonesia", "Nama pulau utama Indonesia", "Nama provinsi Indonesia", "Nama kabupaten/kota",
+                    "Wilayah geografis besar (Barat/Timur)", "Nama pulau utama", "Nama provinsi", "Nama kabupaten/kota",
                     "Persentase populasi berusia di bawah lima tahun", "Persentase populasi perempuan", "Persentase populasi berusia 65 tahun ke atas",
                     "Persentase rumah tangga dengan kepala keluarga perempuan", "Rata-rata jumlah anggota rumah tangga", "Persentase rumah tangga tanpa akses listrik sebagai sumber penerangan",
                     "Persentase populasi 15 tahun ke atas dengan pendidikan rendah", "Persentase perubahan (pertumbuhan) populasi", "Persentase penduduk miskin",
-                    "Persentase populasi yang buta huruf", "Persentase rumah tangga yang tidak pernah mendapat pelatihan bencana", "Persentase rumah tangga yang tinggal di area rawan bencana",
-                    "Persentase rumah tangga yang menyewa rumah", "Persentase rumah tangga tanpa sistem drainase/saluran pembuangan", "Persentase rumah tangga yang menggunakan air ledeng/pipa",
-                    "Jumlah total populasi"
+                    "Persentase populasi yang buta huruf", "Persentase rumah tangga tanpa pelatihan bencana", "Persentase rumah tangga di daerah rawan bencana",
+                    "Persentase rumah tangga yang menyewa", "Persentase rumah tangga tanpa sistem saluran pembuangan", "Persentase rumah tangga yang menggunakan air ledeng/pipa", "Total populasi"
                 ),
-                "Satuan" = c(
-                    "-", "-", "-", "-",
-                    "%", "%", "%", "%", "Orang", "%",
-                    "%", "%", "%", "%", "%", "%",
-                    "%", "%", "%", "Jiwa"
+                "Tipe Data" = c(
+                    "Kategorik", "Kategorik", "Kategorik", "Kategorik",
+                    rep("Numerik", 16)
                 ),
                 "Sumber" = rep("SUSENAS 2017, BPS-Statistics Indonesia", 20),
                 check.names = FALSE
             )
-        }
 
-        # ==============================================================================
-        # DOWNLOAD HANDLERS
-        # ==============================================================================
+            DT::datatable(metadata,
+                options = list(pageLength = 10, scrollX = TRUE),
+                class = "table-striped table-hover"
+            )
+        })
 
         # Download handler for dashboard info
         output$download_info <- downloadHandler(
-            filename = "ALIVA_Info.pdf",
+            filename = function() {
+                paste("ALIVA_Dashboard_Info_", Sys.Date(), ".pdf", sep = "")
+            },
             content = function(file) {
-                # Create a temporary R Markdown file
+                # Create a temporary Rmd file
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
-                rmd_content <- '---
-title: "ALIVA Dashboard - Informasi Lengkap"
-output: pdf_document
-date: "`r Sys.Date()`"
----
+                # Write the content to the Rmd file
+                writeLines(c(
+                    "---",
+                    "title: 'ALIVA Dashboard - Informasi Lengkap'",
+                    "author: 'Tim Dashboard ALIVA'",
+                    "date: '`r Sys.Date()`'",
+                    "output: pdf_document",
+                    "---",
+                    "",
+                    "# ALIVA: Alif's Vulnerability Analytics Dashboard",
+                    "",
+                    "## Ringkasan",
+                    "",
+                    "ALIVA (Alif's Vulnerability Analytics) adalah dashboard interaktif yang dirancang khusus untuk analisis kerentanan sosial Indonesia. Dashboard ini menyediakan platform komprehensif untuk eksplorasi, analisis, dan visualisasi data kerentanan sosial dengan menggunakan metodologi statistik yang rigorous.",
+                    "",
+                    "## Fitur Utama",
+                    "",
+                    "### 1. Manajemen Data",
+                    "- Transformasi variabel kontinu menjadi kategorik",
+                    "- Kategorisasi berbasis quartiles dan cut-points",
+                    "- Validasi dan pembersihan data otomatis",
+                    "",
+                    "### 2. Eksplorasi Data",
+                    "- Statistik deskriptif komprehensif",
+                    "- Visualisasi distribusi (histogram, boxplot)",
+                    "- Peta spasial interaktif untuk analisis geografis",
+                    "- Matriks korelasi dan scatter plots",
+                    "",
+                    "### 3. Uji Asumsi Statistik",
+                    "- Uji normalitas (Shapiro-Wilk, Kolmogorov-Smirnov)",
+                    "- Uji homogenitas varians (Levene's test)",
+                    "- Interpretasi otomatis dan rekomendasi tindak lanjut",
+                    "",
+                    "### 4. Statistik Inferensia",
+                    "",
+                    "#### Uji Beda Rata-rata:",
+                    "- One-sample t-test",
+                    "- Independent two-sample t-test",
+                    "- Paired t-test",
+                    "- Welch's t-test untuk varians tidak sama",
+                    "",
+                    "#### Uji Proporsi & Varians:",
+                    "- One-sample proportion test",
+                    "- Two-sample proportion test",
+                    "- Chi-square goodness of fit",
+                    "- F-test untuk perbandingan varians",
+                    "",
+                    "#### ANOVA:",
+                    "- One-way ANOVA",
+                    "- Two-way ANOVA",
+                    "- Post-hoc tests (Tukey HSD)",
+                    "- Analisis efek interaksi",
+                    "",
+                    "### 5. Regresi Linear Berganda",
+                    "- Model regresi dengan multiple predictors",
+                    "- Uji asumsi regresi lengkap:",
+                    "  - Linearitas",
+                    "  - Independensi residual",
+                    "  - Homoskedastisitas",
+                    "  - Normalitas residual",
+                    "  - Multikolinearitas (VIF)",
+                    "- Model selection dan validation",
+                    "- Interpretasi koefisien dan significance testing",
+                    "",
+                    "### 6. Sistem Ekspor dan Pelaporan",
+                    "- Export hasil dalam format PDF",
+                    "- Export dalam format Microsoft Word",
+                    "- Export data dalam format CSV",
+                    "- Template laporan yang dapat dikustomisasi",
+                    "",
+                    "## Sumber Data",
+                    "",
+                    "Dashboard ini menggunakan data dari SUSENAS (Survei Sosial Ekonomi Nasional) 2017 yang diterbitkan oleh BPS-Statistics Indonesia. Dataset mencakup:",
+                    "",
+                    "- **Cakupan Geografis**: 511 kabupaten/kota di seluruh Indonesia",
+                    "- **Jumlah Variabel**: 17 indikator kerentanan sosial",
+                    "- **Periode**: Data tahun 2017",
+                    "",
+                    "### Variabel yang Tersedia:",
+                    "",
+                    "1. **CHILDREN**: Persentase populasi berusia di bawah lima tahun",
+                    "2. **FEMALE**: Persentase populasi perempuan",
+                    "3. **ELDERLY**: Persentase populasi berusia 65 tahun ke atas",
+                    "4. **FHEAD**: Persentase rumah tangga dengan kepala keluarga perempuan",
+                    "5. **FAMILYSIZE**: Rata-rata jumlah anggota rumah tangga",
+                    "6. **NOELECTRIC**: Persentase rumah tangga tanpa akses listrik",
+                    "7. **LOWEDU**: Persentase populasi dengan pendidikan rendah",
+                    "8. **GROWTH**: Persentase pertumbuhan populasi",
+                    "9. **POVERTY**: Persentase penduduk miskin",
+                    "10. **ILLITERATE**: Persentase populasi yang buta huruf",
+                    "11. **NOTRAINING**: Persentase rumah tangga tanpa pelatihan bencana",
+                    "12. **DPRONE**: Persentase rumah tangga di daerah rawan bencana",
+                    "13. **RENTED**: Persentase rumah tangga yang menyewa",
+                    "14. **NOSEWER**: Persentase rumah tangga tanpa sistem saluran pembuangan",
+                    "15. **TAPWATER**: Persentase rumah tangga menggunakan air ledeng",
+                    "16. **POPULATION**: Total populasi",
+                    "17. **DISTRICTCODE**: Kode kabupaten/kota (identifikasi)",
+                    "",
+                    "## Metodologi Analisis",
+                    "",
+                    "### Pendekatan Statistik",
+                    "Dashboard menggunakan pendekatan statistik yang komprehensif dengan emphasis pada:",
+                    "",
+                    "1. **Exploratory Data Analysis (EDA)**",
+                    "2. **Confirmatory Statistical Testing**",
+                    "3. **Model Building and Validation**",
+                    "4. **Spatial Analysis**",
+                    "",
+                    "### Validasi dan Quality Assurance",
+                    "- Semua uji statistik menggunakan alpha = 0.05 sebagai default",
+                    "- Automatic assumption checking sebelum analisis",
+                    "- Robust methods untuk data yang tidak memenuhi asumsi",
+                    "- Multiple comparison corrections tersedia",
+                    "",
+                    "## Cara Penggunaan",
+                    "",
+                    "### 1. Navigasi Dashboard",
+                    "Gunakan menu sidebar untuk mengakses berbagai fitur:",
+                    "- **Beranda**: Informasi umum dan metadata",
+                    "- **Manajemen Data**: Transformasi dan kategorisasi variabel",
+                    "- **Eksplorasi Data**: Analisis deskriptif dan visualisasi",
+                    "- **Uji Asumsi**: Validasi asumsi untuk analisis lanjutan",
+                    "- **Statistik Inferensia**: Uji hipotesis berbagai jenis",
+                    "- **Regresi**: Analisis regresi linear berganda",
+                    "",
+                    "### 2. Workflow yang Disarankan",
+                    "1. Mulai dengan **Eksplorasi Data** untuk memahami karakteristik dataset",
+                    "2. Gunakan **Uji Asumsi** untuk memvalidasi persyaratan analisis",
+                    "3. Lakukan **Manajemen Data** jika diperlukan transformasi",
+                    "4. Pilih uji yang appropriate di **Statistik Inferensia**",
+                    "5. Untuk analisis hubungan kompleks, gunakan **Regresi**",
+                    "6. Export hasil untuk dokumentasi dan sharing",
+                    "",
+                    "### 3. Interpretasi Hasil",
+                    "Dashboard menyediakan interpretasi otomatis untuk semua analisis dalam bahasa Indonesia yang mudah dipahami, termasuk:",
+                    "- Kesimpulan statistik",
+                    "- Practical significance",
+                    "- Rekomendasi tindak lanjut",
+                    "- Peringatan tentang limitasi",
+                    "",
+                    "## Technical Specifications",
+                    "",
+                    "### Platform dan Dependencies",
+                    "- **R version**: 4.0 atau lebih tinggi",
+                    "- **Shiny framework**: untuk interactive web applications",
+                    "- **Statistical packages**: car, lmtest, nortest, broom",
+                    "- **Visualization**: ggplot2, plotly, leaflet",
+                    "- **Data manipulation**: dplyr, tidyr",
+                    "",
+                    "### System Requirements",
+                    "- RAM minimum: 4GB",
+                    "- Browser: Chrome, Firefox, Safari (versi terbaru)",
+                    "- Koneksi internet untuk beberapa fitur mapping",
+                    "",
+                    "## Kontribusi dan Development",
+                    "",
+                    "### Tim Pengembang",
+                    "ALIVA Dashboard dikembangkan oleh tim yang terdiri dari:",
+                    "- Statistician",
+                    "- Data Scientists",
+                    "- R/Shiny Developers",
+                    "- UI/UX Specialists",
+                    "",
+                    "### Roadmap",
+                    "Pengembangan berkelanjutan mencakup:",
+                    "- Penambahan metode analisis multivariat",
+                    "- Machine learning capabilities",
+                    "- Real-time data integration",
+                    "- Mobile-responsive design improvements",
+                    "",
+                    "## Referensi dan Sitasi",
+                    "",
+                    "### Data Source",
+                    "BPS-Statistics Indonesia. (2017). SUSENAS: Survei Sosial Ekonomi Nasional 2017.",
+                    "",
+                    "### Statistical Methods References",
+                    "- Kutner, M. H., Nachtsheim, C. J., Neter, J., & Li, W. (2005). Applied Linear Statistical Models.",
+                    "- Field, A. (2013). Discovering Statistics Using IBM SPSS Statistics.",
+                    "- R Core Team (2023). R: A Language and Environment for Statistical Computing.",
+                    "",
+                    "## Kontak dan Support",
+                    "",
+                    "Untuk pertanyaan, bug reports, atau feature requests:",
+                    "- Email: support@aliva-dashboard.id",
+                    "- Documentation: https://aliva-dashboard.github.io",
+                    "- Issues: https://github.com/aliva-dashboard/issues",
+                    "",
+                    "---",
+                    "",
+                    "*Generated on `r Sys.Date()` by ALIVA Dashboard Information System*"
+                ), temp_rmd)
 
-# Tentang ALIVA Dashboard
-
-ALIVA adalah dashboard interaktif untuk analisis kerentanan sosial dan statistik Indonesia yang dikembangkan menggunakan R Shiny.
-
-## Fitur Utama
-
-1. **Manajemen Data**: Transformasi variabel kontinu menjadi kategorik
-2. **Eksplorasi Data**: Statistik deskriptif dan visualisasi
-3. **Uji Asumsi**: Uji normalitas dan homogenitas
-4. **Statistik Inferensia**: Berbagai uji statistik
-5. **Regresi Linear Berganda**: Model prediktif lengkap
-
-## Sumber Data
-
-Data berasal dari SUSENAS 2017, BPS-Statistics Indonesia, mencakup 511 kabupaten/kota dengan 17 variabel kerentanan sosial.
-
-## Metadata Variabel
-
-```{r echo=FALSE}
-metadata <- data.frame(
-  Variabel = c("CHILDREN", "FEMALE", "ELDERLY", "POVERTY", "ILLITERATE", "NOELECTRIC"),
-  Deskripsi = c("Persentase Populasi Balita", "Persentase Populasi Perempuan",
-                "Persentase Populasi Lansia ≥65 tahun", "Persentase Penduduk Miskin",
-                "Persentase Populasi Buta Huruf", "Persentase Rumah Tangga Tanpa Listrik"),
-  Satuan = c("%", "%", "%", "%", "%", "%")
-)
-knitr::kable(metadata)
-```
-'
-
-                writeLines(rmd_content, temp_rmd)
+                # Render the Rmd file to PDF
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
             }
         )
 
-        # Combined download handler for all menus (PDF)
+        # Combined download handlers for all dashboard reports
         output$download_combined_pdf <- downloadHandler(
             filename = function() {
-                paste0("ALIVA_Laporan_Gabungan_", Sys.Date(), ".pdf")
+                paste("ALIVA_Complete_Dashboard_Report_", Sys.Date(), ".pdf", sep = "")
             },
             content = function(file) {
-                # Create comprehensive combined report
+                # This would combine reports from all modules
+                # For now, just provide the dashboard info
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
-                rmd_content <- '---
-title: "ALIVA Dashboard - Laporan Gabungan Semua Menu"
-subtitle: "Analisis Kerentanan Sosial Indonesia"
-author: "ALIVA: Alif\'s Vulnerability Analytics Dashboard"
-date: "`r format(Sys.Date(), \'%d %B %Y\')`"
-output:
-  pdf_document:
-    latex_engine: xelatex
-    keep_tex: false
-    toc: true
-    toc_depth: 3
----
+                writeLines(c(
+                    "---",
+                    "title: 'ALIVA Dashboard - Laporan Lengkap Semua Fitur'",
+                    "author: 'Tim Dashboard ALIVA'",
+                    "date: '`r Sys.Date()`'",
+                    "output: pdf_document",
+                    "---",
+                    "",
+                    "# Laporan Komprehensif ALIVA Dashboard",
+                    "",
+                    "Laporan ini berisi ringkasan dari semua fitur dan analisis yang tersedia di ALIVA Dashboard.",
+                    "",
+                    "## 1. Informasi Dashboard",
+                    "ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari eksplorasi data hingga regresi linear berganda.",
+                    "",
+                    "## 2. Dataset Information",
+                    if (!is.null(values$sovi_data)) {
+                        paste("- Jumlah observasi:", nrow(values$sovi_data))
+                    } else {
+                        "- Data sedang dimuat..."
+                    },
+                    if (!is.null(values$sovi_data)) {
+                        paste("- Jumlah variabel:", ncol(values$sovi_data))
+                    } else {
+                        ""
+                    },
+                    "",
+                    "## 3. Fitur yang Tersedia",
+                    "- Manajemen Data: Transformasi variabel",
+                    "- Eksplorasi Data: Statistik deskriptif dan visualisasi",
+                    "- Uji Asumsi: Normalitas dan homogenitas",
+                    "- Statistik Inferensia: T-test, ANOVA, uji proporsi",
+                    "- Regresi Linear Berganda: Model prediktif",
+                    "",
+                    "---",
+                    "Untuk laporan detail dari setiap modul, silakan gunakan fitur download di masing-masing tab."
+                ), temp_rmd)
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-```
-
-# Executive Summary
-
-ALIVA Dashboard merupakan aplikasi analisis statistik komprehensif untuk data kerentanan sosial Indonesia. Dashboard ini menyediakan berbagai fitur analisis mulai dari eksplorasi data dasar hingga analisis regresi lanjutan.
-
-## Dataset Overview
-
-Dataset yang digunakan berasal dari SUSENAS 2017 dengan 511 observasi kabupaten/kota di Indonesia dan 17 variabel indikator kerentanan sosial.
-
-# 1. Beranda - Informasi Dashboard
-
-## Tentang ALIVA
-ALIVA: Alif Vulnerability Analytics Dashboard adalah platform analisis statistik yang dirancang khusus untuk menganalisis data kerentanan sosial Indonesia.
-
-## Fitur Utama
-- Manajemen Data: Transformasi variabel kontinu ke kategorik
-- Eksplorasi Data: Statistik deskriptif dan visualisasi
-- Uji Asumsi: Normalitas dan homogenitas varians
-- Statistik Inferensia: Uji t, ANOVA, uji proporsi dan varians
-- Regresi Linear Berganda: Model prediktif dengan uji asumsi
-
-# 2. Manajemen Data
-
-Fitur manajemen data memungkinkan transformasi variabel kontinu menjadi kategorik menggunakan dua metode:
-- **Interval Sama**: Pembagian berdasarkan rentang nilai yang sama
-- **Kuantil**: Pembagian berdasarkan persentil untuk jumlah observasi yang sama
-
-**Interpretasi**: Kategorisasi membantu dalam analisis eksploratori dan memudahkan interpretasi pola data untuk analisis statistik lanjutan.
-
-# 3. Eksplorasi Data
-
-## Statistik Deskriptif
-Analisis deskriptif mencakup:
-- Measures of central tendency (mean, median, mode)
-- Measures of variability (std dev, variance, range)
-- Measures of shape (skewness, kurtosis)
-
-## Visualisasi
-- **Histogram**: Menampilkan distribusi frekuensi variabel
-- **Peta Interaktif**: Visualisasi spasial distribusi variabel per kabupaten/kota
-
-**Interpretasi**: Eksplorasi data memberikan pemahaman awal tentang karakteristik dataset sebelum melakukan analisis inferensia.
-
-# 4. Uji Asumsi
-
-## Uji Normalitas (Shapiro-Wilk)
-Menguji apakah data berdistribusi normal - prerequisite untuk uji parametrik.
-
-**Hipotesis**:
-- H₀: Data berdistribusi normal
-- H₁: Data tidak berdistribusi normal
-
-## Uji Homogenitas (Levene Test)
-Menguji kesamaan varians antar grup - asumsi penting untuk ANOVA.
-
-**Hipotesis**:
-- H₀: Varians antar grup homogen
-- H₁: Varians antar grup tidak homogen
-
-**Interpretasi**: Pengujian asumsi memastikan validitas analisis statistik selanjutnya.
-
-# 5. Statistik Inferensia
-
-## 5.1 Uji Beda Rata-Rata
-### Uji t Satu Sampel
-Membandingkan rata-rata sampel dengan nilai hipotesis tertentu.
-
-### Uji t Dua Sampel
-Membandingkan rata-rata dua kelompok independen.
-
-**Interpretasi**: Uji t membantu menentukan apakah perbedaan yang diamati signifikan secara statistik.
-
-## 5.2 Uji Proporsi dan Varians
-### Uji Proporsi Satu Sampel
-Menguji apakah proporsi sampel berbeda dari nilai hipotesis.
-
-### Uji Varians Satu Sampel
-Menguji apakah varians sampel berbeda dari nilai hipotesis.
-
-**Interpretasi**: Uji ini penting untuk validasi asumsi dan analisis karakteristik populasi.
-
-## 5.3 ANOVA (Analysis of Variance)
-### One-Way ANOVA
-Membandingkan rata-rata lebih dari dua kelompok independen.
-
-### Two-Way ANOVA
-Menganalisis pengaruh dua faktor sekaligus, termasuk efek interaksi.
-
-**Interpretasi**: ANOVA memungkinkan analisis pengaruh multiple factors terhadap variabel outcome.
-
-# 6. Regresi Linear Berganda
-
-## Model Regresi
-Analisis hubungan antara satu variabel dependen dengan multiple variabel independen.
-
-## Uji Asumsi Klasik
-- **Multikolinearitas (VIF)**: Mengecek korelasi tinggi antar prediktor
-- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual
-- **Normalitas Residual (Shapiro-Wilk)**: Mengecek distribusi normal residual
-
-## Interpretasi Model
-- **R-squared**: Proporsi varians yang dijelaskan model
-- **Adjusted R-squared**: R-squared yang disesuaikan dengan jumlah prediktor
-- **F-test**: Signifikansi model secara keseluruhan
-- **t-test**: Signifikansi masing-masing koefisien
-
-**Interpretasi**: Regresi berganda memberikan model prediktif dan understanding tentang faktor-faktor yang mempengaruhi variabel outcome.
-
-# Kesimpulan
-
-ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari eksplorasi data hingga modeling prediktif. Setiap fitur dilengkapi dengan interpretasi yang memudahkan pengguna memahami hasil analisis.
-
-## Rekomendasi Penggunaan
-1. Mulai dengan eksplorasi data untuk memahami karakteristik dataset
-2. Lakukan uji asumsi sebelum analisis inferensia
-3. Pilih uji statistik yang sesuai berdasarkan jenis data dan tujuan analisis
-4. Validasi model regresi dengan pengujian asumsi klasik
-5. Interpretasikan hasil dalam konteks domain knowledge
-
----
-
-*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
-'
-
-                writeLines(rmd_content, temp_rmd)
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
             }
         )
 
-        # Combined download handler for all menus (Word)
         output$download_combined_word <- downloadHandler(
             filename = function() {
-                paste0("ALIVA_Laporan_Gabungan_", Sys.Date(), ".docx")
+                paste("ALIVA_Complete_Dashboard_Report_", Sys.Date(), ".docx", sep = "")
             },
             content = function(file) {
-                # Create Word version of combined report
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
-                rmd_content <- '---
-title: "ALIVA Dashboard - Laporan Gabungan Semua Menu"
-subtitle: "Analisis Kerentanan Sosial Indonesia"
-author: "ALIVA: Alif Vulnerability Analytics Dashboard"
-date: "`r format(Sys.Date(), \"%d %B %Y\")`"
-output:
-  word_document:
-    reference_docx: NULL
-    toc: true
-    toc_depth: 3
----
+                writeLines(c(
+                    "---",
+                    "title: 'ALIVA Dashboard - Laporan Lengkap'",
+                    "author: 'Tim Dashboard ALIVA'",
+                    "date: '`r Sys.Date()`'",
+                    "output: word_document",
+                    "---",
+                    "",
+                    "# ALIVA Dashboard - Laporan Komprehensif",
+                    "",
+                    "Dashboard ALIVA menyediakan analisis statistik komprehensif untuk data kerentanan sosial Indonesia.",
+                    "",
+                    "## Ringkasan Fitur",
+                    "1. **Eksplorasi Data**: Analisis deskriptif lengkap",
+                    "2. **Uji Asumsi**: Validasi persyaratan statistik",
+                    "3. **Analisis Inferensia**: Berbagai uji hipotesis",
+                    "4. **Regresi**: Model prediktif multivariat",
+                    "",
+                    "## Data Information",
+                    if (!is.null(values$sovi_data)) {
+                        paste("Dataset berisi", nrow(values$sovi_data), "observasi dengan", ncol(values$sovi_data), "variabel.")
+                    } else {
+                        "Data sedang dimuat..."
+                    },
+                    "",
+                    "Sumber: SUSENAS 2017, BPS-Statistics Indonesia"
+                ), temp_rmd)
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-```
-
-# Executive Summary
-
-ALIVA Dashboard merupakan aplikasi analisis statistik komprehensif untuk data kerentanan sosial Indonesia. Dashboard ini menyediakan berbagai fitur analisis mulai dari eksplorasi data dasar hingga analisis regresi lanjutan.
-
-## Dataset Overview
-
-Dataset yang digunakan berasal dari SUSENAS 2017 dengan 511 observasi kabupaten/kota di Indonesia dan 17 variabel indikator kerentanan sosial.
-
-# 1. Beranda - Informasi Dashboard
-
-## Tentang ALIVA
-ALIVA: Alif Vulnerability Analytics Dashboard adalah platform analisis statistik yang dirancang khusus untuk menganalisis data kerentanan sosial Indonesia.
-
-## Fitur Utama
-- Manajemen Data: Transformasi variabel kontinu ke kategorik
-- Eksplorasi Data: Statistik deskriptif dan visualisasi
-- Uji Asumsi: Normalitas dan homogenitas varians
-- Statistik Inferensia: Uji t, ANOVA, uji proporsi dan varians
-- Regresi Linear Berganda: Model prediktif dengan uji asumsi
-
-# 2. Manajemen Data
-
-Fitur manajemen data memungkinkan transformasi variabel kontinu menjadi kategorik menggunakan dua metode:
-
-**Metode Interval Sama**: Pembagian berdasarkan rentang nilai yang sama
-**Metode Kuantil**: Pembagian berdasarkan persentil untuk jumlah observasi yang sama
-
-**Interpretasi**: Kategorisasi membantu dalam analisis eksploratori dan memudahkan interpretasi pola data untuk analisis statistik lanjutan.
-
-# 3. Eksplorasi Data
-
-## Statistik Deskriptif
-Analisis deskriptif mencakup:
-- Measures of central tendency (mean, median, mode)
-- Measures of variability (std dev, variance, range)
-- Measures of shape (skewness, kurtosis)
-
-## Visualisasi
-- **Histogram**: Menampilkan distribusi frekuensi variabel
-- **Peta Interaktif**: Visualisasi spasial distribusi variabel per kabupaten/kota
-
-**Interpretasi**: Eksplorasi data memberikan pemahaman awal tentang karakteristik dataset sebelum melakukan analisis inferensia.
-
-# 4. Uji Asumsi
-
-## Uji Normalitas (Shapiro-Wilk)
-Menguji apakah data berdistribusi normal - prerequisite untuk uji parametrik.
-
-**Hipotesis**:
-- H₀: Data berdistribusi normal
-- H₁: Data tidak berdistribusi normal
-
-## Uji Homogenitas (Levene Test)
-Menguji kesamaan varians antar grup - asumsi penting untuk ANOVA.
-
-**Hipotesis**:
-- H₀: Varians antar grup homogen
-- H₁: Varians antar grup tidak homogen
-
-**Interpretasi**: Pengujian asumsi memastikan validitas analisis statistik selanjutnya.
-
-# 5. Statistik Inferensia
-
-## 5.1 Uji Beda Rata-Rata
-
-### Uji t Satu Sampel
-Membandingkan rata-rata sampel dengan nilai hipotesis tertentu.
-
-### Uji t Dua Sampel
-Membandingkan rata-rata dua kelompok independen.
-
-**Interpretasi**: Uji t membantu menentukan apakah perbedaan yang diamati signifikan secara statistik.
-
-## 5.2 Uji Proporsi dan Varians
-
-### Uji Proporsi Satu Sampel
-Menguji apakah proporsi sampel berbeda dari nilai hipotesis.
-
-### Uji Varians Satu Sampel
-Menguji apakah varians sampel berbeda dari nilai hipotesis.
-
-**Interpretasi**: Uji ini penting untuk validasi asumsi dan analisis karakteristik populasi.
-
-## 5.3 ANOVA (Analysis of Variance)
-
-### One-Way ANOVA
-Membandingkan rata-rata lebih dari dua kelompok independen.
-
-### Two-Way ANOVA
-Menganalisis pengaruh dua faktor sekaligus, termasuk efek interaksi.
-
-**Interpretasi**: ANOVA memungkinkan analisis pengaruh multiple factors terhadap variabel outcome.
-
-# 6. Regresi Linear Berganda
-
-## Model Regresi
-Analisis hubungan antara satu variabel dependen dengan multiple variabel independen.
-
-## Uji Asumsi Klasik
-- **Multikolinearitas (VIF)**: Mengecek korelasi tinggi antar prediktor
-- **Heteroskedastisitas (Breusch-Pagan)**: Mengecek homogenitas varians residual
-- **Normalitas Residual (Shapiro-Wilk)**: Mengecek distribusi normal residual
-
-## Interpretasi Model
-- **R-squared**: Proporsi varians yang dijelaskan model
-- **Adjusted R-squared**: R-squared yang disesuaikan dengan jumlah prediktor
-- **F-test**: Signifikansi model secara keseluruhan
-- **t-test**: Signifikansi masing-masing koefisien
-
-**Interpretasi**: Regresi berganda memberikan model prediktif dan understanding tentang faktor-faktor yang mempengaruhi variabel outcome.
-
-# Kesimpulan
-
-ALIVA Dashboard menyediakan workflow analisis statistik yang komprehensif dari eksplorasi data hingga modeling prediktif. Setiap fitur dilengkapi dengan interpretasi yang memudahkan pengguna memahami hasil analisis.
-
-## Rekomendasi Penggunaan
-1. Mulai dengan eksplorasi data untuk memahami karakteristik dataset
-2. Lakukan uji asumsi sebelum analisis inferensia
-3. Pilih uji statistik yang sesuai berdasarkan jenis data dan tujuan analisis
-4. Validasi model regresi dengan pengujian asumsi klasik
-5. Interpretasikan hasil dalam konteks domain knowledge
-
----
-
-*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
-'
-
-                writeLines(rmd_content, temp_rmd)
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
             }
         )
     })
-}
-
-# ==============================================================================
-# HELPER FUNCTIONS FOR UI CREATION
-# ==============================================================================
-
-# Create welcome content UI
-create_welcome_content <- function() {
-    tagList(
-        div(
-            class = "jumbotron", style = "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 10px; margin-bottom: 20px;",
-            h2("🇮🇩 ALIVA: Alif Vulnerability Analytics Dashboard",
-                style = "font-weight: bold; margin-bottom: 15px;"
-            ),
-            p("Selamat datang di ALIVA Dashboard! Platform analisis statistik komprehensif untuk data kerentanan sosial Indonesia.",
-                style = "font-size: 1.1em; margin-bottom: 0;"
-            )
-        ),
-        div(
-            class = "row",
-            div(
-                class = "col-md-6",
-                div(
-                    class = "card border-primary", style = "margin-bottom: 20px;",
-                    div(
-                        class = "card-header bg-primary text-white",
-                        h4("🎯 Fitur Utama", style = "margin: 0;")
-                    ),
-                    div(
-                        class = "card-body",
-                        tags$ul(
-                            class = "list-group list-group-flush",
-                            tags$li(class = "list-group-item", "📊 Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
-                            tags$li(class = "list-group-item", "📈 Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
-                            tags$li(class = "list-group-item", "🔍 Uji Asumsi: Normalitas dan homogenitas varians"),
-                            tags$li(class = "list-group-item", "📊 Statistik Inferensia: Uji t, ANOVA, proporsi, varians"),
-                            tags$li(class = "list-group-item", "🔬 Regresi Linear Berganda: Model prediktif lengkap"),
-                            tags$li(class = "list-group-item", "📄 Export: PDF, Word, dan CSV untuk semua hasil")
-                        )
-                    )
-                )
-            ),
-            div(
-                class = "col-md-6",
-                div(
-                    class = "card border-success", style = "margin-bottom: 20px;",
-                    div(
-                        class = "card-header bg-success text-white",
-                        h4("📚 Sumber Data", style = "margin: 0;")
-                    ),
-                    div(
-                        class = "card-body",
-                        p("Data bersumber dari SUSENAS (Survei Sosial Ekonomi Nasional) 2017 oleh BPS-Statistics Indonesia."),
-                        tags$strong("Cakupan Data:"),
-                        tags$ul(
-                            tags$li("511 kabupaten/kota di Indonesia"),
-                            tags$li("17 variabel kerentanan sosial"),
-                            tags$li("Indikator demografis, ekonomi, dan infrastruktur"),
-                            tags$li("Tingkat kabupaten/kota untuk analisis spasial")
-                        )
-                    )
-                )
-            )
-        )
-    )
-}
-
-# Create dataset information UI
-create_dataset_info_ui <- function(sovi_data, distance_data) {
-    tagList(
-        div(
-            class = "row",
-            div(
-                class = "col-md-6",
-                div(
-                    class = "card border-info",
-                    div(
-                        class = "card-header bg-info text-white",
-                        h5("📊 Dataset SOVI (Vulnerability)", style = "margin: 0;")
-                    ),
-                    div(
-                        class = "card-body",
-                        tags$ul(
-                            class = "list-unstyled",
-                            tags$li(tags$strong("Jumlah Observasi: "), nrow(sovi_data)),
-                            tags$li(tags$strong("Jumlah Variabel: "), ncol(sovi_data)),
-                            tags$li(tags$strong("Variabel Numerik: "), length(get_numeric_columns(sovi_data))),
-                            tags$li(tags$strong("Variabel Kategorik: "), length(get_categorical_columns(sovi_data)))
-                        )
-                    )
-                )
-            ),
-            div(
-                class = "col-md-6",
-                div(
-                    class = "card border-warning",
-                    div(
-                        class = "card-header bg-warning text-dark",
-                        h5("🗺️ Dataset Distance (Spatial)", style = "margin: 0;")
-                    ),
-                    div(
-                        class = "card-body",
-                        tags$ul(
-                            class = "list-unstyled",
-                            tags$li(tags$strong("Jumlah Observasi: "), nrow(distance_data)),
-                            tags$li(tags$strong("Jumlah Variabel: "), ncol(distance_data)),
-                            tags$li(tags$strong("Matrix Type: "), "Distance Matrix"),
-                            tags$li(tags$strong("Spatial Unit: "), "Kabupaten/Kota")
-                        )
-                    )
-                )
-            )
-        )
-    )
 }

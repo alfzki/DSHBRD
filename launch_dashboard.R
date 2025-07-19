@@ -1,102 +1,85 @@
-# ==============================================================================
-# LAUNCHER DASHBOARD ALIVA
-# ==============================================================================
-#
-# Tujuan: Script peluncuran yang memastikan semua dependensi terinstal
-# Penulis: Tim Dashboard ALIVA
-# Terakhir Diperbarui: Juli 2025
-#
-# Deskripsi:
-# Script ini memastikan semua paket yang diperlukan telah terinstal,
-# memeriksa keberadaan file data, dan meluncurkan dashboard ALIVA
-# dengan konfigurasi yang tepat.
-#
-# Fitur:
-# - Verifikasi versi R dan dependensi
-# - Pemeriksaan file data yang diperlukan
-# - Mode development dengan autoreload
-# - Penanganan kesalahan komprehensif
-# ==============================================================================
+# ALIVA Dashboard Launcher
+# This script ensures all dependencies are installed before launching
 
-cat("Launcher Dashboard ALIVA\n")
+cat("ALIVA Dashboard Launcher\n")
 cat("===========================\n\n")
 
-# Penetapan mirror CRAN
+# Set CRAN mirror
 options(repos = c(CRAN = "https://cran.rstudio.com/"))
 
-# Memeriksa versi R
+# Check R version
 cat("R Version:", R.version.string, "\n")
 cat("Working Directory:", getwd(), "\n\n")
 
-# Paket inti yang harus tersedia
+# Core packages that must be available
 core_packages <- c("shiny", "dplyr", "ggplot2")
 
-cat("Memeriksa paket inti...\n")
+cat("Checking core packages...\n")
 for (pkg in core_packages) {
     if (!requireNamespace(pkg, quietly = TRUE)) {
-        cat("Menginstal paket inti:", pkg, "\n")
+        cat("Installing core package:", pkg, "\n")
         install.packages(pkg, repos = "https://cran.rstudio.com/")
     } else {
-        cat("✓", pkg, "tersedia\n")
+        cat("✓", pkg, "is available\n")
     }
 }
 
-# Memeriksa keberadaan file data
-cat("\nMemeriksa file data...\n")
+# Check if data files exist
+cat("\nChecking data files...\n")
 if (file.exists("data/sovi_data.csv")) {
-    cat("✓ File data SOVI ditemukan\n")
+    cat("✓ SOVI data file found\n")
 } else {
-    cat("⚠ File data SOVI tidak ditemukan. Harap sediakan data yang diperlukan di 'data/sovi_data.csv'.\n")
+    cat("⚠ SOVI data file not found. Please provide the required data in 'data/sovi_data.csv'.\n")
 }
 
 if (file.exists("data/distance.csv")) {
-    cat("✓ File data jarak ditemukan\n")
+    cat("✓ Distance data file found\n")
 } else {
-    cat("⚠ File data jarak tidak ditemukan. Harap sediakan data yang diperlukan di 'data/distance.csv'.\n")
+    cat("⚠ Distance data file not found. Please provide the required data in 'data/distance.csv'.\n")
 }
 
-# Memuat konfigurasi global
-cat("\nMemuat konfigurasi global...\n")
+# Load global configuration
+cat("\nLoading global configuration...\n")
 if (file.exists("global.R")) {
     tryCatch(
         {
             source("global.R")
-            cat("✓ Konfigurasi global berhasil dimuat\n")
+            cat("✓ Global configuration loaded successfully\n")
         },
         error = function(e) {
-            cat("✗ Kesalahan memuat konfigurasi global:", e$message, "\n")
-            cat("Mencoba meluncurkan dengan konfigurasi minimal...\n")
+            cat("✗ Error loading global configuration:", e$message, "\n")
+            cat("Attempting to launch with minimal configuration...\n")
             library(shiny)
         }
     )
 } else {
-    cat("✗ global.R tidak ditemukan\n")
-    stop("File konfigurasi global diperlukan")
+    cat("✗ global.R not found\n")
+    stop("Global configuration file is required")
 }
 
-# Memeriksa argumen mode development
+# Check for development mode argument
 args <- commandArgs(trailingOnly = TRUE)
 is_dev_mode <- "--dev" %in% args
 
 if (is_dev_mode) {
-    cat("\n** MODE PENGEMBANGAN DIAKTIFKAN **\n")
-    cat("** Autoreload Shiny MENYALA.     **\n\n")
+    cat("\n** DEVELOPMENT MODE ACTIVATED **\n")
+    cat("** Shiny autoreload is ON.      **\n\n")
     options(shiny.autoreload = TRUE)
 }
 
-# Meluncurkan dashboard
-cat("Meluncurkan Dashboard ALIVA...\n")
+# Launch the dashboard
+cat("Launching ALIVA Dashboard...\n")
 if (!is_dev_mode) {
-    cat("Dashboard akan tersedia di: http://127.0.0.1:3838\n")
+    cat("Dashboard will be available at: http://127.0.0.1:3838\n")
 }
-cat("Tekan Ctrl+C untuk menghentikan dashboard\n\n")
+cat("Press Ctrl+C to stop the dashboard\n\n")
 
-# Memeriksa keberadaan app.R
+# Check if app.R exists
 if (!file.exists("app.R")) {
-    stop("app.R tidak ditemukan di direktori saat ini")
+    stop("app.R not found in current directory")
 }
 
-# Peluncuran dengan penanganan kesalahan
+# Launch with error handling
 tryCatch(
     {
         shiny::runApp("app.R",
@@ -106,7 +89,7 @@ tryCatch(
         )
     },
     error = function(e) {
-        cat("Kesalahan meluncurkan dashboard:", e$message, "\n")
-        cat("Silakan periksa pesan kesalahan di atas dan coba lagi.\n")
+        cat("Error launching dashboard:", e$message, "\n")
+        cat("Please check the error messages above and try again.\n")
     }
 )

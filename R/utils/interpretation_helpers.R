@@ -1,31 +1,13 @@
-# ==============================================================================
-# FUNGSI HELPER INTERPRETASI STATISTIK
-# ==============================================================================
-#
-# Tujuan: Fungsi untuk interpretasi otomatis hasil uji statistik
-# Penulis: Tim Dashboard ALIVA
-# Terakhir Diperbarui: Juli 2025
-#
-# Deskripsi:
-# File ini berisi fungsi untuk menginterpretasi hasil uji statistik secara
-# otomatis dalam bahasa Indonesia untuk pemahaman pengguna yang lebih baik.
-#
-# Fungsi Utama:
-# - Interpretasi hasil uji t (satu sampel dan dua sampel)
-# - Interpretasi uji proporsi dan varians
-# - Interpretasi ANOVA satu arah dan dua arah
-# - Interpretasi regresi linear berganda
-# - Interpretasi uji asumsi (normalitas, homogenitas)
-# ==============================================================================
+# Statistical Interpretation Helper Functions
+# This file contains functions to automatically interpret statistical test results
+# in Indonesian language for better user understanding
 
-#' Interpretasi Hasil Uji T
+#' Interpret T-Test Results
 #'
-#' @description Memberikan interpretasi otomatis hasil uji t dalam bahasa Indonesia
-#' @param test_result Objek hasil dari t.test()
-#' @param alpha Tingkat signifikansi (default: 0.05)
-#' @param test_type Jenis uji ("one_sample" atau "two_sample")
-#' @return Character string berisi interpretasi dalam bahasa Indonesia
-#' @author Tim Dashboard ALIVA
+#' @param test_result Object returned from t.test()
+#' @param alpha Significance level (default: 0.05)
+#' @param test_type Type of test ("one_sample" or "two_sample")
+#' @return Character string with interpretation in Indonesian
 interpret_ttest <- function(test_result, alpha = 0.05, test_type = "one_sample") {
     p_value <- test_result$p.value
     conf_int <- test_result$conf.int

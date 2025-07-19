@@ -77,6 +77,34 @@ source("validate_dashboard.R")
 - **Variables**: 15+ social vulnerability indicators
 - **File**: `data/sovi_data.csv` (auto-generated)
 
+## 📥 Report Generation
+
+### Individual Module Reports
+Each module provides dedicated download options:
+
+- **CSV Export**: Raw processed data (Manajemen Data)
+- **PNG/JPG**: High-quality plot exports (Eksplorasi)
+- **PDF Reports**: Comprehensive analysis reports (all modules)
+- **Word Documents**: Editable interpretation documents
+- **Individual Interpretations**: Module-specific insights
+
+### Combined Reports (Beranda)
+Access comprehensive reports covering all modules:
+
+```r
+# Available from Beranda menu:
+# - Combined PDF Report: All modules in single document
+# - Combined Word Report: Editable comprehensive analysis
+```
+
+### Security Features
+Enhanced download handlers include:
+
+- **Input Validation**: Sanitized filenames prevent path traversal
+- **Error Handling**: Graceful fallbacks for failed operations
+- **Resource Protection**: Safe rendering with timeouts
+- **Data Validation**: Required input checks before processing
+
 ## 🎓 UAS Submission Checklist
 
 - ✅ All features working correctly
@@ -85,6 +113,8 @@ source("validate_dashboard.R")
 - ✅ Screenshots/demo ready
 - ✅ Code well-commented
 - ✅ Error handling robust
+- ✅ Security validation implemented
+- ✅ Dynamic report generation functional
 
 ## 🔗 Quick Links
 

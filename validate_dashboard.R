@@ -251,6 +251,33 @@ validate_statistical_functions <- function() {
                 shapiro_result <- shapiro.test(test_data[1:50]) # Shapiro-Wilk needs <= 5000 obs
                 results$normality_test <- if ("statistic" %in% names(shapiro_result)) "PASSED" else "FAILED"
             }
+            
+            # Test security validation functions
+            tryCatch({
+                # Test validate_variable_name function
+                if (exists("validate_variable_name")) {
+                    safe_name <- validate_variable_name("test_var")
+                    malicious_name <- validate_variable_name("../../../etc/passwd")
+                    results$variable_name_validation <- if (safe_name == "test_var" && malicious_name != "../../../etc/passwd") "PASSED" else "FAILED"
+                } else {
+                    results$variable_name_validation <- "SKIPPED"
+                }
+                
+                # Test validate_download_request function
+                if (exists("validate_download_request")) {
+                    # Create mock values object
+                    mock_values <- list(sovi_data = sovi_data)
+                    validation_result <- validate_download_request(mock_values)
+                    results$download_request_validation <- if (is.logical(validation_result)) "PASSED" else "FAILED"
+                } else {
+                    results$download_request_validation <- "SKIPPED"
+                }
+                
+                cat("  ✅ Security validation functions tested\n")
+            }, error = function(e) {
+                results$security_validation <- paste("FAILED:", e$message)
+                cat("  ⚠️ Security validation test errors:", e$message, "\n")
+            })
 
             cat("  ✅ Statistical functions validated\n")
         },

@@ -130,9 +130,17 @@ Jika file data asli (`sovi_data.csv` dan `distance.csv`) tidak tersedia, dashboa
 
 Setiap analisis dalam dashboard dapat diunduh dalam berbagai format:
 - **PDF**: Laporan lengkap dengan interpretasi
-- **CSV**: Data hasil analisis
-- **TXT**: Interpretasi dalam format teks
-- **PNG**: Visualisasi grafik
+- **CSV**: Data hasil analisis  
+- **Word Documents**: Laporan editable dengan officer
+- **PNG/JPG**: Visualisasi grafik berkualitas tinggi
+- **Combined Reports**: Laporan gabungan semua modul
+
+### Keamanan Unduhan
+Dashboard mengimplementasikan validasi keamanan untuk semua fitur unduhan:
+- **Input Sanitization**: Nama file divalidasi untuk mencegah path traversal
+- **Error Handling**: Penanganan kesalahan yang robust dengan notifikasi pengguna
+- **Resource Protection**: Rendering file dengan timeout dan pembersihan otomatis
+- **Data Validation**: Validasi input yang diperlukan sebelum pemrosesan
 
 ## Teknologi yang Digunakan
 
@@ -142,6 +150,8 @@ Setiap analisis dalam dashboard dapat diunduh dalam berbagai format:
 - **DT**: Tabel data interaktif
 - **leaflet**: Peta interaktif
 - **rmarkdown**: Pembuatan laporan dinamis
+- **officer**: Pembuatan dokumen Word
+- **flextable**: Formatting tabel profesional
 
 ## Struktur Kode
 

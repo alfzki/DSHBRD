@@ -64,7 +64,16 @@ uji_anova_server <- function(id, values) {
                     {
                         model <- aov(formula_obj, data = values$sovi_data)
                         result <- summary(model)
-                        anova_result(list(model = model, summary = result, type = "one_way"))
+
+                        # Store all necessary data for consistent rendering
+                        anova_result(list(
+                            model = model,
+                            summary = result,
+                            type = "one_way",
+                            dep_var = input$dep_var,
+                            factor1 = input$factor1,
+                            data = values$sovi_data
+                        ))
 
                         # Post-hoc test (Tukey HSD)
                         if (length(factor1_levels) > 2) {
@@ -106,9 +115,17 @@ uji_anova_server <- function(id, values) {
                     {
                         model <- aov(formula_obj, data = values$sovi_data)
                         result <- summary(model)
+
+                        # Store all necessary data for consistent rendering
                         anova_result(list(
-                            model = model, summary = result, type = "two_way",
-                            interaction = input$interaction
+                            model = model,
+                            summary = result,
+                            type = "two_way",
+                            interaction = input$interaction,
+                            dep_var = input$dep_var,
+                            factor1 = input$factor1,
+                            factor2 = input$factor2,
+                            data = values$sovi_data
                         ))
 
                         # Post-hoc test for two-way ANOVA
@@ -162,15 +179,15 @@ uji_anova_server <- function(id, values) {
 
             if (result$type == "one_way") {
                 cat("One-Way ANOVA\n")
-                cat("Dependent Variable:", input$dep_var, "\n")
-                cat("Factor:", input$factor1, "\n\n")
+                cat("Dependent Variable:", result$dep_var, "\n")
+                cat("Factor:", result$factor1, "\n\n")
             } else if (result$type == "two_way") {
                 cat("Two-Way ANOVA\n")
-                cat("Dependent Variable:", input$dep_var, "\n")
-                cat("Factor 1:", input$factor1, "\n")
-                cat("Factor 2:", input$factor2, "\n")
+                cat("Dependent Variable:", result$dep_var, "\n")
+                cat("Factor 1:", result$factor1, "\n")
+                cat("Factor 2:", result$factor2, "\n")
                 if (result$interaction) {
-                    cat("Interaction:", paste(input$factor1, "*", input$factor2), "\n\n")
+                    cat("Interaction:", paste(result$factor1, "*", result$factor2), "\n\n")
                 } else {
                     cat("Model: Main effects only (no interaction)\n\n")
                 }
@@ -233,46 +250,54 @@ uji_anova_server <- function(id, values) {
 
             result <- anova_result()
 
+            # Use stored data and variable names instead of current inputs
+            plot_data <- result$data
+            dep_var <- result$dep_var
+            factor1 <- result$factor1
+
             if (result$type == "one_way") {
                 # Box plot for one-way ANOVA
-                p <- ggplot(values$sovi_data, aes_string(x = input$factor1, y = input$dep_var)) +
+                p <- ggplot(plot_data, aes_string(x = factor1, y = dep_var)) +
                     geom_boxplot(fill = "lightblue", alpha = 0.7) +
                     geom_jitter(width = 0.2, alpha = 0.5) +
                     labs(
-                        title = paste("Box Plot:", input$dep_var, "by", input$factor1),
-                        x = input$factor1,
-                        y = input$dep_var
+                        title = paste("Box Plot:", dep_var, "by", factor1),
+                        x = factor1,
+                        y = dep_var
                     ) +
                     theme_minimal()
             } else if (result$type == "two_way") {
+                # Get factor2 from stored results
+                factor2 <- result$factor2
+
                 # Interaction plot for two-way ANOVA
                 if (result$interaction) {
                     # Interaction plot
-                    p <- ggplot(values$sovi_data, aes_string(
-                        x = input$factor1, y = input$dep_var,
-                        color = input$factor2
+                    p <- ggplot(plot_data, aes_string(
+                        x = factor1, y = dep_var,
+                        color = factor2
                     )) +
                         stat_summary(fun = mean, geom = "point", size = 3) +
-                        stat_summary(fun = mean, geom = "line", aes_string(group = input$factor2), size = 1) +
+                        stat_summary(fun = mean, geom = "line", aes_string(group = factor2), size = 1) +
                         labs(
-                            title = paste("Interaction Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
-                            x = input$factor1,
-                            y = paste("Mean", input$dep_var),
-                            color = input$factor2
+                            title = paste("Interaction Plot:", dep_var, "by", factor1, "and", factor2),
+                            x = factor1,
+                            y = paste("Mean", dep_var),
+                            color = factor2
                         ) +
                         theme_minimal()
                 } else {
                     # Side-by-side box plots
-                    p <- ggplot(values$sovi_data, aes_string(
-                        x = input$factor1, y = input$dep_var,
-                        fill = input$factor2
+                    p <- ggplot(plot_data, aes_string(
+                        x = factor1, y = dep_var,
+                        fill = factor2
                     )) +
                         geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
                         labs(
-                            title = paste("Box Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
-                            x = input$factor1,
-                            y = input$dep_var,
-                            fill = input$factor2
+                            title = paste("Box Plot:", dep_var, "by", factor1, "and", factor2),
+                            x = factor1,
+                            y = dep_var,
+                            fill = factor2
                         ) +
                         theme_minimal()
                 }
@@ -398,46 +423,54 @@ uji_anova_server <- function(id, values) {
 
                 result <- anova_result()
 
+                # Use stored data and variable names instead of current inputs
+                plot_data <- result$data
+                dep_var <- result$dep_var
+                factor1 <- result$factor1
+
                 if (result$type == "one_way") {
                     # Box plot for one-way ANOVA
-                    p <- ggplot(values$sovi_data, aes_string(x = input$factor1, y = input$dep_var)) +
+                    p <- ggplot(plot_data, aes_string(x = factor1, y = dep_var)) +
                         geom_boxplot(fill = "lightblue", alpha = 0.7) +
                         geom_jitter(width = 0.2, alpha = 0.5) +
                         labs(
-                            title = paste("Box Plot:", input$dep_var, "by", input$factor1),
-                            x = input$factor1,
-                            y = input$dep_var
+                            title = paste("Box Plot:", dep_var, "by", factor1),
+                            x = factor1,
+                            y = dep_var
                         ) +
                         theme_minimal()
                 } else if (result$type == "two_way") {
+                    # Get factor2 from stored results
+                    factor2 <- result$factor2
+
                     # Interaction plot for two-way ANOVA
                     if (result$interaction) {
                         # Interaction plot
-                        p <- ggplot(values$sovi_data, aes_string(
-                            x = input$factor1, y = input$dep_var,
-                            color = input$factor2
+                        p <- ggplot(plot_data, aes_string(
+                            x = factor1, y = dep_var,
+                            color = factor2
                         )) +
                             stat_summary(fun = mean, geom = "point", size = 3) +
-                            stat_summary(fun = mean, geom = "line", aes_string(group = input$factor2), size = 1) +
+                            stat_summary(fun = mean, geom = "line", aes_string(group = factor2), size = 1) +
                             labs(
-                                title = paste("Interaction Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
-                                x = input$factor1,
-                                y = paste("Mean", input$dep_var),
-                                color = input$factor2
+                                title = paste("Interaction Plot:", dep_var, "by", factor1, "and", factor2),
+                                x = factor1,
+                                y = paste("Mean", dep_var),
+                                color = factor2
                             ) +
                             theme_minimal()
                     } else {
                         # Side-by-side box plots
-                        p <- ggplot(values$sovi_data, aes_string(
-                            x = input$factor1, y = input$dep_var,
-                            fill = input$factor2
+                        p <- ggplot(plot_data, aes_string(
+                            x = factor1, y = dep_var,
+                            fill = factor2
                         )) +
                             geom_boxplot(alpha = 0.7, position = position_dodge(0.8)) +
                             labs(
-                                title = paste("Box Plot:", input$dep_var, "by", input$factor1, "and", input$factor2),
-                                x = input$factor1,
-                                y = input$dep_var,
-                                fill = input$factor2
+                                title = paste("Box Plot:", dep_var, "by", factor1, "and", factor2),
+                                x = factor1,
+                                y = dep_var,
+                                fill = factor2
                             ) +
                             theme_minimal()
                     }
@@ -460,14 +493,14 @@ uji_anova_server <- function(id, values) {
 
                 # Prepare parameters for R Markdown template
                 params <- list(
-                    data = values$sovi_data,
+                    data = result$data,
                     anova_result = result,
                     anova_table = anova_table,
-                    dep_var = input$dep_var,
-                    factor1 = input$factor1,
-                    factor2 = input$factor2,
-                    anova_type = input$anova_type,
-                    interaction = input$interaction,
+                    dep_var = result$dep_var,
+                    factor1 = result$factor1,
+                    factor2 = result$factor2,
+                    anova_type = result$type,
+                    interaction = result$interaction,
                     posthoc_result = posthoc_result(),
                     analysis_date = Sys.Date(),
                     interpretation = interpret_anova(result$summary, alpha = 0.05, type = result$type)
@@ -507,14 +540,14 @@ uji_anova_server <- function(id, values) {
 
                 # Prepare parameters for R Markdown template
                 params <- list(
-                    data = values$sovi_data,
+                    data = result$data,
                     anova_result = result,
                     anova_table = anova_table,
-                    dep_var = input$dep_var,
-                    factor1 = input$factor1,
-                    factor2 = input$factor2,
-                    anova_type = input$anova_type,
-                    interaction = input$interaction,
+                    dep_var = result$dep_var,
+                    factor1 = result$factor1,
+                    factor2 = result$factor2,
+                    anova_type = result$type,
+                    interaction = result$interaction,
                     posthoc_result = posthoc_result(),
                     analysis_date = Sys.Date(),
                     interpretation = interpret_anova(result$summary, alpha = 0.05, type = result$type)

@@ -1,14 +1,14 @@
 # Comprehensive Unused Code Analysis Report
 
-**Generated:** Sat Jul 19 09:20:34 UTC 2025
+**Generated:** Sat Jul 19 09:24:19 UTC 2025
 **Repository:** ALIVA Dashboard
 
 ## Executive Summary
 
 - **Total R files analyzed:** 22
 - **Potentially unused files:** 16
-- **Total functions analyzed:** 62
-- **Potentially unused functions:** 4
+- **Total functions analyzed:** 58
+- **Potentially unused functions:** 0
 
 ## Potentially Unused Files
 
@@ -95,12 +95,7 @@
 
 ## Potentially Unused Functions
 
-The following functions are defined but never called:
-
-- `generate_clean_report()`
-- `interpret_with_recommendations()`
-- `render_pdf_safely()`
-- `render_word_safely()`
+No unused functions detected.
 
 ## Recommendations
 

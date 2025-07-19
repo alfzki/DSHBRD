@@ -270,7 +270,103 @@ uji_asumsi_server <- function(id, values) {
                     }
                 }
 
-                rmd_content <- '---
+                # Generate dynamic content based on current test results
+                normality_section <- ""
+                homogeneity_section <- ""
+                
+                # Dynamic Normality Section
+                if (!is.null(normality_results)) {
+                    var_name <- input$var_normal
+                    normality_interpretation <- interpret_assumption_test(
+                        test_result = normality_results,
+                        test_name = "normalitas",
+                        alpha = 0.05
+                    )
+                    
+                    normality_section <- paste0(
+                        "### Hasil Uji Shapiro-Wilk\n\n",
+                        "**Variabel yang diuji:** ", var_name, "\n\n",
+                        "- **Statistik Uji (W):** ", round(normality_results$statistic, 4), "\n",
+                        "- **P-value:** ", format(normality_results$p.value, scientific = TRUE), "\n",
+                        "- **Alpha (α):** 0.05\n\n",
+                        "### Interpretasi\n\n",
+                        normality_interpretation, "\n\n"
+                    )
+                } else {
+                    normality_section <- paste0(
+                        "### Hasil Uji Shapiro-Wilk\n\n",
+                        "Tidak ada data yang cukup untuk melakukan uji normalitas atau variabel belum dipilih.\n\n",
+                        "### Interpretasi\n\n",
+                        "Silakan pilih variabel numerik dan pastikan data memiliki minimal 3 observasi untuk melakukan uji normalitas.\n\n"
+                    )
+                }
+                
+                # Dynamic Homogeneity Section  
+                if (!is.null(homogeneity_results)) {
+                    var_name <- input$var_homogen
+                    group_name <- input$group_homogen
+                    homogeneity_interpretation <- interpret_assumption_test(
+                        test_result = homogeneity_results,
+                        test_name = "homogenitas",
+                        alpha = 0.05
+                    )
+                    
+                    homogeneity_section <- paste0(
+                        "### Hasil Uji Levene\n\n",
+                        "**Variabel yang diuji:** ", var_name, "\n",
+                        "**Variabel pengelompokan:** ", group_name, "\n\n",
+                        "- **Statistik Uji (F):** ", round(homogeneity_results$`F value`[1], 4), "\n",
+                        "- **P-value:** ", format(homogeneity_results$`Pr(>F)`[1], scientific = TRUE), "\n",
+                        "- **Alpha (α):** 0.05\n\n",
+                        "### Interpretasi\n\n",
+                        homogeneity_interpretation, "\n\n"
+                    )
+                } else {
+                    homogeneity_section <- paste0(
+                        "### Hasil Uji Levene\n\n",
+                        "Tidak ada data yang cukup untuk melakukan uji homogenitas atau variabel belum dipilih.\n\n",
+                        "### Interpretasi\n\n",
+                        "Silakan pilih variabel numerik dan variabel pengelompokan (kategorikal) untuk melakukan uji homogenitas varians.\n\n"
+                    )
+                }
+                
+                # Generate conclusion based on results
+                conclusion_text <- ""
+                if (!is.null(normality_results) && !is.null(homogeneity_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan hasil uji asumsi yang telah dilakukan:\n\n",
+                        "1. **Uji Normalitas**: ", 
+                        ifelse(normality_results$p.value >= 0.05, 
+                               "Data berdistribusi normal (asumsi terpenuhi)", 
+                               "Data tidak berdistribusi normal (asumsi tidak terpenuhi)"), "\n",
+                        "2. **Uji Homogenitas**: ",
+                        ifelse(homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "Varians antar grup homogen (asumsi terpenuhi)",
+                               "Varians antar grup tidak homogen (asumsi tidak terpenuhi)"), "\n\n",
+                        "**Rekomendasi**: ",
+                        ifelse(normality_results$p.value >= 0.05 && homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "Asumsi terpenuhi untuk melakukan uji parametrik.",
+                               "Pertimbangkan menggunakan uji non-parametrik atau transformasi data.")
+                    )
+                } else if (!is.null(normality_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan uji normalitas yang telah dilakukan, ",
+                        ifelse(normality_results$p.value >= 0.05,
+                               "data berdistribusi normal sehingga memenuhi asumsi untuk uji parametrik.",
+                               "data tidak berdistribusi normal sehingga perlu pertimbangan penggunaan uji non-parametrik.")
+                    )
+                } else if (!is.null(homogeneity_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan uji homogenitas yang telah dilakukan, ",
+                        ifelse(homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "varians antar grup homogen sehingga memenuhi asumsi untuk uji parametrik.",
+                               "varians antar grup tidak homogen sehingga perlu pertimbangan penggunaan uji non-parametrik.")
+                    )
+                } else {
+                    conclusion_text <- "Silakan lakukan uji asumsi terlebih dahulu untuk mendapatkan rekomendasi analisis yang sesuai."
+                }
+
+                rmd_content <- paste0('---
 title: "Laporan Uji Asumsi - Dashboard ALIVA"
 author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
@@ -296,32 +392,24 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 ## Uji Normalitas
 
-### Hasil Uji Shapiro-Wilk
-
-Hasil uji normalitas untuk variabel yang dipilih.
-
-### Interpretasi
-
-Berdasarkan hasil uji Shapiro-Wilk, dapat disimpulkan mengenai distribusi normalitas data.
+', normality_section, '
 
 ---
 
 ## Uji Homogenitas
 
-### Hasil Uji Levene
-
-Hasil uji homogenitas varians antar grup.
-
-### Interpretasi
-
-Berdasarkan hasil uji Levene, dapat disimpulkan mengenai homogenitas varians antar grup.
+', homogeneity_section, '
 
 ---
 
 ## Kesimpulan
 
-Laporan ini menyajikan hasil uji asumsi yang diperlukan untuk analisis statistik lebih lanjut.
-'
+', conclusion_text, '
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
+')
 
                 writeLines(rmd_content, temp_rmd)
                 
@@ -360,8 +448,133 @@ Laporan ini menyajikan hasil uji asumsi yang diperlukan untuk analisis statistik
             },
             content = function(file) {
                 temp_rmd <- tempfile(fileext = ".Rmd")
+                
+                # Get current test results (same as PDF version)
+                normality_results <- NULL
+                homogeneity_results <- NULL
+                
+                if (!is.null(input$var_normal) && validate_data(values$sovi_data, "Data SOVI")) {
+                    var_data <- values$sovi_data[[input$var_normal]]
+                    var_data <- var_data[!is.na(var_data)]
+                    
+                    if (length(var_data) >= 3) {
+                        if (length(var_data) > 5000) {
+                            var_data <- sample(var_data, 5000)
+                        }
+                        normality_results <- shapiro.test(var_data)
+                    }
+                }
+                
+                if (!is.null(input$var_homogen) && !is.null(input$group_homogen) && 
+                    validate_data(values$sovi_data, "Data SOVI")) {
+                    
+                    group_var <- values$sovi_data[[input$group_homogen]]
+                    if (length(unique(group_var)) >= 2) {
+                        formula_str <- paste(input$var_homogen, "~", input$group_homogen)
+                        formula_obj <- as.formula(formula_str)
+                        
+                        homogeneity_results <- tryCatch(
+                            car::leveneTest(formula_obj, data = values$sovi_data),
+                            error = function(e) NULL
+                        )
+                    }
+                }
+                
+                # Generate dynamic content (same logic as PDF version)
+                normality_section <- ""
+                homogeneity_section <- ""
+                
+                if (!is.null(normality_results)) {
+                    var_name <- input$var_normal
+                    normality_interpretation <- interpret_assumption_test(
+                        test_result = normality_results,
+                        test_name = "normalitas",
+                        alpha = 0.05
+                    )
+                    
+                    normality_section <- paste0(
+                        "### Hasil Uji Shapiro-Wilk\n\n",
+                        "**Variabel yang diuji:** ", var_name, "\n\n",
+                        "- **Statistik Uji (W):** ", round(normality_results$statistic, 4), "\n",
+                        "- **P-value:** ", format(normality_results$p.value, scientific = TRUE), "\n",
+                        "- **Alpha (α):** 0.05\n\n",
+                        "### Interpretasi\n\n",
+                        normality_interpretation, "\n\n"
+                    )
+                } else {
+                    normality_section <- paste0(
+                        "### Hasil Uji Shapiro-Wilk\n\n",
+                        "Tidak ada data yang cukup untuk melakukan uji normalitas atau variabel belum dipilih.\n\n",
+                        "### Interpretasi\n\n",
+                        "Silakan pilih variabel numerik dan pastikan data memiliki minimal 3 observasi untuk melakukan uji normalitas.\n\n"
+                    )
+                }
+                
+                if (!is.null(homogeneity_results)) {
+                    var_name <- input$var_homogen
+                    group_name <- input$group_homogen
+                    homogeneity_interpretation <- interpret_assumption_test(
+                        test_result = homogeneity_results,
+                        test_name = "homogenitas",
+                        alpha = 0.05
+                    )
+                    
+                    homogeneity_section <- paste0(
+                        "### Hasil Uji Levene\n\n",
+                        "**Variabel yang diuji:** ", var_name, "\n",
+                        "**Variabel pengelompokan:** ", group_name, "\n\n",
+                        "- **Statistik Uji (F):** ", round(homogeneity_results$`F value`[1], 4), "\n",
+                        "- **P-value:** ", format(homogeneity_results$`Pr(>F)`[1], scientific = TRUE), "\n",
+                        "- **Alpha (α):** 0.05\n\n",
+                        "### Interpretasi\n\n",
+                        homogeneity_interpretation, "\n\n"
+                    )
+                } else {
+                    homogeneity_section <- paste0(
+                        "### Hasil Uji Levene\n\n",
+                        "Tidak ada data yang cukup untuk melakukan uji homogenitas atau variabel belum dipilih.\n\n",
+                        "### Interpretasi\n\n",
+                        "Silakan pilih variabel numerik dan variabel pengelompokan (kategorikal) untuk melakukan uji homogenitas varians.\n\n"
+                    )
+                }
+                
+                # Generate conclusion
+                conclusion_text <- ""
+                if (!is.null(normality_results) && !is.null(homogeneity_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan hasil uji asumsi yang telah dilakukan:\n\n",
+                        "1. **Uji Normalitas**: ", 
+                        ifelse(normality_results$p.value >= 0.05, 
+                               "Data berdistribusi normal (asumsi terpenuhi)", 
+                               "Data tidak berdistribusi normal (asumsi tidak terpenuhi)"), "\n",
+                        "2. **Uji Homogenitas**: ",
+                        ifelse(homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "Varians antar grup homogen (asumsi terpenuhi)",
+                               "Varians antar grup tidak homogen (asumsi tidak terpenuhi)"), "\n\n",
+                        "**Rekomendasi**: ",
+                        ifelse(normality_results$p.value >= 0.05 && homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "Asumsi terpenuhi untuk melakukan uji parametrik.",
+                               "Pertimbangkan menggunakan uji non-parametrik atau transformasi data.")
+                    )
+                } else if (!is.null(normality_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan uji normalitas yang telah dilakukan, ",
+                        ifelse(normality_results$p.value >= 0.05,
+                               "data berdistribusi normal sehingga memenuhi asumsi untuk uji parametrik.",
+                               "data tidak berdistribusi normal sehingga perlu pertimbangan penggunaan uji non-parametrik.")
+                    )
+                } else if (!is.null(homogeneity_results)) {
+                    conclusion_text <- paste0(
+                        "Berdasarkan uji homogenitas yang telah dilakukan, ",
+                        ifelse(homogeneity_results$`Pr(>F)`[1] >= 0.05,
+                               "varians antar grup homogen sehingga memenuhi asumsi untuk uji parametrik.",
+                               "varians antar grup tidak homogen sehingga perlu pertimbangan penggunaan uji non-parametrik.")
+                    )
+                } else {
+                    conclusion_text <- "Silakan lakukan uji asumsi terlebih dahulu untuk mendapatkan rekomendasi analisis yang sesuai."
+                }
 
-                rmd_content <- '---
+                rmd_content <- paste0('---
 title: "Laporan Uji Asumsi - Dashboard ALIVA"
 author: "Dashboard ALIVA"
 date: "`r format(Sys.Date(), \'%d %B %Y\')`"
@@ -386,38 +599,39 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 ## Uji Normalitas
 
-### Hasil Uji Shapiro-Wilk
-
-Hasil uji normalitas untuk variabel yang dipilih.
-
-### Interpretasi
-
-Berdasarkan hasil uji Shapiro-Wilk, dapat disimpulkan mengenai distribusi normalitas data.
+', normality_section, '
 
 ---
 
 ## Uji Homogenitas
 
-### Hasil Uji Levene
-
-Hasil uji homogenitas varians antar grup.
-
-### Interpretasi
-
-Berdasarkan hasil uji Levene, dapat disimpulkan mengenai homogenitas varians antar grup.
+', homogeneity_section, '
 
 ---
 
 ## Kesimpulan
 
-Laporan ini menyajikan hasil uji asumsi yang diperlukan untuk analisis statistik lebih lanjut.
-'
+', conclusion_text, '
+
+---
+
+*Laporan ini dihasilkan secara otomatis oleh ALIVA Dashboard pada `r Sys.Date()`*
+')
 
                 writeLines(rmd_content, temp_rmd)
                 
                 # Render using the correct pattern to avoid pandoc error
-                output_path <- rmarkdown::render(input = temp_rmd, output_format = "word_document", quiet = TRUE)
-                file.copy(output_path, file)
+                tryCatch({
+                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "word_document", quiet = TRUE)
+                    file.copy(output_path, file)
+                    # Clean up
+                    unlink(temp_rmd)
+                    if (file.exists(output_path)) unlink(output_path)
+                }, error = function(e) {
+                    # If Word generation fails, create a simple error document
+                    writeLines(paste("Error generating Word report:", e$message), file)
+                    showNotification("Word generation failed. Please try the PDF format.", type = "error")
+                })
             }
         )
     })

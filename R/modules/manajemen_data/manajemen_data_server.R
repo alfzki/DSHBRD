@@ -223,11 +223,22 @@ manajemen_data_server <- function(id, values) {
         # Download handlers
         output$download_result <- downloadHandler(
             filename = function() {
-                paste0("kategorisasi_", input$select_var, "_", Sys.Date(), ".csv")
+                safe_var_name <- validate_variable_name(input$select_var)
+                paste0("kategorisasi_", safe_var_name, "_", Sys.Date(), ".csv")
             },
             content = function(file) {
+                # Enhanced validation
+                if (!validate_download_request(values, "select_var", session)) {
+                    return()
+                }
                 req(processed_result())
-                readr::write_csv(processed_result(), file)
+                
+                tryCatch({
+                    readr::write_csv(processed_result(), file)
+                }, error = function(e) {
+                    showNotification("Gagal mengunduh file CSV. Silakan coba lagi.", 
+                                   type = "error", duration = 5)
+                })
             }
         )
 
@@ -285,14 +296,18 @@ manajemen_data_server <- function(id, values) {
         # Download report as PDF
         output$download_report_pdf <- downloadHandler(
             filename = function() {
-                paste0("laporan_kategorisasi_", input$select_var, "_", Sys.Date(), ".pdf")
+                safe_var_name <- validate_variable_name(input$select_var)
+                paste0("laporan_kategorisasi_", safe_var_name, "_", Sys.Date(), ".pdf")
             },
             content = function(file) {
+                # Enhanced validation
+                if (!validate_download_request(values, c("select_var"), session)) {
+                    return()
+                }
                 req(processed_result(), input$select_var)
 
                 temp_rmd <- tempfile(fileext = ".Rmd")
-                temp_dir <- tempdir()
-
+                
                 var_name <- input$select_var
                 n_cat <- input$num_kategori
                 method_text <- ifelse(input$method == "interval", "interval sama", "kuantil")

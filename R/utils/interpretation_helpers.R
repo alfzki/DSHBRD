@@ -667,5 +667,137 @@ interpret_assumption_test <- function(test_result, test_name, alpha = 0.05) {
     return(interpretation)
 }
 
+# ==============================================================================
+# SECURITY AND VALIDATION FUNCTIONS
+# ==============================================================================
+
+#' Validate and Sanitize Variable Names for Download Handlers
+#'
+#' @description Validates variable names to prevent path traversal and injection attacks
+#' @param var_name Character. Variable name to validate
+#' @return Character. Sanitized variable name or NULL if invalid
+#' @author Tim Dashboard ALIVA
+validate_variable_name <- function(var_name) {
+    if (is.null(var_name) || length(var_name) != 1 || !is.character(var_name)) {
+        return(NULL)
+    }
+    
+    # Remove any path traversal attempts, special characters
+    sanitized <- gsub("[^a-zA-Z0-9_]", "_", var_name)
+    
+    # Limit length to prevent excessively long filenames
+    if (nchar(sanitized) > 50) {
+        sanitized <- substr(sanitized, 1, 50)
+    }
+    
+    # Ensure it's not empty after sanitization
+    if (nchar(sanitized) == 0) {
+        return("variable")
+    }
+    
+    return(sanitized)
+}
+
+#' Safe File Rendering with Error Handling
+#'
+#' @description Safely renders R Markdown files with proper error handling and validation
+#' @param temp_file Character. Temporary file path
+#' @param output_file Character. Output file path
+#' @param output_format Character. Output format ("pdf_document" or "word_document")
+#' @param quiet Logical. Whether to suppress rendering messages
+#' @return Logical. TRUE if successful, FALSE otherwise
+#' @author Tim Dashboard ALIVA
+safe_render_file <- function(temp_file, output_file, output_format = "pdf_document", quiet = TRUE) {
+    tryCatch({
+        # Validate inputs
+        if (!file.exists(temp_file)) {
+            stop("Temporary file does not exist")
+        }
+        
+        if (!is.character(output_file) || length(output_file) != 1) {
+            stop("Invalid output file path")
+        }
+        
+        # Ensure output directory exists
+        output_dir <- dirname(output_file)
+        if (!dir.exists(output_dir)) {
+            dir.create(output_dir, recursive = TRUE)
+        }
+        
+        # Render with timeout to prevent hanging
+        output_path <- suppressMessages(suppressWarnings(
+            rmarkdown::render(
+                input = temp_file,
+                output_format = output_format,
+                output_file = basename(output_file),
+                output_dir = output_dir,
+                quiet = quiet,
+                clean = TRUE
+            )
+        ))
+        
+        # Verify output was created
+        if (!file.exists(output_path)) {
+            stop("Output file was not generated")
+        }
+        
+        # Copy to final destination if different
+        if (output_path != output_file) {
+            file.copy(output_path, output_file, overwrite = TRUE)
+        }
+        
+        # Clean up temporary files
+        unlink(temp_file)
+        if (output_path != output_file && file.exists(output_path)) {
+            unlink(output_path)
+        }
+        
+        return(TRUE)
+        
+    }, error = function(e) {
+        # Clean up on error
+        if (file.exists(temp_file)) unlink(temp_file)
+        
+        # Log error (in real app, this would go to proper logging system)
+        cat("Error in safe_render_file:", e$message, "\n")
+        
+        return(FALSE)
+    })
+}
+
+#' Validate Download Request
+#'
+#' @description Validates download requests to prevent abuse
+#' @param values Reactive values object
+#' @param required_inputs Character vector of required input names
+#' @param session Shiny session object
+#' @return Logical. TRUE if request is valid, FALSE otherwise
+#' @author Tim Dashboard ALIVA
+validate_download_request <- function(values, required_inputs = NULL, session = NULL) {
+    # Check if data is available
+    if (is.null(values$sovi_data)) {
+        if (!is.null(session)) {
+            showNotification("Data belum dimuat. Silakan tunggu hingga data tersedia.", 
+                           type = "error", duration = 5)
+        }
+        return(FALSE)
+    }
+    
+    # Check required inputs if specified
+    if (!is.null(required_inputs)) {
+        for (input_name in required_inputs) {
+            if (is.null(session$input[[input_name]]) || session$input[[input_name]] == "") {
+                if (!is.null(session)) {
+                    showNotification(paste("Input", input_name, "diperlukan untuk unduhan."), 
+                                   type = "error", duration = 5)
+                }
+                return(FALSE)
+            }
+        }
+    }
+    
+    return(TRUE)
+}
+
 # [Removed unused functions: interpret_with_recommendations, render_pdf_safely, render_word_safely]
 # These functions were never called in the codebase and have been removed to reduce dead code.

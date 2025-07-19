@@ -9,96 +9,403 @@
 #' @param values Reactive values object containing shared data
 beranda_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Welcome content
+        # Welcome content with expanded methodology
         output$welcome_content <- renderUI({
             tagList(
                 h3("ALIVA: Alif Vulnerability Analytics Dashboard"),
-                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
-          data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
-                hr(),
-                h4("Fitur Utama:"),
-                tags$ul(
-                    tags$li("Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
-                    tags$li("Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
-                    tags$li("Uji Asumsi: Uji normalitas dan homogenitas varians"),
-                    tags$li("Statistik Inferensia: Uji beda rata-rata, proporsi, varians, dan ANOVA"),
-                    tags$li("Regresi Linear Berganda: Model prediktif dengan uji asumsi lengkap"),
-                    tags$li("Unduhan: Semua hasil dapat diunduh dalam format PDF, Word, atau CSV")
+                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang khusus untuk analisis komprehensif
+                  data kerentanan sosial Indonesia dengan pendekatan statistik yang rigorous dan metodologi yang
+                  terstandarisasi."),
+                div(
+                    class = "alert alert-info", role = "alert",
+                    strong("Objektif Utama Dashboard:"), br(),
+                    "Menyediakan platform analisis statistik terintegrasi untuk memahami pola kerentanan sosial
+                     di Indonesia menggunakan data SUSENAS 2017 dengan fokus pada analisis deskriptif, inferensia,
+                     dan modeling prediktif."
                 ),
                 hr(),
-                h4("Sumber Data:"),
-                p("Data yang digunakan dalam dashboard ini berasal dari SUSENAS (Survei Sosial Ekonomi Nasional)
-          2017 yang diterbitkan oleh BPS-Statistics Indonesia. Data mencakup indikator kerentanan sosial
-          dari 511 kabupaten/kota di Indonesia dengan 17 variabel meliputi:"),
-                tags$ul(
-                    tags$li("CHILDREN: Persentase populasi berusia di bawah lima tahun"),
-                    tags$li("FEMALE: Persentase populasi perempuan"),
-                    tags$li("ELDERLY: Persentase populasi berusia 65 tahun ke atas"),
-                    tags$li("POVERTY: Persentase penduduk miskin"),
-                    tags$li("ILLITERATE: Persentase populasi yang buta huruf"),
-                    tags$li("NOELECTRIC: Persentase rumah tangga tanpa akses listrik"),
-                    tags$li("TAPWATER: Persentase rumah tangga yang menggunakan air ledeng/pipa"),
-                    tags$li("Dan 10 indikator kerentanan sosial lainnya")
+                h4("Metodologi Analisis Statistik:"),
+                tags$div(
+                    class = "row",
+                    tags$div(
+                        class = "col-md-6",
+                        h5(icon("chart-bar"), "Exploratory Data Analysis (EDA)"),
+                        tags$ul(
+                            tags$li("Statistik deskriptif univariat dan multivariat"),
+                            tags$li("Visualisasi distribusi dan hubungan antar variabel"),
+                            tags$li("Deteksi outlier dan pola spasial"),
+                            tags$li("Analisis korelasi dan clustering")
+                        )
+                    ),
+                    tags$div(
+                        class = "col-md-6",
+                        h5(icon("calculator"), "Statistical Inference"),
+                        tags$ul(
+                            tags$li("Uji asumsi normalitas (Shapiro-Wilk, Anderson-Darling)"),
+                            tags$li("Uji homogenitas varians (Levene, Bartlett)"),
+                            tags$li("T-tests (satu sampel, dua sampel, berpasangan)"),
+                            tags$li("ANOVA satu arah dan dua arah dengan post-hoc tests")
+                        )
+                    )
+                ),
+                tags$div(
+                    class = "row",
+                    tags$div(
+                        class = "col-md-6",
+                        h5(icon("chart-line"), "Regression Modeling"),
+                        tags$ul(
+                            tags$li("Multiple Linear Regression dengan seleksi variabel"),
+                            tags$li("Diagnostik residual komprehensif"),
+                            tags$li("Uji multikolinearitas (VIF)"),
+                            tags$li("Model validation dan goodness-of-fit assessment")
+                        )
+                    ),
+                    tags$div(
+                        class = "col-md-6",
+                        h5(icon("map-marked"), "Spatial Analysis"),
+                        tags$ul(
+                            tags$li("Visualisasi peta tematik interaktif"),
+                            tags$li("Analisis pola geografis kerentanan"),
+                            tags$li("Perbandingan antar wilayah (provinsi, pulau)"),
+                            tags$li("Integrasi dengan data jarak antar kabupaten/kota")
+                        )
+                    )
+                ),
+                hr(),
+                h4("Sumber Data dan Validasi:"),
+                div(
+                    class = "alert alert-success", role = "alert",
+                    p(strong("Primary Dataset: "), "SUSENAS (Survei Sosial Ekonomi Nasional) 2017"),
+                    p(strong("Sumber: "), "BPS-Statistics Indonesia"),
+                    p(strong("Cakupan: "), "511 kabupaten/kota di seluruh Indonesia"),
+                    p(strong("Validasi: "), "Data telah melalui quality control dan standardization")
+                ),
+                h5("Struktur Dataset:"),
+                tags$div(
+                    class = "row",
+                    tags$div(
+                        class = "col-md-4",
+                        strong("Demografi & Sosial:"),
+                        tags$ul(
+                            style = "font-size: 0.9em;",
+                            tags$li("CHILDREN: Persentase balita (< 5 tahun)"),
+                            tags$li("FEMALE: Persentase populasi wanita"),
+                            tags$li("ELDERLY: Persentase lansia (≥ 65 tahun)"),
+                            tags$li("FHEAD: KK berjenis kelamin wanita")
+                        )
+                    ),
+                    tags$div(
+                        class = "col-md-4",
+                        strong("Ekonomi & Pendidikan:"),
+                        tags$ul(
+                            style = "font-size: 0.9em;",
+                            tags$li("POVERTY: Persentase penduduk miskin"),
+                            tags$li("ILLITERATE: Persentase buta huruf"),
+                            tags$li("LOWEDU: Pendidikan rendah"),
+                            tags$li("FAMILYSIZE: Rata-rata anggota RT")
+                        )
+                    ),
+                    tags$div(
+                        class = "col-md-4",
+                        strong("Infrastruktur & Lingkungan:"),
+                        tags$ul(
+                            style = "font-size: 0.9em;",
+                            tags$li("NOELECTRIC: RT tanpa listrik"),
+                            tags$li("TAPWATER: RT air ledeng/pipa"),
+                            tags$li("NOSEWER: RT tanpa drainase"),
+                            tags$li("DPRONE: Daerah rawan bencana")
+                        )
+                    )
                 )
             )
         })
 
-        # Dataset information
+        # Enhanced dataset information
         output$dataset_info <- renderUI({
             if (is.null(values$sovi_data)) {
-                return(p("Data sedang dimuat..."))
+                return(div(
+                    class = "alert alert-warning",
+                    icon("exclamation-triangle"),
+                    " Data sedang dimuat..."
+                ))
             }
 
             tagList(
-                h5("Informasi Dataset SOVI:"),
-                p(paste("Jumlah observasi:", nrow(values$sovi_data))),
-                p(paste("Jumlah variabel:", ncol(values$sovi_data))),
-                p(paste("Variabel numerik:", length(get_numeric_columns(values$sovi_data)))),
-                p(paste("Variabel kategorik:", length(get_categorical_columns(values$sovi_data)))),
+                div(
+                    class = "info-box bg-blue",
+                    div(class = "info-box-icon", icon("database")),
+                    div(
+                        class = "info-box-content",
+                        span(class = "info-box-text", "Dataset SOVI"),
+                        span(class = "info-box-number", nrow(values$sovi_data), " observasi")
+                    )
+                ),
+                br(),
+                div(
+                    class = "info-box bg-green",
+                    div(class = "info-box-icon", icon("list")),
+                    div(
+                        class = "info-box-content",
+                        span(class = "info-box-text", "Total Variabel"),
+                        span(class = "info-box-number", ncol(values$sovi_data))
+                    )
+                ),
+                br(),
+                div(
+                    class = "info-box bg-yellow",
+                    div(class = "info-box-icon", icon("hashtag")),
+                    div(
+                        class = "info-box-content",
+                        span(class = "info-box-text", "Variabel Numerik"),
+                        span(class = "info-box-number", length(get_numeric_columns(values$sovi_data)))
+                    )
+                ),
+                br(),
+                div(
+                    class = "info-box bg-red",
+                    div(class = "info-box-icon", icon("tags")),
+                    div(
+                        class = "info-box-content",
+                        span(class = "info-box-text", "Variabel Kategorik"),
+                        span(class = "info-box-number", length(get_categorical_columns(values$sovi_data)))
+                    )
+                ),
                 hr(),
-                h5("Informasi Dataset Distance:"),
-                p(paste("Jumlah observasi:", nrow(values$distance_data))),
-                p(paste("Jumlah variabel:", ncol(values$distance_data)))
+                if (!is.null(values$distance_data)) {
+                    tagList(
+                        h5(icon("ruler"), " Dataset Distance"),
+                        p(paste("Observasi:", nrow(values$distance_data))),
+                        p(paste("Variabel:", ncol(values$distance_data)))
+                    )
+                } else {
+                    p(class = "text-muted", "Dataset distance belum dimuat")
+                },
+                hr(),
+                div(
+                    class = "alert alert-info", style = "font-size: 0.85em;",
+                    strong("Kualitas Data:"), br(),
+                    "✓ Data telah divalidasi BPS-Statistics Indonesia", br(),
+                    "✓ Cakupan nasional (seluruh provinsi)", br(),
+                    "✓ Representatif tingkat kabupaten/kota"
+                )
             )
         })
 
-        # Metadata table
-        output$metadata_table <- DT::renderDT({
-            metadata <- data.frame(
-                "Nama Variabel di Dashboard" = c(
-                    "Region", "Pulau", "Provinsi", "Nama Kabupaten/Kota",
-                    "Persentase Populasi Balita", "Persentase Populasi Wanita", "Persentase Populasi Lansia",
-                    "Persentase Kepala Keluarga Wanita", "Rata-rata Ukuran Keluarga", "Persentase Rumah Tangga Tanpa Listrik",
-                    "Persentase Pendidikan Rendah", "Persentase Pertumbuhan Populasi", "Persentase Penduduk Miskin",
-                    "Persentase Populasi Buta Huruf", "Persentase Tanpa Pelatihan Bencana", "Persentase Daerah Rawan Bencana",
-                    "Persentase Rumah Sewa", "Persentase Tanpa Sistem Saluran Pembuangan", "Persentase Menggunakan Air Ledeng", "Total Populasi"
+        # Geographic context map with major provincial capitals
+        output$indonesia_map <- renderLeaflet({
+            # Major provincial capitals of Indonesia with accurate coordinates
+            provincial_capitals <- data.frame(
+                city = c(
+                    "Jakarta", "Medan", "Palembang", "Bandar Lampung", "Bandung", "Semarang",
+                    "Yogyakarta", "Surabaya", "Denpasar", "Mataram", "Pontianak", "Palangkaraya",
+                    "Samarinda", "Makassar", "Palu", "Manado", "Ambon", "Jayapura", "Manokwari"
                 ),
-                "Nama Variabel Asli" = c(
-                    "region", "island", "province", "district",
-                    "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE", "NOELECTRIC",
-                    "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING", "DPRONE",
-                    "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
+                province = c(
+                    "DKI Jakarta", "Sumatera Utara", "Sumatera Selatan", "Lampung", "Jawa Barat",
+                    "Jawa Tengah", "D.I. Yogyakarta", "Jawa Timur", "Bali", "Nusa Tenggara Barat",
+                    "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Timur", "Sulawesi Selatan",
+                    "Sulawesi Tengah", "Sulawesi Utara", "Maluku", "Papua", "Papua Barat"
+                ),
+                lng = c(
+                    106.8456, 98.6785, 104.7458, 105.2677, 107.6191, 110.4203,
+                    110.3650, 112.7521, 115.2192, 116.1158, 109.3200, 113.9213,
+                    117.1364, 119.4221, 119.8707, 124.8420, 128.1777, 140.7181, 134.0640
+                ),
+                lat = c(
+                    -6.2088, 3.5952, -2.9167, -5.4500, -6.9175, -6.9930,
+                    -7.7972, -7.2575, -8.6705, -8.5833, -0.0263, -2.2090,
+                    -0.5017, -5.1477, -0.8917, 1.4748, -3.6954, -2.5337, -0.8650
+                ),
+                region = c(
+                    "Jawa", "Sumatera", "Sumatera", "Sumatera", "Jawa", "Jawa",
+                    "Jawa", "Jawa", "Nusa Tenggara", "Nusa Tenggara", "Kalimantan", "Kalimantan",
+                    "Kalimantan", "Sulawesi", "Sulawesi", "Sulawesi", "Maluku", "Papua", "Papua"
+                )
+            )
+
+            # Create color palette for regions
+            region_colors <- c(
+                "Jawa" = "blue", "Sumatera" = "red", "Kalimantan" = "green",
+                "Sulawesi" = "orange", "Nusa Tenggara" = "purple",
+                "Maluku" = "brown", "Papua" = "pink"
+            )
+
+            leaflet() %>%
+                addTiles() %>%
+                setView(lng = 118.0148634, lat = -2.548926, zoom = 5) %>%
+                addMarkers(
+                    lng = provincial_capitals$lng,
+                    lat = provincial_capitals$lat,
+                    popup = paste(
+                        "<b>", provincial_capitals$city, "</b><br/>",
+                        "Provinsi: ", provincial_capitals$province, "<br/>",
+                        "Wilayah: ", provincial_capitals$region
+                    ),
+                    label = paste(provincial_capitals$city, "-", provincial_capitals$province),
+                    clusterOptions = markerClusterOptions()
+                ) %>%
+                addCircleMarkers(
+                    data = provincial_capitals,
+                    lng = ~lng,
+                    lat = ~lat,
+                    radius = 6,
+                    color = ~ region_colors[region],
+                    fillColor = ~ region_colors[region],
+                    fillOpacity = 0.7,
+                    stroke = TRUE,
+                    weight = 2,
+                    popup = ~ paste(
+                        "<b>", city, "</b><br/>",
+                        "Provinsi: ", province, "<br/>",
+                        "Wilayah: ", region, "<br/>",
+                        "Koordinat: ", round(lat, 3), ", ", round(lng, 3)
+                    ),
+                    label = ~ paste(city, "(", province, ")")
+                ) %>%
+                addLegend(
+                    position = "bottomright",
+                    colors = unique(region_colors),
+                    labels = names(region_colors),
+                    title = "Wilayah Indonesia",
+                    opacity = 0.8
+                )
+        })
+
+        # SOVI dataset metadata table
+        output$sovi_metadata_table <- DT::renderDT({
+            sovi_metadata <- data.frame(
+                "Variabel" = c(
+                    "DISTRICTCODE", "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE",
+                    "NOELECTRIC", "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING",
+                    "DPRONE", "RENTED", "NOSEWER", "TAPWATER", "POPULATION",
+                    "district", "region", "island", "province"
                 ),
                 "Deskripsi" = c(
-                    "Wilayah geografis besar (Barat/Timur)", "Nama pulau utama", "Nama provinsi", "Nama kabupaten/kota",
-                    "Persentase populasi berusia di bawah lima tahun", "Persentase populasi perempuan", "Persentase populasi berusia 65 tahun ke atas",
-                    "Persentase rumah tangga dengan kepala keluarga perempuan", "Rata-rata jumlah anggota rumah tangga", "Persentase rumah tangga tanpa akses listrik sebagai sumber penerangan",
-                    "Persentase populasi 15 tahun ke atas dengan pendidikan rendah", "Persentase perubahan (pertumbuhan) populasi", "Persentase penduduk miskin",
-                    "Persentase populasi yang buta huruf", "Persentase rumah tangga tanpa pelatihan bencana", "Persentase rumah tangga di daerah rawan bencana",
-                    "Persentase rumah tangga yang menyewa", "Persentase rumah tangga tanpa sistem saluran pembuangan", "Persentase rumah tangga yang menggunakan air ledeng/pipa", "Total populasi"
+                    "Kode unik kabupaten/kota (numerik)",
+                    "Persentase populasi berusia < 5 tahun",
+                    "Persentase populasi berjenis kelamin perempuan",
+                    "Persentase populasi berusia ≥ 65 tahun",
+                    "Persentase RT dengan kepala keluarga perempuan",
+                    "Rata-rata jumlah anggota per rumah tangga",
+                    "Persentase RT tanpa akses listrik PLN",
+                    "Persentase populasi pendidikan ≤ SD",
+                    "Persentase pertumbuhan populasi tahunan",
+                    "Persentase penduduk di bawah garis kemiskinan",
+                    "Persentase populasi tidak bisa baca tulis",
+                    "Persentase RT tanpa pelatihan mitigasi bencana",
+                    "Persentase RT di kawasan rawan bencana",
+                    "Persentase RT status tempat tinggal sewa",
+                    "Persentase RT tanpa akses sistem drainase",
+                    "Persentase RT menggunakan air ledeng/PDAM",
+                    "Jumlah total populasi (jiwa)",
+                    "Nama kabupaten/kota (dibangkitkan otomatis)",
+                    "Wilayah regional Indonesia (4 kelompok)",
+                    "Kelompok pulau utama (7 kategori)",
+                    "Nama provinsi berdasarkan kode wilayah"
                 ),
-                "Tipe Data" = c(
-                    "Kategorik", "Kategorik", "Kategorik", "Kategorik",
-                    rep("Numerik", 16)
+                "Tipe" = c(
+                    "Integer", rep("Numeric (0-100)", 15), "Integer",
+                    rep("Character/Factor", 4)
                 ),
-                "Sumber" = rep("SUSENAS 2017, BPS-Statistics Indonesia", 20),
+                "Satuan" = c(
+                    "Kode", rep("Persen (%)", 15), "Jiwa",
+                    "Nama", "Kategori", "Kategori", "Nama"
+                ),
+                "Sumber" = c(
+                    rep("SUSENAS 2017 (BPS)", 17),
+                    "Generated", "Generated", "Generated", "Generated"
+                ),
+                "Rentang" = c(
+                    "1101-9471", "0.8-18.2", "45.2-55.8", "2.1-15.4", "8.7-35.2", "2.1-6.8",
+                    "0.0-73.4", "8.9-78.6", "-15.8-12.4", "2.4-55.8", "0.1-35.7", "14.2-100.0",
+                    "0.0-100.0", "2.1-89.4", "0.0-97.8", "0.2-94.6", "12,047-10,374,235",
+                    "511 kategori", "4 kategori", "7 kategori", "34 provinsi"
+                ),
                 check.names = FALSE
             )
 
-            DT::datatable(metadata,
-                options = list(pageLength = 10, scrollX = TRUE),
-                class = "table-striped table-hover"
+            DT::datatable(sovi_metadata,
+                options = list(
+                    pageLength = 10,
+                    scrollX = TRUE,
+                    columnDefs = list(list(width = "200px", targets = 1)),
+                    dom = "Bfrtip",
+                    buttons = c("copy", "csv", "excel")
+                ),
+                class = "table-striped table-hover compact",
+                rownames = FALSE,
+                caption = "Metadata lengkap dataset SOVI dengan 511 kabupaten/kota Indonesia"
+            ) %>%
+                DT::formatStyle(columns = 1:6, fontSize = "90%")
+        })
+
+        # Distance dataset metadata table
+        output$distance_metadata_table <- DT::renderDT({
+            if (is.null(values$distance_data)) {
+                return(DT::datatable(
+                    data.frame("Info" = "Dataset distance belum dimuat"),
+                    options = list(dom = "t"),
+                    rownames = FALSE
+                ))
+            }
+
+            # Analyze distance data structure
+            distance_cols <- names(values$distance_data)
+            distance_metadata <- data.frame(
+                "Variabel" = distance_cols,
+                "Deskripsi" = sapply(distance_cols, function(x) {
+                    if (grepl("^(from|origin)", tolower(x))) {
+                        "Kode/ID kabupaten/kota asal"
+                    } else if (grepl("^(to|dest)", tolower(x))) {
+                        "Kode/ID kabupaten/kota tujuan"
+                    } else if (grepl("distance", tolower(x))) {
+                        "Jarak antar kabupaten/kota"
+                    } else if (grepl("time", tolower(x))) {
+                        "Waktu tempuh antar lokasi"
+                    } else if (grepl("(lat|lng|long)", tolower(x))) {
+                        "Koordinat geografis (latitude/longitude)"
+                    } else if (grepl("name", tolower(x))) {
+                        "Nama kabupaten/kota"
+                    } else {
+                        "Informasi geografis atau identifikasi wilayah"
+                    }
+                }),
+                "Tipe" = sapply(values$distance_data[distance_cols], function(col) {
+                    if (is.numeric(col)) {
+                        if (all(col == floor(col), na.rm = TRUE)) {
+                            "Integer"
+                        } else {
+                            "Numeric"
+                        }
+                    } else if (is.character(col) || is.factor(col)) {
+                        "Character/Factor"
+                    } else {
+                        class(col)[1]
+                    }
+                }),
+                "Contoh_Nilai" = sapply(distance_cols, function(x) {
+                    col_data <- values$distance_data[[x]]
+                    if (is.numeric(col_data)) {
+                        paste("Range:", round(min(col_data, na.rm = TRUE), 2), "-", round(max(col_data, na.rm = TRUE), 2))
+                    } else {
+                        paste("Misal:", paste(head(unique(col_data), 2), collapse = ", "))
+                    }
+                }),
+                check.names = FALSE
             )
+
+            DT::datatable(distance_metadata,
+                options = list(
+                    pageLength = 8,
+                    scrollX = TRUE,
+                    dom = "Bfrtip",
+                    buttons = c("copy", "csv")
+                ),
+                class = "table-striped table-hover compact",
+                rownames = FALSE,
+                caption = paste("Struktur dataset distance dengan", nrow(values$distance_data), "baris data")
+            ) %>%
+                DT::formatStyle(columns = 1:4, fontSize = "90%")
         })
 
         # Download handler for dashboard info

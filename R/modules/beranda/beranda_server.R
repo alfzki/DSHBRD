@@ -110,45 +110,6 @@ beranda_server <- function(id, values) {
         # Tabel metadata dataset distance
         output$distance_metadata_table <- DT::renderDT({
             create_distance_metadata_table(values$distance_data)
-                        "Informasi geografis atau identifikasi wilayah"
-                    }
-                }),
-                "Tipe" = sapply(values$distance_data[distance_cols], function(col) {
-                    if (is.numeric(col)) {
-                        if (all(col == floor(col), na.rm = TRUE)) {
-                            "Integer"
-                        } else {
-                            "Numeric"
-                        }
-                    } else if (is.character(col) || is.factor(col)) {
-                        "Character/Factor"
-                    } else {
-                        class(col)[1]
-                    }
-                }),
-                "Contoh_Nilai" = sapply(distance_cols, function(x) {
-                    col_data <- values$distance_data[[x]]
-                    if (is.numeric(col_data)) {
-                        paste("Range:", round(min(col_data, na.rm = TRUE), 2), "-", round(max(col_data, na.rm = TRUE), 2))
-                    } else {
-                        paste("Misal:", paste(head(unique(col_data), 2), collapse = ", "))
-                    }
-                }),
-                check.names = FALSE
-            )
-
-            DT::datatable(distance_metadata,
-                options = list(
-                    pageLength = 8,
-                    scrollX = TRUE,
-                    dom = "Bfrtip",
-                    buttons = c("copy", "csv")
-                ),
-                class = "table-striped table-hover compact",
-                rownames = FALSE,
-                caption = paste("Struktur dataset distance dengan", nrow(values$distance_data), "baris data")
-            ) %>%
-                DT::formatStyle(columns = 1:4, fontSize = "90%")
         })
 
         # Handler download untuk informasi dashboard
@@ -172,6 +133,7 @@ beranda_server <- function(id, values) {
                     "output: pdf_document",
                     "---",
                     "",
+                    report_content
                 ), temp_rmd)
 
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
@@ -197,7 +159,7 @@ beranda_server <- function(id, values) {
                     "output: pdf_document",
                     "---",
                     "",
-                    report_content
+                    report_content,
                     "- Two-sample proportion test",
                     "- Chi-square goodness of fit",
                     "- F-test untuk perbandingan varians",

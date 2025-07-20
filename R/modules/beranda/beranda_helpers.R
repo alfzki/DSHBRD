@@ -58,7 +58,8 @@ create_methodology_content <- function() {
                 tags$li("ANOVA satu arah dan dua arah dengan post-hoc tests")
             )
         )
-    ),
+    )
+
     tags$div(
         class = "row",
         tags$div(
@@ -190,7 +191,7 @@ create_dataset_info <- function(sovi_data) {
 create_variable_type_info <- function(sovi_data) {
     numeric_count <- sum(sapply(sovi_data, is.numeric))
     categorical_count <- sum(sapply(sovi_data, function(x) is.character(x) || is.factor(x)))
-    
+
     tags$div(
         class = "row",
         tags$div(
@@ -228,7 +229,7 @@ create_variable_type_info <- function(sovi_data) {
 create_data_quality_info <- function(sovi_data) {
     missing_count <- sum(is.na(sovi_data))
     completeness_rate <- round((1 - missing_count / (nrow(sovi_data) * ncol(sovi_data))) * 100, 2)
-    
+
     tags$div(
         class = "row",
         tags$div(
@@ -264,32 +265,41 @@ create_data_quality_info <- function(sovi_data) {
 #' @param sovi_data Data frame berisi data SOVI
 #' @return Objek DT::datatable berisi metadata variabel
 create_sovi_metadata_table <- function(sovi_data) {
-    if (is.null(sovi_data)) return(NULL)
-    
+    if (is.null(sovi_data)) {
+        return(NULL)
+    }
+
     # Buat metadata untuk setiap variabel
     metadata <- data.frame(
         Variabel = names(sovi_data),
         Tipe = sapply(sovi_data, function(x) {
-            if (is.numeric(x)) "Numerik"
-            else if (is.character(x) || is.factor(x)) "Kategorik"
-            else "Lainnya"
+            if (is.numeric(x)) {
+                "Numerik"
+            } else if (is.character(x) || is.factor(x)) {
+                "Kategorik"
+            } else {
+                "Lainnya"
+            }
         }),
         `Missing Values` = sapply(sovi_data, function(x) sum(is.na(x))),
         `Persen Missing` = round(sapply(sovi_data, function(x) sum(is.na(x)) / length(x) * 100), 2),
         stringsAsFactors = FALSE
     )
-    
+
     # Tambahkan deskripsi untuk variabel numerik
-    metadata$Min <- ifelse(metadata$Tipe == "Numerik", 
-                          round(sapply(sovi_data, function(x) if(is.numeric(x)) min(x, na.rm = TRUE) else NA), 4),
-                          NA)
+    metadata$Min <- ifelse(metadata$Tipe == "Numerik",
+        round(sapply(sovi_data, function(x) if (is.numeric(x)) min(x, na.rm = TRUE) else NA), 4),
+        NA
+    )
     metadata$Max <- ifelse(metadata$Tipe == "Numerik",
-                          round(sapply(sovi_data, function(x) if(is.numeric(x)) max(x, na.rm = TRUE) else NA), 4),
-                          NA)
+        round(sapply(sovi_data, function(x) if (is.numeric(x)) max(x, na.rm = TRUE) else NA), 4),
+        NA
+    )
     metadata$Rerata <- ifelse(metadata$Tipe == "Numerik",
-                             round(sapply(sovi_data, function(x) if(is.numeric(x)) mean(x, na.rm = TRUE) else NA), 4),
-                             NA)
-    
+        round(sapply(sovi_data, function(x) if (is.numeric(x)) mean(x, na.rm = TRUE) else NA), 4),
+        NA
+    )
+
     DT::datatable(metadata,
         options = list(
             pageLength = 20,
@@ -311,13 +321,17 @@ create_sovi_metadata_table <- function(sovi_data) {
 #' @param distance_data Data frame berisi data distance
 #' @return Objek DT::datatable berisi informasi matriks jarak
 create_distance_metadata_table <- function(distance_data) {
-    if (is.null(distance_data)) return(NULL)
-    
+    if (is.null(distance_data)) {
+        return(NULL)
+    }
+
     # Informasi dasar matriks jarak
     info_df <- data.frame(
-        Atribut = c("Dimensi Matriks", "Total Elemen", "Tipe Data", 
-                   "Jarak Minimum", "Jarak Maksimum", "Jarak Rata-rata",
-                   "Jarak Median", "Missing Values", "Simetri Matriks"),
+        Atribut = c(
+            "Dimensi Matriks", "Total Elemen", "Tipe Data",
+            "Jarak Minimum", "Jarak Maksimum", "Jarak Rata-rata",
+            "Jarak Median", "Missing Values", "Simetri Matriks"
+        ),
         Nilai = c(
             paste(nrow(distance_data), "x", ncol(distance_data)),
             nrow(distance_data) * ncol(distance_data),
@@ -331,7 +345,7 @@ create_distance_metadata_table <- function(distance_data) {
         ),
         stringsAsFactors = FALSE
     )
-    
+
     DT::datatable(info_df,
         options = list(
             pageLength = 10,
@@ -360,7 +374,7 @@ create_combined_report_content <- function(sovi_data, report_type = "info") {
         "",
         "## Ringkasan Dataset"
     )
-    
+
     if (!is.null(sovi_data)) {
         data_summary <- c(
             paste("- **Jumlah Observasi:** ", nrow(sovi_data), " kabupaten/kota"),
@@ -372,7 +386,7 @@ create_combined_report_content <- function(sovi_data, report_type = "info") {
         )
         base_content <- c(base_content, data_summary)
     }
-    
+
     features_content <- c(
         "## Fitur Dashboard Tersedia",
         "",
@@ -381,7 +395,7 @@ create_combined_report_content <- function(sovi_data, report_type = "info") {
         "- Kategorisasi data numerik",
         "- Filter dan seleksi data",
         "",
-        "### 2. Eksplorasi Data", 
+        "### 2. Eksplorasi Data",
         "- Statistik deskriptif lengkap",
         "- Visualisasi univariat dan bivariat",
         "- Matriks korelasi interaktif",
@@ -403,7 +417,7 @@ create_combined_report_content <- function(sovi_data, report_type = "info") {
         "- Diagnostik model komprehensif",
         ""
     )
-    
+
     if (report_type == "info") {
         additional_content <- c(
             "## Data Information",
@@ -429,7 +443,7 @@ create_combined_report_content <- function(sovi_data, report_type = "info") {
             "*Laporan ini dihasilkan secara otomatis dari ALIVA Dashboard*"
         )
     }
-    
+
     c(base_content, features_content, additional_content)
 }
 
@@ -445,13 +459,13 @@ create_dashboard_filename <- function(type) {
         "word" = "ALIVA_Complete_Dashboard_Report",
         "ALIVA_Dashboard_Report"
     )
-    
+
     extension <- switch(type,
         "info" = ".txt",
-        "pdf" = ".pdf", 
+        "pdf" = ".pdf",
         "word" = ".docx",
         ".pdf"
     )
-    
+
     paste0(prefix, "_", Sys.Date(), extension)
 }

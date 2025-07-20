@@ -281,8 +281,8 @@ create_sovi_metadata_table <- function(sovi_data) {
                 "Lainnya"
             }
         }),
-        `Missing Values` = sapply(sovi_data, function(x) sum(is.na(x))),
-        `Persen Missing` = round(sapply(sovi_data, function(x) sum(is.na(x)) / length(x) * 100), 2),
+        Missing.Values = sapply(sovi_data, function(x) sum(is.na(x))),
+        Persen.Missing = round(sapply(sovi_data, function(x) sum(is.na(x)) / length(x) * 100), 2),
         stringsAsFactors = FALSE
     )
 
@@ -310,7 +310,7 @@ create_sovi_metadata_table <- function(sovi_data) {
         caption = "Metadata Dataset SOVI - Social Vulnerability Index Indonesia",
         rownames = FALSE
     ) %>%
-        DT::formatStyle(c("Persen Missing"),
+        DT::formatStyle(c("Persen.Missing"),
             backgroundColor = DT::styleInterval(c(5, 10), c("lightgreen", "yellow", "lightcoral"))
         )
 }

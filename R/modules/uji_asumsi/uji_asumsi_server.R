@@ -35,16 +35,16 @@ uji_asumsi_server <- function(id, values) {
 
         # Update variable choices when data changes
         observe({
-            req(values$current_data)
+            req(values$sovi_data)
             check_required_packages()
 
             # Get numeric variables
-            numeric_vars <- names(values$current_data)[sapply(values$current_data, function(x) {
+            numeric_vars <- names(values$sovi_data)[sapply(values$sovi_data, function(x) {
                 is.numeric(x) && length(unique(x)) > 2
             })]
 
             # Get categorical variables
-            categorical_vars <- names(values$current_data)[sapply(values$current_data, function(x) {
+            categorical_vars <- names(values$sovi_data)[sapply(values$sovi_data, function(x) {
                 is.factor(x) || is.character(x) || (is.numeric(x) && length(unique(x)) <= 10)
             })]
 
@@ -78,11 +78,11 @@ uji_asumsi_server <- function(id, values) {
         # ========== NORMALITY TESTS ==========
 
         observeEvent(input$run_normality, {
-            req(values$current_data, input$var_normal)
+            req(values$sovi_data, input$var_normal)
 
             tryCatch(
                 {
-                    data_to_use <- values$current_data
+                    data_to_use <- values$sovi_data
                     var_data <- data_to_use[[input$var_normal]]
 
                     # Remove missing values
@@ -310,11 +310,11 @@ uji_asumsi_server <- function(id, values) {
         # ========== HOMOGENEITY TESTS ==========
 
         observeEvent(input$run_homogeneity, {
-            req(values$current_data, input$var_homogen, input$group_homogen)
+            req(values$sovi_data, input$var_homogen, input$group_homogen)
 
             tryCatch(
                 {
-                    data_to_use <- values$current_data
+                    data_to_use <- values$sovi_data
                     var_data <- data_to_use[[input$var_homogen]]
                     group_data <- data_to_use[[input$group_homogen]]
 
@@ -537,11 +537,11 @@ uji_asumsi_server <- function(id, values) {
         # ========== INDEPENDENCE TESTS ==========
 
         observeEvent(input$run_independence, {
-            req(values$current_data, input$var_indep1, input$var_indep2)
+            req(values$sovi_data, input$var_indep1, input$var_indep2)
 
             tryCatch(
                 {
-                    data_to_use <- values$current_data
+                    data_to_use <- values$sovi_data
                     var1_data <- data_to_use[[input$var_indep1]]
                     var2_data <- data_to_use[[input$var_indep2]]
 

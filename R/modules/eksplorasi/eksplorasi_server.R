@@ -1,21 +1,24 @@
 # Eksplorasi Server Module
-# Comprehensive server logic for data exploration functionality
+# Logic server komprehensif untuk fungsionalitas eksplorasi data
 
-#' Eksplorasi Server Module
+# Load helper functions
+source(file.path("R", "modules", "eksplorasi", "eksplorasi_helpers.R"), local = TRUE)
+
+#' Modul Server Eksplorasi
 #'
-#' Server logic for comprehensive data exploration features
+#' Logic server untuk fitur eksplorasi data komprehensif
 #'
-#' @param id Module ID for namespacing  
-#' @param values Reactive values object containing shared data
+#' @param id ID modul untuk namespacing  
+#' @param values Objek reactive values berisi data bersama
 eksplorasi_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
         
-        # Reactive values for storing plot objects
+        # Reactive values untuk menyimpan objek plot
         current_plot <- reactiveVal(NULL)
         current_data_summary <- reactiveVal(NULL)
         
         # =================================================================
-        # UPDATE VARIABLE CHOICES FOR ALL TABS
+        # UPDATE PILIHAN VARIABEL UNTUK SEMUA TAB
         # =================================================================
         
         observe({
@@ -25,34 +28,34 @@ eksplorasi_server <- function(id, values) {
             categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
             all_choices <- get_variable_choices(values$sovi_data, "all")
             
-            # Update for univariate tab
+            # Update untuk tab univariat
             updateSelectInput(session, "univar_var", choices = numeric_choices)
             
-            # Update for bivariate tab
+            # Update untuk tab bivariat
             updateSelectInput(session, "bivar_x", choices = all_choices)
             updateSelectInput(session, "bivar_y", choices = numeric_choices)
             
-            # Update for correlation tab
+            # Update untuk tab korelasi
             updateCheckboxGroupInput(session, "corr_vars", choices = numeric_choices, 
                                    selected = numeric_choices[1:min(6, length(numeric_choices))])
             
-            # Update for group analysis
+            # Update untuk analisis kelompok
             updateSelectInput(session, "group_var", choices = categorical_choices)
             updateSelectInput(session, "group_target", choices = numeric_choices)
             
-            # Update for data tables
+            # Update untuk tabel data
             updateSelectInput(session, "table_columns", choices = all_choices, 
                             selected = all_choices[1:min(10, length(all_choices))])
             
-            # Update for maps
+            # Update untuk peta
             updateSelectInput(session, "map_var", choices = numeric_choices)
         })
         
         # =================================================================
-        # TAB 1: UNIVARIATE ANALYSIS
+        # TAB 1: ANALISIS UNIVARIAT
         # =================================================================
         
-        # Generate univariate plots
+        # Membuat plot univariat
         observeEvent(input$generate_univar, {
             req(input$univar_var, input$univar_plot_type)
             
@@ -61,72 +64,33 @@ eksplorasi_server <- function(id, values) {
             var_data <- values$sovi_data[[input$univar_var]]
             var_name <- input$univar_var
             
-            p <- switch(input$univar_plot_type,
-                "histogram" = {
-                    plot_ly(x = ~var_data, type = "histogram", nbinsx = input$hist_bins %||% 20) %>%
-                        layout(title = paste("Histogram:", var_name),
-                               xaxis = list(title = var_name),
-                               yaxis = list(title = "Frequency"))
-                },
-                "density" = {
-                    dens <- density(var_data, na.rm = TRUE)
-                    plot_ly(x = ~dens$x, y = ~dens$y, type = "scatter", mode = "lines", fill = "tozeroy") %>%
-                        layout(title = paste("Density Plot:", var_name),
-                               xaxis = list(title = var_name),
-                               yaxis = list(title = "Density"))
-                },
-                "boxplot" = {
-                    plot_ly(y = ~var_data, type = "box", name = var_name) %>%
-                        layout(title = paste("Boxplot:", var_name),
-                               yaxis = list(title = var_name))
-                },
-                "qqplot" = {
-                    qqnorm_data <- qqnorm(var_data, plot.it = FALSE)
-                    plot_ly(x = ~qqnorm_data$x, y = ~qqnorm_data$y, type = "scatter", mode = "markers") %>%
-                        add_lines(x = ~qqnorm_data$x, y = ~qqnorm_data$x, line = list(color = "red")) %>%
-                        layout(title = paste("Q-Q Plot:", var_name),
-                               xaxis = list(title = "Theoretical Quantiles"),
-                               yaxis = list(title = "Sample Quantiles"))
-                }
-            )
-            
+            # Menggunakan helper function untuk membuat plot
+            p <- create_univariate_plot(var_data, var_name, input$univar_plot_type, input$hist_bins %||% 20)
             current_plot(p)
         })
         
-        # Display univariate plot
+        # Menampilkan plot univariat
         output$univar_plot <- renderPlotly({
             current_plot()
         })
         
-        # Univariate summary statistics
+        # Statistik ringkasan univariat
         output$univar_summary <- renderText({
             req(input$univar_var)
             
-            if (!validate_data(values$sovi_data, "Data SOVI")) return("Data not available")
+            if (!validate_data(values$sovi_data, "Data SOVI")) return("Data tidak tersedia")
             
             var_data <- values$sovi_data[[input$univar_var]]
             
-            paste0(
-                "STATISTIK DESKRIPTIF: ", input$univar_var, "\n",
-                "========================================\n",
-                "Mean: ", round(mean(var_data, na.rm = TRUE), 4), "\n",
-                "Median: ", round(median(var_data, na.rm = TRUE), 4), "\n", 
-                "Standard Deviation: ", round(sd(var_data, na.rm = TRUE), 4), "\n",
-                "Min: ", round(min(var_data, na.rm = TRUE), 4), "\n",
-                "Max: ", round(max(var_data, na.rm = TRUE), 4), "\n",
-                "Q1: ", round(quantile(var_data, 0.25, na.rm = TRUE), 4), "\n",
-                "Q3: ", round(quantile(var_data, 0.75, na.rm = TRUE), 4), "\n",
-                "IQR: ", round(IQR(var_data, na.rm = TRUE), 4), "\n",
-                "Skewness: ", round((3 * (mean(var_data, na.rm = TRUE) - median(var_data, na.rm = TRUE))) / sd(var_data, na.rm = TRUE), 4), "\n",
-                "Missing Values: ", sum(is.na(var_data)), " (", round(sum(is.na(var_data))/length(var_data)*100, 2), "%)"
-            )
+            # Menggunakan helper function untuk menghitung ringkasan
+            calculate_univariate_summary(var_data, input$univar_var)
         })
         
         # =================================================================
-        # TAB 2: BIVARIATE ANALYSIS
+        # TAB 2: ANALISIS BIVARIAT
         # =================================================================
         
-        # Generate bivariate plots
+        # Membuat plot bivariat
         observeEvent(input$generate_bivar, {
             req(input$bivar_x, input$bivar_y, input$bivar_plot_type)
             
@@ -134,84 +98,73 @@ eksplorasi_server <- function(id, values) {
             
             x_data <- values$sovi_data[[input$bivar_x]]
             y_data <- values$sovi_data[[input$bivar_y]]
+            x_name <- input$bivar_x
+            y_name <- input$bivar_y
             
-            p <- switch(input$bivar_plot_type,
-                "scatter" = {
-                    p <- plot_ly(x = ~x_data, y = ~y_data, type = "scatter", mode = "markers") %>%
-                        layout(title = paste(input$bivar_y, "vs", input$bivar_x),
-                               xaxis = list(title = input$bivar_x),
-                               yaxis = list(title = input$bivar_y))
-                    
-                    if (input$add_smooth && is.numeric(x_data)) {
-                        # Add trend line
-                        fit <- lm(y_data ~ x_data)
-                        p <- p %>% add_lines(x = ~x_data, y = ~fitted(fit), name = "Trend Line")
+            # Menggunakan helper function untuk plot dengan penanganan khusus untuk scatter dengan smooth
+            if (input$bivar_plot_type == "scatter" && input$add_smooth && is.numeric(x_data)) {
+                p <- create_bivariate_plot(x_data, y_data, x_name, y_name, "smooth")
+            } else {
+                # Untuk plot tipe lain, gunakan implementasi khusus sementara
+                p <- switch(input$bivar_plot_type,
+                    "scatter" = create_bivariate_plot(x_data, y_data, x_name, y_name, "scatter"),
+                    "line" = create_bivariate_plot(x_data, y_data, x_name, y_name, "line"),
+                    "boxplot" = {
+                        plot_ly(x = ~x_data, y = ~y_data, type = "box", color = ~x_data) %>%
+                            layout(title = paste(y_name, "berdasarkan", x_name),
+                                   xaxis = list(title = x_name),
+                                   yaxis = list(title = y_name))
+                    },
+                    "bar" = {
+                        if (is.character(x_data) || is.factor(x_data)) {
+                            agg_data <- aggregate(y_data, by = list(x_data), FUN = mean, na.rm = TRUE)
+                            plot_ly(x = ~agg_data$Group.1, y = ~agg_data$x, type = "bar") %>%
+                                layout(title = paste("Rerata", y_name, "berdasarkan", x_name),
+                                       xaxis = list(title = x_name),
+                                       yaxis = list(title = paste("Rerata", y_name)))
+                        } else {
+                            plot_ly(x = ~x_data, y = ~y_data, type = "bar") %>%
+                                layout(title = paste(y_name, "vs", x_name),
+                                       xaxis = list(title = x_name),
+                                       yaxis = list(title = y_name))
+                        }
                     }
-                    p
-                },
-                "boxplot" = {
-                    plot_ly(x = ~x_data, y = ~y_data, type = "box", color = ~x_data) %>%
-                        layout(title = paste(input$bivar_y, "by", input$bivar_x),
-                               xaxis = list(title = input$bivar_x),
-                               yaxis = list(title = input$bivar_y))
-                },
-                "bar" = {
-                    if (is.character(x_data) || is.factor(x_data)) {
-                        agg_data <- aggregate(y_data, by = list(x_data), FUN = mean, na.rm = TRUE)
-                        plot_ly(x = ~agg_data$Group.1, y = ~agg_data$x, type = "bar") %>%
-                            layout(title = paste("Mean", input$bivar_y, "by", input$bivar_x),
-                                   xaxis = list(title = input$bivar_x),
-                                   yaxis = list(title = paste("Mean", input$bivar_y)))
-                    } else {
-                        plot_ly(x = ~x_data, y = ~y_data, type = "bar") %>%
-                            layout(title = paste(input$bivar_y, "vs", input$bivar_x),
-                                   xaxis = list(title = input$bivar_x),
-                                   yaxis = list(title = input$bivar_y))
-                    }
-                },
-                "line" = {
-                    # Sort by x for line plot
-                    order_idx <- order(x_data)
-                    plot_ly(x = ~x_data[order_idx], y = ~y_data[order_idx], type = "scatter", mode = "lines+markers") %>%
-                        layout(title = paste(input$bivar_y, "vs", input$bivar_x),
-                               xaxis = list(title = input$bivar_x),
-                               yaxis = list(title = input$bivar_y))
-                }
-            )
+                )
+            }
             
             current_plot(p)
         })
         
-        # Display bivariate plot
+        # Menampilkan plot bivariat
         output$bivar_plot <- renderPlotly({
             current_plot()
         })
         
-        # Correlation statistics
+        # Statistik korelasi
         output$correlation_stats <- renderText({
             req(input$bivar_x, input$bivar_y)
             
-            if (!validate_data(values$sovi_data, "Data SOVI")) return("Data not available")
+            if (!validate_data(values$sovi_data, "Data SOVI")) return("Data tidak tersedia")
             
             x_data <- values$sovi_data[[input$bivar_x]]
             y_data <- values$sovi_data[[input$bivar_y]]
             
             if (!is.numeric(x_data) || !is.numeric(y_data)) {
-                return("Correlation analysis requires both variables to be numeric")
+                return("Analisis korelasi memerlukan kedua variabel bersifat numerik")
             }
             
             pearson_cor <- cor(x_data, y_data, use = "complete.obs", method = "pearson")
             spearman_cor <- cor(x_data, y_data, use = "complete.obs", method = "spearman")
             
-            # Correlation test
+            # Uji korelasi
             cor_test <- cor.test(x_data, y_data)
             
             paste0(
                 "ANALISIS KORELASI\n",
                 "==================\n",
-                "Pearson Correlation: ", round(pearson_cor, 4), "\n",
-                "Spearman Correlation: ", round(spearman_cor, 4), "\n",
-                "P-value: ", round(cor_test$p.value, 6), "\n",
+                "Korelasi Pearson: ", round(pearson_cor, 4), "\n",
+                "Korelasi Spearman: ", round(spearman_cor, 4), "\n",
+                "Nilai P: ", round(cor_test$p.value, 6), "\n",
                 "95% CI: [", round(cor_test$conf.int[1], 4), ", ", round(cor_test$conf.int[2], 4), "]\n\n",
                 "Interpretasi:\n",
                 if (abs(pearson_cor) < 0.3) "Korelasi lemah" else
@@ -221,10 +174,10 @@ eksplorasi_server <- function(id, values) {
         })
         
         # =================================================================
-        # TAB 3: CORRELATION MATRIX & HEATMAP
+        # TAB 3: MATRIKS KORELASI & HEATMAP
         # =================================================================
         
-        # Generate correlation heatmap
+        # Membuat heatmap korelasi
         observeEvent(input$generate_corr, {
             req(input$corr_vars, input$corr_method)
             
@@ -235,32 +188,17 @@ eksplorasi_server <- function(id, values) {
                 return()
             }
             
-            # Calculate correlation matrix
-            corr_data <- values$sovi_data %>% select(all_of(input$corr_vars))
-            corr_matrix <- cor(corr_data, use = "complete.obs", method = input$corr_method)
-            
-            # Create heatmap
-            p <- plot_ly(
-                z = ~corr_matrix,
-                x = ~colnames(corr_matrix),
-                y = ~rownames(corr_matrix),
-                type = "heatmap",
-                colorscale = "RdBu",
-                zmid = 0,
-                zmin = -1,
-                zmax = 1
-            ) %>%
-                layout(title = paste("Correlation Heatmap -", input$corr_method))
-            
+            # Menggunakan helper function untuk membuat heatmap korelasi
+            p <- create_correlation_heatmap(values$sovi_data, input$corr_vars, input$corr_method)
             current_plot(p)
         })
         
-        # Display correlation heatmap
+        # Menampilkan heatmap korelasi
         output$correlation_heatmap <- renderPlotly({
             current_plot()
         })
         
-        # Correlation table
+        # Tabel korelasi
         output$correlation_table <- DT::renderDT({
             req(input$corr_vars, input$corr_method)
             
@@ -271,20 +209,20 @@ eksplorasi_server <- function(id, values) {
             corr_data <- values$sovi_data %>% select(all_of(input$corr_vars))
             corr_matrix <- cor(corr_data, use = "complete.obs", method = input$corr_method)
             
-            # Convert to long format for table
+            # Konversi ke format panjang untuk tabel
             corr_df <- as.data.frame(corr_matrix)
-            corr_df$Variable1 <- rownames(corr_df)
+            corr_df$Variabel1 <- rownames(corr_df)
             corr_long <- corr_df %>%
-                pivot_longer(-Variable1, names_to = "Variable2", values_to = "Correlation") %>%
-                filter(Variable1 != Variable2) %>%
-                arrange(desc(abs(Correlation)))
+                pivot_longer(-Variabel1, names_to = "Variabel2", values_to = "Korelasi") %>%
+                filter(Variabel1 != Variabel2) %>%
+                arrange(desc(abs(Korelasi)))
             
             DT::datatable(corr_long,
                 options = list(pageLength = 10, scrollX = TRUE),
                 rownames = FALSE
             ) %>%
-                DT::formatRound("Correlation", digits = 4) %>%
-                DT::formatStyle("Correlation",
+                DT::formatRound("Korelasi", digits = 4) %>%
+                DT::formatStyle("Korelasi",
                     backgroundColor = DT::styleInterval(
                         c(-0.7, -0.3, 0.3, 0.7),
                         c("#d73027", "#fee08b", "#ffffff", "#fee08b", "#d73027")
@@ -293,74 +231,55 @@ eksplorasi_server <- function(id, values) {
         })
         
         # =================================================================
-        # TAB 4: GROUP ANALYSIS
+        # TAB 4: ANALISIS KELOMPOK
         # =================================================================
         
-        # Generate group analysis
+        # Membuat analisis kelompok
         observeEvent(input$generate_group, {
             req(input$group_var, input$group_target, input$group_analysis_type)
             
             if (!validate_data(values$sovi_data, "Data SOVI")) return()
             
-            group_data <- values$sovi_data[[input$group_var]]
-            target_data <- values$sovi_data[[input$group_target]]
+            # Menggunakan helper function untuk analisis kelompok
+            result <- create_group_analysis(values$sovi_data, input$group_var, input$group_target, input$group_analysis_type)
             
-            p <- switch(input$group_analysis_type,
-                "boxplot" = {
-                    plot_ly(x = ~group_data, y = ~target_data, type = "box", color = ~group_data) %>%
-                        layout(title = paste(input$group_target, "by", input$group_var),
-                               xaxis = list(title = input$group_var),
-                               yaxis = list(title = input$group_target))
-                },
-                "barchart" = {
-                    agg_data <- aggregate(target_data, by = list(group_data), FUN = mean, na.rm = TRUE)
-                    plot_ly(x = ~agg_data$Group.1, y = ~agg_data$x, type = "bar") %>%
-                        layout(title = paste("Mean", input$group_target, "by", input$group_var),
-                               xaxis = list(title = input$group_var),
-                               yaxis = list(title = paste("Mean", input$group_target)))
-                },
-                "violin" = {
-                    plot_ly(x = ~group_data, y = ~target_data, type = "violin", color = ~group_data) %>%
-                        layout(title = paste(input$group_target, "by", input$group_var),
-                               xaxis = list(title = input$group_var),
-                               yaxis = list(title = input$group_target))
-                },
-                "descriptive" = {
-                    # For descriptive, we'll show a bar chart of means
-                    agg_data <- aggregate(target_data, by = list(group_data), FUN = mean, na.rm = TRUE)
-                    plot_ly(x = ~agg_data$Group.1, y = ~agg_data$x, type = "bar") %>%
-                        layout(title = paste("Mean", input$group_target, "by", input$group_var),
-                               xaxis = list(title = input$group_var),
-                               yaxis = list(title = paste("Mean", input$group_target)))
-                }
-            )
-            
-            current_plot(p)
+            if (input$group_analysis_type == "summary") {
+                # Untuk summary, simpan data di current_data_summary
+                current_data_summary(result)
+            } else {
+                # Untuk plot, simpan di current_plot
+                current_plot(result)
+            }
         })
         
-        # Display group plot
+        # Menampilkan plot kelompok
         output$group_plot <- renderPlotly({
             current_plot()
         })
         
-        # Group statistics table
+        # Tabel statistik kelompok
         output$group_stats_table <- DT::renderDT({
             req(input$group_var, input$group_target)
             
             if (!validate_data(values$sovi_data, "Data SOVI")) return(NULL)
             
-            group_stats <- values$sovi_data %>%
-                group_by(!!sym(input$group_var)) %>%
-                summarise(
-                    N = n(),
-                    Mean = round(mean(!!sym(input$group_target), na.rm = TRUE), 4),
-                    SD = round(sd(!!sym(input$group_target), na.rm = TRUE), 4),
-                    Min = round(min(!!sym(input$group_target), na.rm = TRUE), 4),
-                    Max = round(max(!!sym(input$group_target), na.rm = TRUE), 4),
-                    Median = round(median(!!sym(input$group_target), na.rm = TRUE), 4),
-                    Missing = sum(is.na(!!sym(input$group_target))),
-                    .groups = "drop"
-                )
+            # Jika ada data summary dari helper, gunakan itu, otherwise buat baru
+            if (!is.null(current_data_summary())) {
+                group_stats <- current_data_summary()
+            } else {
+                group_stats <- values$sovi_data %>%
+                    group_by(!!sym(input$group_var)) %>%
+                    summarise(
+                        N = n(),
+                        Rerata = round(mean(!!sym(input$group_target), na.rm = TRUE), 4),
+                        SD = round(sd(!!sym(input$group_target), na.rm = TRUE), 4),
+                        Min = round(min(!!sym(input$group_target), na.rm = TRUE), 4),
+                        Max = round(max(!!sym(input$group_target), na.rm = TRUE), 4),
+                        Median = round(median(!!sym(input$group_target), na.rm = TRUE), 4),
+                        Missing = sum(is.na(!!sym(input$group_target))),
+                        .groups = "drop"
+                    )
+            }
             
             DT::datatable(group_stats,
                 options = list(pageLength = 10, scrollX = TRUE, dom = "tp"),
@@ -370,14 +289,14 @@ eksplorasi_server <- function(id, values) {
         })
         
         # =================================================================
-        # TAB 5: INTERACTIVE DATA TABLES
+        # TAB 5: TABEL DATA INTERAKTIF
         # =================================================================
         
-        # Update interactive table
+        # Update tabel interaktif
         observeEvent(input$update_table, {
             req(input$table_columns)
             
-            # This will trigger the table rendering
+            # Ini akan memicu rendering tabel
         })
         
         # Interactive data table
@@ -431,69 +350,24 @@ eksplorasi_server <- function(id, values) {
         })
         
         # =================================================================
-        # TAB 6: THEMATIC MAPS
+        # TAB 6: PETA TEMATIK
         # =================================================================
         
-        # Generate thematic map
+        # Membuat peta tematik
         observeEvent(input$generate_map, {
             req(input$map_var)
             
             if (!validate_data(values$sovi_data, "Data SOVI")) return()
             
-            # This is a simplified example - in a real implementation,
-            # you would need actual geographic data/shapefiles
-            map_data <- values$sovi_data[[input$map_var]]
-            
-            # Create quantile breaks for color coding
-            breaks <- quantile(map_data, probs = seq(0, 1, length.out = input$map_bins + 1), na.rm = TRUE)
-            map_colors <- colorBin(input$map_color_scheme, domain = map_data, bins = breaks)
-            
-            # Create basic leaflet map with sample points
-            # Note: This would be enhanced with actual geographic boundaries
-            m <- leaflet() %>%
-                addTiles() %>%
-                setView(lng = 118.0148634, lat = -2.548926, zoom = 5)
-            
-            if (input$show_markers) {
-                # Add sample markers (in real implementation, use actual coordinates)
-                sample_indices <- sample(nrow(values$sovi_data), min(100, nrow(values$sovi_data)))
-                sample_data <- values$sovi_data[sample_indices, ]
+            # Menggunakan helper function untuk placeholder peta
+            p <- create_thematic_map_placeholder(values$sovi_data, input$map_var)
+            current_plot(p)
                 
-                # Generate random coordinates for demonstration
-                set.seed(123)
-                lngs <- runif(nrow(sample_data), min = 95, max = 141)
-                lats <- runif(nrow(sample_data), min = -11, max = 6)
-                
-                m <- m %>%
-                    addCircleMarkers(
-                        lng = lngs,
-                        lat = lats,
-                        radius = 5,
-                        color = ~map_colors(sample_data[[input$map_var]]),
-                        stroke = FALSE,
-                        fillOpacity = 0.8,
-                        popup = ~paste0(
-                            "District: ", sample_data$DISTRICTCODE, "<br/>",
-                            input$map_var, ": ", round(sample_data[[input$map_var]], 2)
-                        )
-                    ) %>%
-                    addLegend(
-                        position = "bottomright",
-                        pal = map_colors,
-                        values = map_data,
-                        title = input$map_var,
-                        opacity = 0.7
-                    )
-            }
-            
-            # Store the map object for potential downloads
-            current_plot(m)
         })
         
-        # Display thematic map
-        output$thematic_map <- renderLeaflet({
-            current_plot() %||% leaflet() %>% addTiles() %>% 
-                setView(lng = 118.0148634, lat = -2.548926, zoom = 5)
+        # Menampilkan peta tematik  
+        output$thematic_map <- renderPlotly({
+            current_plot()
         })
         
         # Map summary
@@ -518,13 +392,13 @@ eksplorasi_server <- function(id, values) {
         })
         
         # =================================================================
-        # DOWNLOAD HANDLERS
+        # HANDLER DOWNLOAD
         # =================================================================
         
-        # Download plot as PNG
+        # Download plot sebagai PNG
         output$download_plot_png <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Plot_", Sys.Date(), ".png", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Plot", ".png")
             },
             content = function(file) {
                 if (!is.null(current_plot())) {
@@ -541,10 +415,10 @@ eksplorasi_server <- function(id, values) {
             }
         )
         
-        # Download plot as JPEG
+        # Download plot sebagai JPEG
         output$download_plot_jpg <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Plot_", Sys.Date(), ".jpg", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Plot", ".jpg")
             },
             content = function(file) {
                 if (!is.null(current_plot())) {
@@ -559,10 +433,10 @@ eksplorasi_server <- function(id, values) {
             }
         )
         
-        # Download summary CSV
+        # Download ringkasan CSV
         output$download_summary_csv <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Summary_", Sys.Date(), ".csv", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Summary", ".csv")
             },
             content = function(file) {
                 data_to_export <- current_data_summary() %||% values$sovi_data
@@ -573,23 +447,26 @@ eksplorasi_server <- function(id, values) {
         # Download Excel
         output$download_data_excel <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Data_", Sys.Date(), ".xlsx", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Data", ".xlsx")
             },
             content = function(file) {
-                # This would require the openxlsx package
-                # For now, export as CSV
+                # Ini akan memerlukan package openxlsx
+                # Untuk sementara, export sebagai CSV
                 data_to_export <- current_data_summary() %||% values$sovi_data
                 write.csv(data_to_export, file, row.names = FALSE)
             }
         )
         
-        # Download interpretation
+        # Download interpretasi
         output$download_interpretation <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Interpretasi_", Sys.Date(), ".docx", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Interpretasi", ".docx")
             },
             content = function(file) {
                 temp_rmd <- tempfile(fileext = ".Rmd")
+                
+                # Menggunakan helper function untuk konten laporan
+                report_content <- create_report_content(values$sovi_data, "interpretation")
                 
                 writeLines(c(
                     "---",
@@ -599,61 +476,38 @@ eksplorasi_server <- function(id, values) {
                     "output: word_document",
                     "---",
                     "",
-                    "# Laporan Eksplorasi Data",
-                    "",
-                    "## Ringkasan Analisis",
-                    paste("Analisis eksplorasi dilakukan pada:", Sys.time()),
-                    "",
-                    "## Fitur yang Dianalisis:",
-                    "- Analisis Univariat (Histogram, Density, Boxplot, Q-Q Plot)",
-                    "- Analisis Bivariat (Scatter, Box, Bar, Line Plot)",
-                    "- Matriks Korelasi dan Heatmap", 
-                    "- Analisis Kelompok",
-                    "- Tabel Interaktif",
-                    "- Peta Tematik",
-                    "",
-                    "Dataset berisi", nrow(values$sovi_data), "observasi dengan", ncol(values$sovi_data), "variabel."
+                    report_content
                 ), temp_rmd)
                 
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
             }
         )
         
-        # Download PDF report
+        # Download laporan PDF
         output$download_report_pdf <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Eksplorasi_Report_", Sys.Date(), ".pdf", sep = "")
+                create_download_filename("ALIVA_Eksplorasi_Report", ".pdf")
             },
             content = function(file) {
                 temp_rmd <- tempfile(fileext = ".Rmd")
                 
+                # Menggunakan helper function untuk konten laporan
+                report_content <- create_report_content(values$sovi_data, "pdf")
+                
                 writeLines(c(
                     "---",
                     "title: 'ALIVA Dashboard - Laporan Eksplorasi Data'",
-                    "author: 'ALIVA Analytics'", 
+                    "author: 'ALIVA Analytics'",
                     "date: '`r Sys.Date()`'",
                     "output: pdf_document",
                     "---",
                     "",
-                    "# Laporan Komprehensif Eksplorasi Data",
-                    "",
-                    "## Dataset Information",
-                    paste("- Observasi:", nrow(values$sovi_data)),
-                    paste("- Variabel:", ncol(values$sovi_data)),
-                    paste("- Variabel Numerik:", length(get_numeric_columns(values$sovi_data))),
-                    paste("- Variabel Kategorik:", length(get_categorical_columns(values$sovi_data))),
-                    "",
-                    "## Fitur Eksplorasi Tersedia:",
-                    "1. **Analisis Univariat**: Statistik deskriptif dan visualisasi distribusi",
-                    "2. **Analisis Bivariat**: Hubungan antar variabel",
-                    "3. **Matriks Korelasi**: Heatmap korelasi dengan berbagai metode",
-                    "4. **Analisis Kelompok**: Perbandingan statistik antar grup",
-                    "5. **Tabel Interaktif**: Eksplorasi data dengan filter dinamis",
-                    "6. **Peta Tematik**: Visualisasi spasial data Indonesia"
+                    report_content
                 ), temp_rmd)
                 
                 rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
             }
+        )
         )
         
         # Download Word report
@@ -725,11 +579,11 @@ eksplorasi_server <- function(id, values) {
         
         output$download_filtered_excel <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Filtered_Data_", Sys.Date(), ".xlsx", sep = "")
+                create_download_filename("ALIVA_Filtered_Data", ".xlsx")
             },
             content = function(file) {
                 data_to_export <- current_data_summary() %||% values$sovi_data
-                # Export as CSV for now (would need openxlsx for real Excel)
+                # Export sebagai CSV untuk sementara (akan perlu openxlsx untuk Excel asli)
                 write.csv(data_to_export, file, row.names = FALSE)
             }
         )

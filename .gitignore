@@ -50,4 +50,7 @@ www/*.bak
 # data/!distance.csv
 # data/!indonesia_kabkota.geojson
 
+# Ignore deployment files
+rsconnect/
+
 # End of .gitignore

@@ -1,4 +1,61 @@
-.Rproj.user
+# ALIVA Dashboard - .gitignore
+# R, RStudio, VS Code, OS, and Shiny-specific ignores
+
+# R session, workspace, and history files
 .Rhistory
 .RData
 .Ruserdata
+.Rapp.history
+.Rproj.user/
+
+# RStudio project files
+*.Rproj
+.Rproj.user/
+
+# VS Code project files
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs, cache, and temp files
+*.log
+*.tmp
+*.bak
+.cache/
+__pycache__/
+
+# User-generated exports and reports
+*.pdf
+*.docx
+*.xlsx
+*.csv
+*.html
+*.Rmd
+
+# Shiny runtime files
+shinyapps/
+shinylogs/
+
+# Node/npm (if used for web assets)
+node_modules/
+
+# Ignore generated files in reports/ (but not templates)
+reports/*.pdf
+reports/*.docx
+reports/*.html
+
+# Ignore generated files in data/ (but not source data)
+data/*.tmp
+
+# Custom web assets (if generated)
+www/*.tmp
+www/*.bak
+
+# Uncomment below if you want to ignore all data except source CSV/GeoJSON
+# data/!sovi_data.csv
+# data/!distance.csv
+# data/!indonesia_kabkota.geojson
+
+# End of .gitignore

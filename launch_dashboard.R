@@ -12,7 +12,7 @@ cat("R Version:", R.version.string, "\n")
 cat("Working Directory:", getwd(), "\n\n")
 
 # Core packages that must be available
-core_packages <- c("shiny", "dplyr", "ggplot2")
+core_packages <- c("shiny", "dplyr", "ggplot2", "DescTools")
 
 cat("Checking core packages...\n")
 for (pkg in core_packages) {

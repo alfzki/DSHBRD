@@ -13,8 +13,8 @@ uji_prop_var_server <- function(id, values) {
         observe({
             # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
-            
+            data_counter <- values$data_update_counter # This creates a reactive dependency
+
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             updateSelectInput(session, "var_variance", choices = numeric_choices, selected = numeric_choices[1])
         })
@@ -104,63 +104,66 @@ uji_prop_var_server <- function(id, values) {
             req(test_result())
 
             result <- test_result()
-            
+
             # Validate that result matches the current test type
-            tryCatch({
-                if (input$test_choice == "proportion") {
-                    # Validate proportion test result structure
-                    if (is.null(result$conf.int) || is.null(result$statistic) || is.null(result$parameter)) {
-                        cat("Error: Invalid test result for proportion test. Please run the test again.\n")
-                        return()
+            tryCatch(
+                {
+                    if (input$test_choice == "proportion") {
+                        # Validate proportion test result structure
+                        if (is.null(result$conf.int) || is.null(result$statistic) || is.null(result$parameter)) {
+                            cat("Error: Invalid test result for proportion test. Please run the test again.\n")
+                            return()
+                        }
+
+                        cat("Uji Proporsi Satu Sampel\n")
+                        cat("========================\n\n")
+                        cat("Data:", input$x_prop, "sukses dari", input$n_prop, "percobaan\n")
+                        cat("Proporsi sampel:", round(input$x_prop / input$n_prop, 4), "\n")
+                        cat("Hipotesis nol: p =", input$p_test, "\n")
+                        cat(
+                            "Hipotesis alternatif: p",
+                            switch(input$alternative,
+                                "two.sided" = "≠",
+                                "greater" = ">",
+                                "less" = "<"
+                            ),
+                            input$p_test, "\n\n"
+                        )
+                        cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
+                        cat("Derajat kebebasan:", result$parameter, "\n")
+                        cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
+                        cat("Interval kepercayaan 95%:", round(result$conf.int[1], 4), "-", round(result$conf.int[2], 4), "\n")
+                    } else {
+                        # Validate variance test result structure
+                        if (is.null(result$sample.var) || is.null(result$data.name) || is.null(result$null.value)) {
+                            cat("Error: Invalid test result for variance test. Please run the test again.\n")
+                            return()
+                        }
+
+                        cat("Uji Varians Satu Sampel\n")
+                        cat("=======================\n\n")
+                        cat("Data:", result$data.name, "\n")
+                        cat("Varians sampel:", round(result$sample.var, 4), "\n")
+                        cat("Hipotesis nol: σ² =", result$null.value, "\n")
+                        cat(
+                            "Hipotesis alternatif: σ²",
+                            switch(result$alternative,
+                                "two.sided" = "≠",
+                                "greater" = ">",
+                                "less" = "<"
+                            ),
+                            result$null.value, "\n\n"
+                        )
+                        cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
+                        cat("Derajat kebebasan:", result$parameter, "\n")
+                        cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
                     }
-                    
-                    cat("Uji Proporsi Satu Sampel\n")
-                    cat("========================\n\n")
-                    cat("Data:", input$x_prop, "sukses dari", input$n_prop, "percobaan\n")
-                    cat("Proporsi sampel:", round(input$x_prop / input$n_prop, 4), "\n")
-                    cat("Hipotesis nol: p =", input$p_test, "\n")
-                    cat(
-                        "Hipotesis alternatif: p",
-                        switch(input$alternative,
-                            "two.sided" = "≠",
-                            "greater" = ">",
-                            "less" = "<"
-                        ),
-                        input$p_test, "\n\n"
-                    )
-                    cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
-                    cat("Derajat kebebasan:", result$parameter, "\n")
-                    cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
-                    cat("Interval kepercayaan 95%:", round(result$conf.int[1], 4), "-", round(result$conf.int[2], 4), "\n")
-                } else {
-                    # Validate variance test result structure
-                    if (is.null(result$sample.var) || is.null(result$data.name) || is.null(result$null.value)) {
-                        cat("Error: Invalid test result for variance test. Please run the test again.\n")
-                        return()
-                    }
-                    
-                    cat("Uji Varians Satu Sampel\n")
-                    cat("=======================\n\n")
-                    cat("Data:", result$data.name, "\n")
-                    cat("Varians sampel:", round(result$sample.var, 4), "\n")
-                    cat("Hipotesis nol: σ² =", result$null.value, "\n")
-                    cat(
-                        "Hipotesis alternatif: σ²",
-                        switch(result$alternative,
-                            "two.sided" = "≠",
-                            "greater" = ">",
-                            "less" = "<"
-                        ),
-                        result$null.value, "\n\n"
-                    )
-                    cat("Statistik uji (Chi-square):", round(result$statistic, 4), "\n")
-                    cat("Derajat kebebasan:", result$parameter, "\n")
-                    cat("P-value:", format(result$p.value, scientific = TRUE), "\n")
+                },
+                error = function(e) {
+                    cat("Error displaying results: ", e$message, "\n")
+                    cat("Please run the test again after changing the test type.\n")
                 }
-            }, error = function(e) {
-                cat("Error displaying results: ", e$message, "\n")
-                cat("Please run the test again after changing the test type.\n")
-            })
+            )
         })
 
         # Generate interpretation using helper functions
@@ -168,35 +171,42 @@ uji_prop_var_server <- function(id, values) {
             req(test_result())
 
             result <- test_result()
-            
+
             # Use appropriate interpretation helper function with error handling
-            interpretation_text <- tryCatch({
-                if (input$test_choice == "proportion") {
-                    # Validate proportion result before interpretation
-                    if (is.null(result$estimate) || is.null(result$p.value)) {
-                        return("**Error:** Invalid test result. Please run the proportion test again.")
+            interpretation_text <- tryCatch(
+                {
+                    if (input$test_choice == "proportion") {
+                        # Validate proportion result before interpretation
+                        if (is.null(result$estimate) || is.null(result$p.value)) {
+                            return("**Error:** Invalid test result. Please run the proportion test again.")
+                        }
+                        interpret_prop_test(result, alpha = 0.05)
+                    } else {
+                        # Validate variance result before interpretation
+                        if (is.null(result$sample.var) || is.null(result$p.value)) {
+                            return("**Error:** Invalid test result. Please run the variance test again.")
+                        }
+                        interpret_var_test(result, alpha = 0.05)
                     }
-                    interpret_prop_test(result, alpha = 0.05)
-                } else {
-                    # Validate variance result before interpretation
-                    if (is.null(result$sample.var) || is.null(result$p.value)) {
-                        return("**Error:** Invalid test result. Please run the variance test again.")
-                    }
-                    interpret_var_test(result, alpha = 0.05)
+                },
+                error = function(e) {
+                    paste(
+                        "**Error generating interpretation:** Please run the",
+                        ifelse(input$test_choice == "proportion", "proportion", "variance"),
+                        "test again."
+                    )
                 }
-            }, error = function(e) {
-                paste("**Error generating interpretation:** Please run the", 
-                      ifelse(input$test_choice == "proportion", "proportion", "variance"), 
-                      "test again.")
-            })
+            )
 
             # Convert to HTML with proper formatting
             interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
             interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
-                       interpretation_html,
-                       "</div>"))
+            HTML(paste0(
+                "<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                interpretation_html,
+                "</div>"
+            ))
         })
 
         # Download interpretation as Word document
@@ -215,25 +225,43 @@ uji_prop_var_server <- function(id, values) {
                 )
 
                 # Generate interpretation text
-                interpretation_text <- tryCatch({
-                    if (input$test_choice == "proportion") {
-                        interpret_prop_test(result, alpha = 0.05)
-                    } else {
-                        interpret_var_test(result, alpha = 0.05)
+                interpretation_text <- tryCatch(
+                    {
+                        if (input$test_choice == "proportion") {
+                            interpret_prop_test(result, alpha = 0.05)
+                        } else {
+                            interpret_var_test(result, alpha = 0.05)
+                        }
+                    },
+                    error = function(e) {
+                        paste("Error generating interpretation:", e$message)
                     }
-                }, error = function(e) {
-                    paste("Error generating interpretation:", e$message)
-                })
+                )
 
-                # Create Word document using officer
-                doc <- officer::read_docx()
-                doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
-                doc <- officer::body_add_par(doc, paste("Interpretasi", test_title), style = "heading 2")
-                doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
-                doc <- officer::body_add_par(doc, "")
-                doc <- officer::body_add_par(doc, interpretation_text)
+                # Create Word document using lightweight alternative
+                result <- current_test_result()
+                test_details <- list()
 
-                print(doc, target = file)
+                if (input$test_choice == "proportion") {
+                    test_details <- list(
+                        "Statistik uji" = ifelse(is.null(result$statistic), "N/A", format_number(result$statistic, 4)),
+                        "P-value" = ifelse(is.null(result$p.value), "N/A", format_number(result$p.value, 6)),
+                        "Proporsi sampel" = ifelse(is.null(result$estimate), "N/A", format_number(result$estimate, 4))
+                    )
+                } else {
+                    test_details <- list(
+                        "Statistik uji" = ifelse(is.null(result$statistic), "N/A", format_number(result$statistic, 4)),
+                        "P-value" = ifelse(is.null(result$p.value), "N/A", format_number(result$p.value, 6)),
+                        "Varians sampel" = ifelse(is.null(result$estimate), "N/A", format_number(result$estimate, 4))
+                    )
+                }
+
+                create_interpretation_document(
+                    test_type = test_title,
+                    interpretation_text = interpretation_text,
+                    output_file = file,
+                    details = test_details
+                )
             }
         )
 
@@ -265,13 +293,13 @@ output:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-# ', test_title, '
+# ', test_title, "
 
 ## Informasi Analisis
 
-**Jenis Uji:** ', test_title, '
+**Jenis Uji:** ", test_title, "
 
-**Tanggal Analisis:** `r format(Sys.Date(), \'%d %B %Y\')`
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
 
 **Sumber Data:** SUSENAS 2017, BPS-Statistics Indonesia
 
@@ -292,19 +320,22 @@ Hasil perhitungan statistik uji dan interpretasinya.
 ## Interpretasi dan Kesimpulan
 
 Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak pada tingkat signifikansi yang ditentukan.
-')
+")
 
                 writeLines(rmd_content, temp_rmd)
-                
+
                 # Render using the correct pattern to avoid pandoc error
-                tryCatch({
-                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
-                    file.copy(output_path, file)
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
+                        file.copy(output_path, file)
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
             }
         )
 
@@ -335,13 +366,13 @@ output:
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-# ', test_title, '
+# ', test_title, "
 
 ## Informasi Analisis
 
-**Jenis Uji:** ', test_title, '
+**Jenis Uji:** ", test_title, "
 
-**Tanggal Analisis:** `r format(Sys.Date(), \'%d %B %Y\')`
+**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
 
 **Sumber Data:** SUSENAS 2017, BPS-Statistics Indonesia
 
@@ -362,10 +393,10 @@ Hasil perhitungan statistik uji dan interpretasinya.
 ## Interpretasi dan Kesimpulan
 
 Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak pada tingkat signifikansi yang ditentukan.
-')
+")
 
                 writeLines(rmd_content, temp_rmd)
-                
+
                 # Render using the correct pattern to avoid pandoc error
                 output_path <- rmarkdown::render(input = temp_rmd, output_format = "word_document", quiet = TRUE)
                 file.copy(output_path, file)
@@ -402,16 +433,19 @@ Berdasarkan hasil uji, dapat disimpulkan apakah hipotesis nol ditolak atau tidak
 ")
 
                 writeLines(rmd_content, temp_rmd)
-                
+
                 # Render using the correct pattern to avoid pandoc error
-                tryCatch({
-                    output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
-                    file.copy(output_path, file)
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        output_path <- rmarkdown::render(input = temp_rmd, output_format = "pdf_document", quiet = TRUE)
+                        file.copy(output_path, file)
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
             }
         )
     })

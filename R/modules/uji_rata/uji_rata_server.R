@@ -13,8 +13,8 @@ uji_rata_server <- function(id, values) {
         observe({
             # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
-            
+            data_counter <- values$data_update_counter # This creates a reactive dependency
+
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
             categorical_choices <- get_variable_choices(values$sovi_data, "categorical")
 
@@ -90,7 +90,7 @@ uji_rata_server <- function(id, values) {
 
             result <- test_result()
             test_type <- input$test_type
-            
+
             # Use the interpretation helper function
             interpretation_text <- interpret_ttest(
                 test_result = result,
@@ -102,9 +102,11 @@ uji_rata_server <- function(id, values) {
             interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
             interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
-                       interpretation_html,
-                       "</div>"))
+            HTML(paste0(
+                "<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                interpretation_html,
+                "</div>"
+            ))
         })
 
         # Individual interpretation download using officer
@@ -137,16 +139,18 @@ uji_rata_server <- function(id, values) {
                     }
                 )
 
-                # Create Word document using officer
-                doc <- officer::read_docx()
-                doc <- officer::body_add_par(doc, "Dashboard ALIVA", style = "heading 1")
-                doc <- officer::body_add_par(doc, paste("Interpretasi", test_type_text), style = "heading 2")
-                doc <- officer::body_add_par(doc, paste("Tanggal:", format(Sys.Date(), "%d %B %Y")))
-                doc <- officer::body_add_par(doc, "")
-                doc <- officer::body_add_par(doc, interpretation_text)
-
-                # Save document
-                print(doc, target = file)
+                # Create Word document using lightweight alternative
+                create_interpretation_document(
+                    test_type = test_type_text,
+                    interpretation_text = interpretation_text,
+                    output_file = file,
+                    details = list(
+                        "Statistik uji" = format_number(result$statistic, 4),
+                        "Derajat kebebasan" = ifelse(is.null(result$parameter), "N/A", result$parameter),
+                        "P-value" = format_number(p_value, 6),
+                        "Interval kepercayaan 95%" = paste0("[", format_number(result$conf.int[1], 4), ", ", format_number(result$conf.int[2], 4), "]")
+                    )
+                )
             }
         )
 
@@ -180,25 +184,28 @@ uji_rata_server <- function(id, values) {
                 interpretation_text <- interpret_ttest(result, input$test_type)
 
                 # Render report using template
-                tryCatch({
-                    rmarkdown::render(
-                        input = here::here("reports", "laporan_uji_rata.Rmd"),
-                        output_file = file,
-                        output_format = "pdf_document",
-                        params = list(
-                            jenis_uji = test_type_text,
-                            variabel = variabel,
-                            hasil_uji = result,
-                            interpretasi = interpretation_text,
-                            input_params = input_params
-                        ),
-                        quiet = TRUE
-                    )
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        rmarkdown::render(
+                            input = here::here("reports", "laporan_uji_rata.Rmd"),
+                            output_file = file,
+                            output_format = "pdf_document",
+                            params = list(
+                                jenis_uji = test_type_text,
+                                variabel = variabel,
+                                hasil_uji = result,
+                                interpretasi = interpretation_text,
+                                input_params = input_params
+                            ),
+                            quiet = TRUE
+                        )
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
             }
         )
 

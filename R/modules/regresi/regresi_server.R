@@ -13,8 +13,8 @@ regresi_server <- function(id, values) {
         observe({
             # Create reactive dependency on data and data update counter
             req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
-            
+            data_counter <- values$data_update_counter # This creates a reactive dependency
+
             numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
 
             updateSelectInput(session, "dep_var", choices = numeric_choices)
@@ -95,7 +95,7 @@ regresi_server <- function(id, values) {
             req(model_result())
 
             model <- model_result()
-            
+
             # Use the interpretation helper function
             interpretation_text <- interpret_regression(
                 lm_result = model,
@@ -106,9 +106,11 @@ regresi_server <- function(id, values) {
             interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
             interpretation_html <- gsub("\\n", "<br>", interpretation_html)
 
-            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
-                       interpretation_html,
-                       "</div>"))
+            HTML(paste0(
+                "<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+                interpretation_html,
+                "</div>"
+            ))
         })
 
         # Display assumption tests
@@ -213,36 +215,33 @@ regresi_server <- function(id, values) {
                     "Model tidak menunjukkan hubungan yang signifikan. Pertimbangkan untuk menggunakan variabel prediktor yang berbeda atau memeriksa asumsi model."
                 }
 
-                # Create Word document
-                doc <- officer::read_docx()
-
-                doc <- doc %>%
-                    officer::body_add_par("INTERPRETASI HASIL REGRESI LINEAR BERGANDA", style = "heading 1") %>%
-                    officer::body_add_par(paste("Tanggal Analisis:", Sys.Date()), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("RINGKASAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(paste(
-                        "Model memiliki kualitas", model_quality,
-                        "dalam menjelaskan variabilitas data."
-                    ), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("KEBAIKAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(paste(
-                        "• R² =", format_number(r_squared, 4),
+                # Create comprehensive interpretation content
+                interpretation_content <- c(
+                    "## Ringkasan Model",
+                    "",
+                    paste("Model memiliki kualitas", model_quality, "dalam menjelaskan variabilitas data."),
+                    "",
+                    "## Kebaikan Model",
+                    "",
+                    paste(
+                        "- **R²** =", format_number(r_squared, 4),
                         paste0("(", format_number(r_squared * 100, 1), "% varians dijelaskan)")
-                    ), style = "Normal") %>%
-                    officer::body_add_par(paste("• Adjusted R² =", format_number(adj_r_squared, 4)), style = "Normal") %>%
-                    officer::body_add_par(paste("• F-statistic =", format_number(f_statistic, 4)), style = "Normal") %>%
-                    officer::body_add_par(paste("• Model p-value =", format_number(f_p_value, 6)), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("KESIMPULAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(interpret_p_value(
+                    ),
+                    paste("- **Adjusted R²** =", format_number(adj_r_squared, 4)),
+                    paste("- **F-statistic** =", format_number(f_statistic, 4)),
+                    paste("- **Model p-value** =", format_number(f_p_value, 6)),
+                    "",
+                    "## Kesimpulan Model",
+                    "",
+                    interpret_p_value(
                         f_p_value,
                         h0 = "Model tidak signifikan (semua koefisien = 0)",
                         h1 = "Model signifikan (minimal ada satu koefisien ≠ 0)"
-                    ), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("ANALISIS KOEFISIEN", style = "heading 2")
+                    ),
+                    "",
+                    "## Analisis Koefisien",
+                    ""
+                )
 
                 # Add coefficient interpretations
                 coeffs <- summary_model$coefficients
@@ -265,32 +264,42 @@ regresi_server <- function(id, values) {
                         "tidak signifikan (p ≥ 0.05)"
                     }
 
-                    doc <- doc %>%
-                        officer::body_add_par(paste("Variabel:", var_name), style = "heading 3") %>%
-                        officer::body_add_par(paste("• Koefisien:", format_number(coeff_value, 4)), style = "Normal") %>%
-                        officer::body_add_par(paste(
-                            "• 95% CI: [", format_number(ci_lower, 4), ",",
-                            format_number(ci_upper, 4), "]"
-                        ), style = "Normal") %>%
-                        officer::body_add_par(paste("• Status:", significance_text), style = "Normal")
+                    var_content <- c(
+                        paste("### Variabel:", var_name),
+                        "",
+                        paste("- **Koefisien:**", format_number(coeff_value, 4)),
+                        paste("- **95% CI:** [", format_number(ci_lower, 4), ",", format_number(ci_upper, 4), "]"),
+                        paste("- **Status:**", significance_text)
+                    )
 
                     if (p_value < 0.05) {
-                        doc <- doc %>%
-                            officer::body_add_par(paste(
-                                "Untuk setiap kenaikan 1 unit", var_name,
+                        var_content <- c(
+                            var_content,
+                            paste(
+                                "- **Interpretasi:** Untuk setiap kenaikan 1 unit", var_name,
                                 ", variabel", input$dep_var,
                                 ifelse(coeff_value > 0, "meningkat", "menurun"),
                                 "sebesar", abs(format_number(coeff_value, 4)), "unit."
-                            ), style = "Normal")
+                            )
+                        )
                     }
-                    doc <- doc %>% officer::body_add_par("", style = "Normal")
+
+                    interpretation_content <- c(interpretation_content, var_content, "")
                 }
 
-                doc <- doc %>%
-                    officer::body_add_par("REKOMENDASI", style = "heading 2") %>%
-                    officer::body_add_par(practical_recommendation, style = "Normal")
+                interpretation_content <- c(
+                    interpretation_content,
+                    "## Rekomendasi",
+                    "",
+                    practical_recommendation
+                )
 
-                print(doc, target = file)
+                # Create Word document using lightweight alternative
+                create_word_document(
+                    title = "Interpretasi Hasil Regresi Linear Berganda",
+                    content = interpretation_content,
+                    output_file = file
+                )
             }
         )
 
@@ -315,20 +324,23 @@ regresi_server <- function(id, values) {
                 )
 
                 # Render the R Markdown template
-                tryCatch({
-                    rmarkdown::render(
-                        input = "reports/laporan_regresi.Rmd",
-                        output_file = file,
-                        output_format = "pdf_document",
-                        params = params,
-                        envir = new.env(parent = globalenv()),
-                        quiet = TRUE
-                    )
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
+                tryCatch(
+                    {
+                        rmarkdown::render(
+                            input = "reports/laporan_regresi.Rmd",
+                            output_file = file,
+                            output_format = "pdf_document",
+                            params = params,
+                            envir = new.env(parent = globalenv()),
+                            quiet = TRUE
+                        )
+                    },
+                    error = function(e) {
+                        # If PDF generation fails, create a simple error document
+                        writeLines(paste("Error generating PDF report:", e$message), file)
+                        showNotification("PDF generation failed. Please try the Word format.", type = "error")
+                    }
+                )
             }
         )
 

@@ -1,10 +1,11 @@
 # Global configurations and functions for ALIVA Dashboard
-# This file contains package installations, data loading, and utility functions
+# Optimized for deployment - NO runtime package installation
+# Packages should be pre-installed and managed via renv
 
-# Package Installation and Loading
-# =================================
+# Package Loading (OPTIMIZED)
+# ============================
 
-# List of required packages
+# List of required packages (optimized for deployment)
 required_packages <- c(
     # Core Shiny packages
     "shiny", "shinydashboard", "shinyWidgets", "shinythemes", "shinyjs",
@@ -18,32 +19,43 @@ required_packages <- c(
     # Statistical analysis
     "car", "lmtest", "nortest", "broom", "psych",
 
-    # Report generation
-    "rmarkdown", "knitr", "pagedown", "officer", "flextable",
+    # Lightweight report generation (heavy packages removed for deployment)
+    "rmarkdown", "knitr", "kableExtra",
 
     # Additional utilities
     "here", "glue", "scales", "RColorBrewer", "viridis"
 )
 
-# Set CRAN mirror
-options(repos = c(CRAN = "https://cran.rstudio.com/"))
+# Function to load packages with error handling (NO installation)
+load_packages <- function(packages) {
+    cat("Loading required packages...\n")
+    failed_packages <- c()
 
-# Function to check and install packages
-install_if_missing <- function(packages) {
-    new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
-    if (length(new_packages)) {
-        cat("Installing missing packages:", paste(new_packages, collapse = ", "), "\n")
-        install.packages(new_packages, dependencies = TRUE, repos = "https://cran.rstudio.com/")
+    for (pkg in packages) {
+        tryCatch(
+            {
+                suppressPackageStartupMessages(library(pkg, character.only = TRUE))
+                cat("✓ Loaded:", pkg, "\n")
+            },
+            error = function(e) {
+                failed_packages <<- c(failed_packages, pkg)
+                cat("✗ Failed to load:", pkg, "\n")
+            }
+        )
     }
+
+    if (length(failed_packages) > 0) {
+        stop(paste(
+            "Failed to load packages:", paste(failed_packages, collapse = ", "),
+            "\nPlease install missing packages locally and redeploy."
+        ))
+    }
+
+    cat("All packages loaded successfully!\n")
 }
 
-# Install missing packages
-install_if_missing(required_packages)
-
-# Load all required packages
-lapply(required_packages, function(pkg) {
-    suppressPackageStartupMessages(library(pkg, character.only = TRUE))
-})
+# Load all required packages (no installation)
+load_packages(required_packages)
 
 # Load utility functions
 # ======================

@@ -2,14 +2,20 @@
 # Developed for UAS Komputasi Statistik - Enhanced Version
 # Author: Dasbor ALIVA
 # Date: July 17, 2025
-# Version: 3.0 - Modular Architecture Implementation
+# Version: 3.1 - Deployment Optimized
 
-# Load required libraries and global configurations
+cat("Starting ALIVA Dashboard...\n")
+
+# Load required libraries and global configurations (optimized)
 source("global.R")
 
-# Load modular components
+cat("Loading modular components...\n")
+
+# Load modular components (optimized loading)
 source("R/load_modules.R")
 load_all_modules()
+
+cat("Initializing UI and Server...\n")
 
 # Define UI
 ui <- dashboardPage(

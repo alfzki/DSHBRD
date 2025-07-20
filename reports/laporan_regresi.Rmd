@@ -21,7 +21,7 @@ params:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(flextable)
+library(kableExtra)
 library(dplyr)
 ```
 
@@ -60,10 +60,14 @@ if (!is.null(params$variabel_independen)) {
         check.names = FALSE
     )
 
-    ft <- flextable(var_df) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
+    ft <- knitr::kable(var_df,
+        caption = "Variabel yang Digunakan dalam Model"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 }
@@ -89,14 +93,15 @@ if (!is.null(params$hasil_regresi)) {
         )
     )
 
-    ft <- flextable(model_stats) %>%
-        set_header_labels(
-            Statistik = "Statistik Model",
-            Nilai = "Nilai"
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
+    ft <- knitr::kable(model_stats,
+        col.names = c("Statistik Model", "Nilai"),
+        caption = "Ringkasan Statistik Model Regresi"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 } else {
@@ -129,19 +134,16 @@ if (!is.null(params$hasil_regresi)) {
         check.names = FALSE
     )
 
-    ft <- flextable(coeff_df) %>%
-        set_header_labels(
-            Variabel = "Variabel",
-            Koefisien = "Koefisien (β)",
-            `Std. Error` = "Std. Error",
-            `t-value` = "t-statistic",
-            `p-value` = "p-value",
-            Signifikansi = "Sig."
+    ft <- knitr::kable(coeff_df,
+        col.names = c("Variabel", "Koefisien (β)", "Std. Error", "t-statistic", "p-value", "Sig."),
+        caption = "Koefisien Regresi dan Signifikansi"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
         ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header") %>%
-        footnote(i = 1, j = 6, value = as_paragraph("Signifikansi: '***' p<0.001, '**' p<0.01, '*' p<0.05, '.' p<0.1"), ref_symbols = "")
+        footnote(general = "Signifikansi: '***' p<0.001, '**' p<0.01, '*' p<0.05, '.' p<0.1")
 
     ft
 } else {
@@ -233,10 +235,14 @@ if (!is.null(params$uji_asumsi)) {
         check.names = FALSE
     )
 
-    ft <- flextable(assumption_df) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
+    ft <- knitr::kable(assumption_df,
+        caption = "Hasil Uji Asumsi Model Regresi"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 } else {

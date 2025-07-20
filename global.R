@@ -5,6 +5,36 @@
 # Package Loading (OPTIMIZED)
 # ============================
 
+# Explicit library calls for shinyapps.io dependency detection
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+library(shinythemes)
+library(shinyjs)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+library(leaflet)
+library(DT)
+library(htmlwidgets)
+library(car)
+library(lmtest)
+library(nortest)
+library(broom)
+library(psych)
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+library(here)
+library(glue)
+library(scales)
+library(RColorBrewer)
+library(viridis)
+
 # List of required packages (optimized for deployment)
 required_packages <- c(
     # Core Shiny packages
@@ -26,36 +56,35 @@ required_packages <- c(
     "here", "glue", "scales", "RColorBrewer", "viridis"
 )
 
-# Function to load packages with error handling (NO installation)
-load_packages <- function(packages) {
-    cat("Loading required packages...\n")
+# Function to verify package availability (non-halting for deployment)
+verify_packages <- function(packages) {
+    cat("Verifying package availability...\n")
     failed_packages <- c()
+    loaded_packages <- c()
 
     for (pkg in packages) {
-        tryCatch(
-            {
-                suppressPackageStartupMessages(library(pkg, character.only = TRUE))
-                cat("✓ Loaded:", pkg, "\n")
-            },
-            error = function(e) {
-                failed_packages <<- c(failed_packages, pkg)
-                cat("✗ Failed to load:", pkg, "\n")
-            }
-        )
+        if (requireNamespace(pkg, quietly = TRUE)) {
+            loaded_packages <- c(loaded_packages, pkg)
+            cat("✓ Available:", pkg, "\n")
+        } else {
+            failed_packages <- c(failed_packages, pkg)
+            cat("✗ Missing:", pkg, "\n")
+        }
     }
 
     if (length(failed_packages) > 0) {
-        stop(paste(
-            "Failed to load packages:", paste(failed_packages, collapse = ", "),
-            "\nPlease install missing packages locally and redeploy."
+        warning(paste(
+            "Missing packages:", paste(failed_packages, collapse = ", "),
+            "\nSome features may not work properly."
         ))
     }
 
-    cat("All packages loaded successfully!\n")
+    cat("Package verification complete. Available:", length(loaded_packages), "Missing:", length(failed_packages), "\n")
+    return(list(loaded = loaded_packages, failed = failed_packages))
 }
 
-# Load all required packages (no installation)
-load_packages(required_packages)
+# Verify package availability (non-halting)
+package_status <- verify_packages(required_packages)
 
 # Load utility functions
 # ======================

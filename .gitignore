@@ -26,14 +26,6 @@ Thumbs.db
 .cache/
 __pycache__/
 
-# User-generated exports and reports
-*.pdf
-*.docx
-*.xlsx
-*.csv
-*.html
-*.Rmd
-
 # Shiny runtime files
 shinyapps/
 shinylogs/

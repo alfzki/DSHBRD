@@ -25,7 +25,7 @@ beranda_ui <- function(id) {
         ),
         fluidRow(
             column(
-                width = 6,
+                width = 4,
                 box(
                     title = tags$span(icon("info-circle"), "Tentang Dataset"),
                     status = "info",
@@ -35,13 +35,36 @@ beranda_ui <- function(id) {
                 )
             ),
             column(
+                width = 8,
+                box(
+                    title = tags$span(icon("map-marker"), "Konteks Geografis Indonesia"),
+                    status = "primary",
+                    solidHeader = TRUE,
+                    width = NULL,
+                    height = "400px",
+                    leafletOutput(ns("indonesia_map"), height = "350px")
+                )
+            )
+        ),
+        fluidRow(
+            column(
                 width = 6,
                 box(
-                    title = tags$span(icon("table"), "Metadata Variabel"),
+                    title = tags$span(icon("table"), "Metadata Dataset SOVI"),
                     status = "success",
                     solidHeader = TRUE,
                     width = NULL,
-                    DT::DTOutput(ns("metadata_table"))
+                    DT::DTOutput(ns("sovi_metadata_table"))
+                )
+            ),
+            column(
+                width = 6,
+                box(
+                    title = tags$span(icon("ruler"), "Metadata Dataset Distance"),
+                    status = "warning",
+                    solidHeader = TRUE,
+                    width = NULL,
+                    DT::DTOutput(ns("distance_metadata_table"))
                 )
             )
         ),

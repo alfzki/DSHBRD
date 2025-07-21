@@ -1,116 +1,130 @@
 # Beranda Server Module
-# Server logic for the home page of ALIVA Dashboard
+# Logic server untuk halaman beranda ALIVA Dashboard
 
-#' Beranda Server Module
+# Load helper functions
+source(file.path("R", "modules", "beranda", "beranda_helpers.R"), local = TRUE)
+
+#' Modul Server Beranda
 #'
-#' Server logic for the home/landing page functionality
+#' Logic server untuk fungsionalitas halaman beranda/landing page
 #'
-#' @param id Module ID for namespacing
-#' @param values Reactive values object containing shared data
+#' @param id ID modul untuk namespacing
+#' @param values Objek reactive values berisi data bersama
 beranda_server <- function(id, values) {
     moduleServer(id, function(input, output, session) {
-        # Welcome content
+        # Konten welcome dengan metodologi yang diperluas
         output$welcome_content <- renderUI({
-            tagList(
-                h3("ALIVA: Alif Vulnerability Analytics Dashboard"),
-                p("Selamat datang di ALIVA Dashboard! Aplikasi ini dirancang untuk membantu analisis statistik
-          data kerentanan sosial Indonesia dengan fitur-fitur yang komprehensif dan mudah digunakan."),
-                hr(),
-                h4("Fitur Utama:"),
-                tags$ul(
-                    tags$li("Manajemen Data: Transformasi variabel kontinu menjadi kategorik"),
-                    tags$li("Eksplorasi Data: Statistik deskriptif dan visualisasi interaktif"),
-                    tags$li("Uji Asumsi: Uji normalitas dan homogenitas varians"),
-                    tags$li("Statistik Inferensia: Uji beda rata-rata, proporsi, varians, dan ANOVA"),
-                    tags$li("Regresi Linear Berganda: Model prediktif dengan uji asumsi lengkap"),
-                    tags$li("Unduhan: Semua hasil dapat diunduh dalam format PDF, Word, atau CSV")
+            create_welcome_content()
+        })
+
+        # Informasi dataset yang disempurnakan
+        output$dataset_info <- renderUI({
+            create_dataset_info(values$sovi_data)
+        })
+
+        # Peta konteks geografis dengan ibu kota provinsi utama
+        output$indonesia_map <- renderLeaflet({
+            # Ibu kota provinsi utama Indonesia dengan koordinat akurat
+            provincial_capitals <- data.frame(
+                city = c(
+                    "Jakarta", "Medan", "Palembang", "Bandar Lampung", "Bandung", "Semarang",
+                    "Yogyakarta", "Surabaya", "Denpasar", "Mataram", "Pontianak", "Palangkaraya",
+                    "Samarinda", "Makassar", "Palu", "Manado", "Ambon", "Jayapura", "Manokwari"
                 ),
-                hr(),
-                h4("Sumber Data:"),
-                p("Data yang digunakan dalam dashboard ini berasal dari SUSENAS (Survei Sosial Ekonomi Nasional)
-          2017 yang diterbitkan oleh BPS-Statistics Indonesia. Data mencakup indikator kerentanan sosial
-          dari 511 kabupaten/kota di Indonesia dengan 17 variabel meliputi:"),
-                tags$ul(
-                    tags$li("CHILDREN: Persentase populasi berusia di bawah lima tahun"),
-                    tags$li("FEMALE: Persentase populasi perempuan"),
-                    tags$li("ELDERLY: Persentase populasi berusia 65 tahun ke atas"),
-                    tags$li("POVERTY: Persentase penduduk miskin"),
-                    tags$li("ILLITERATE: Persentase populasi yang buta huruf"),
-                    tags$li("NOELECTRIC: Persentase rumah tangga tanpa akses listrik"),
-                    tags$li("TAPWATER: Persentase rumah tangga yang menggunakan air ledeng/pipa"),
-                    tags$li("Dan 10 indikator kerentanan sosial lainnya")
+                province = c(
+                    "DKI Jakarta", "Sumatera Utara", "Sumatera Selatan", "Lampung", "Jawa Barat",
+                    "Jawa Tengah", "D.I. Yogyakarta", "Jawa Timur", "Bali", "Nusa Tenggara Barat",
+                    "Kalimantan Barat", "Kalimantan Tengah", "Kalimantan Timur", "Sulawesi Selatan",
+                    "Sulawesi Tengah", "Sulawesi Utara", "Maluku", "Papua", "Papua Barat"
+                ),
+                lng = c(
+                    106.8456, 98.6785, 104.7458, 105.2677, 107.6191, 110.4203,
+                    110.3650, 112.7521, 115.2192, 116.1158, 109.3200, 113.9213,
+                    117.1364, 119.4221, 119.8707, 124.8420, 128.1777, 140.7181, 134.0640
+                ),
+                lat = c(
+                    -6.2088, 3.5952, -2.9167, -5.4500, -6.9175, -6.9930,
+                    -7.7972, -7.2575, -8.6705, -8.5833, -0.0263, -2.2090,
+                    -0.5017, -5.1477, -0.8917, 1.4748, -3.6954, -2.5337, -0.8650
+                ),
+                region = c(
+                    "Jawa", "Sumatera", "Sumatera", "Sumatera", "Jawa", "Jawa",
+                    "Jawa", "Jawa", "Nusa Tenggara", "Nusa Tenggara", "Kalimantan", "Kalimantan",
+                    "Kalimantan", "Sulawesi", "Sulawesi", "Sulawesi", "Maluku", "Papua", "Papua"
                 )
             )
-        })
 
-        # Dataset information
-        output$dataset_info <- renderUI({
-            if (is.null(values$sovi_data)) {
-                return(p("Data sedang dimuat..."))
-            }
-
-            tagList(
-                h5("Informasi Dataset SOVI:"),
-                p(paste("Jumlah observasi:", nrow(values$sovi_data))),
-                p(paste("Jumlah variabel:", ncol(values$sovi_data))),
-                p(paste("Variabel numerik:", length(get_numeric_columns(values$sovi_data)))),
-                p(paste("Variabel kategorik:", length(get_categorical_columns(values$sovi_data)))),
-                hr(),
-                h5("Informasi Dataset Distance:"),
-                p(paste("Jumlah observasi:", nrow(values$distance_data))),
-                p(paste("Jumlah variabel:", ncol(values$distance_data)))
-            )
-        })
-
-        # Metadata table
-        output$metadata_table <- DT::renderDT({
-            metadata <- data.frame(
-                "Nama Variabel di Dashboard" = c(
-                    "Region", "Pulau", "Provinsi", "Nama Kabupaten/Kota",
-                    "Persentase Populasi Balita", "Persentase Populasi Wanita", "Persentase Populasi Lansia",
-                    "Persentase Kepala Keluarga Wanita", "Rata-rata Ukuran Keluarga", "Persentase Rumah Tangga Tanpa Listrik",
-                    "Persentase Pendidikan Rendah", "Persentase Pertumbuhan Populasi", "Persentase Penduduk Miskin",
-                    "Persentase Populasi Buta Huruf", "Persentase Tanpa Pelatihan Bencana", "Persentase Daerah Rawan Bencana",
-                    "Persentase Rumah Sewa", "Persentase Tanpa Sistem Saluran Pembuangan", "Persentase Menggunakan Air Ledeng", "Total Populasi"
-                ),
-                "Nama Variabel Asli" = c(
-                    "region", "island", "province", "district",
-                    "CHILDREN", "FEMALE", "ELDERLY", "FHEAD", "FAMILYSIZE", "NOELECTRIC",
-                    "LOWEDU", "GROWTH", "POVERTY", "ILLITERATE", "NOTRAINING", "DPRONE",
-                    "RENTED", "NOSEWER", "TAPWATER", "POPULATION"
-                ),
-                "Deskripsi" = c(
-                    "Wilayah geografis besar (Barat/Timur)", "Nama pulau utama", "Nama provinsi", "Nama kabupaten/kota",
-                    "Persentase populasi berusia di bawah lima tahun", "Persentase populasi perempuan", "Persentase populasi berusia 65 tahun ke atas",
-                    "Persentase rumah tangga dengan kepala keluarga perempuan", "Rata-rata jumlah anggota rumah tangga", "Persentase rumah tangga tanpa akses listrik sebagai sumber penerangan",
-                    "Persentase populasi 15 tahun ke atas dengan pendidikan rendah", "Persentase perubahan (pertumbuhan) populasi", "Persentase penduduk miskin",
-                    "Persentase populasi yang buta huruf", "Persentase rumah tangga tanpa pelatihan bencana", "Persentase rumah tangga di daerah rawan bencana",
-                    "Persentase rumah tangga yang menyewa", "Persentase rumah tangga tanpa sistem saluran pembuangan", "Persentase rumah tangga yang menggunakan air ledeng/pipa", "Total populasi"
-                ),
-                "Tipe Data" = c(
-                    "Kategorik", "Kategorik", "Kategorik", "Kategorik",
-                    rep("Numerik", 16)
-                ),
-                "Sumber" = rep("SUSENAS 2017, BPS-Statistics Indonesia", 20),
-                check.names = FALSE
+            # Buat palet warna untuk wilayah
+            region_colors <- c(
+                "Jawa" = "blue", "Sumatera" = "red", "Kalimantan" = "green",
+                "Sulawesi" = "orange", "Nusa Tenggara" = "purple",
+                "Maluku" = "brown", "Papua" = "pink"
             )
 
-            DT::datatable(metadata,
-                options = list(pageLength = 10, scrollX = TRUE),
-                class = "table-striped table-hover"
-            )
+            leaflet() %>%
+                addTiles() %>%
+                setView(lng = 118.0148634, lat = -2.548926, zoom = 5) %>%
+                addMarkers(
+                    lng = provincial_capitals$lng,
+                    lat = provincial_capitals$lat,
+                    popup = paste(
+                        "<b>", provincial_capitals$city, "</b><br/>",
+                        "Provinsi: ", provincial_capitals$province, "<br/>",
+                        "Wilayah: ", provincial_capitals$region
+                    ),
+                    label = paste(provincial_capitals$city, "-", provincial_capitals$province),
+                    clusterOptions = markerClusterOptions()
+                ) %>%
+                addCircleMarkers(
+                    data = provincial_capitals,
+                    lng = ~lng,
+                    lat = ~lat,
+                    radius = 6,
+                    color = ~ region_colors[region],
+                    fillColor = ~ region_colors[region],
+                    fillOpacity = 0.7,
+                    stroke = TRUE,
+                    weight = 2,
+                    popup = ~ paste(
+                        "<b>", city, "</b><br/>",
+                        "Provinsi: ", province, "<br/>",
+                        "Wilayah: ", region, "<br/>",
+                        "Koordinat: ", round(lat, 3), ", ", round(lng, 3)
+                    ),
+                    label = ~ paste(city, "(", province, ")")
+                ) %>%
+                addLegend(
+                    position = "bottomright",
+                    colors = unique(region_colors),
+                    labels = names(region_colors),
+                    title = "Wilayah Indonesia",
+                    opacity = 0.8
+                )
         })
 
-        # Download handler for dashboard info
+        # Tabel metadata dataset SOVI
+        output$sovi_metadata_table <- DT::renderDT({
+            create_sovi_metadata_table(values$sovi_data)
+        })
+
+        # Tabel metadata dataset distance
+        output$distance_metadata_table <- DT::renderDT({
+            create_distance_metadata_table(values$distance_data)
+        })
+
+        # Handler download untuk informasi dashboard
         output$download_info <- downloadHandler(
             filename = function() {
-                paste("ALIVA_Dashboard_Info_", Sys.Date(), ".pdf", sep = "")
+                create_dashboard_filename("info")
             },
             content = function(file) {
-                # Create a temporary Rmd file
+                # Membuat file Rmd sementara
                 temp_rmd <- tempfile(fileext = ".Rmd")
 
-                # Write the content to the Rmd file
+                # Menggunakan helper function untuk konten
+                report_content <- create_combined_report_content(values$sovi_data, "info")
+
+                # Tulis konten ke file Rmd
                 writeLines(c(
                     "---",
                     "title: 'ALIVA Dashboard - Informasi Lengkap'",
@@ -119,40 +133,33 @@ beranda_server <- function(id, values) {
                     "output: pdf_document",
                     "---",
                     "",
-                    "# ALIVA: Alif's Vulnerability Analytics Dashboard",
+                    report_content
+                ), temp_rmd)
+
+                rmarkdown::render(temp_rmd, output_file = file, quiet = TRUE)
+            }
+        )
+
+        # Download laporan gabungan PDF
+        output$download_combined_pdf <- downloadHandler(
+            filename = function() {
+                create_dashboard_filename("pdf")
+            },
+            content = function(file) {
+                temp_rmd <- tempfile(fileext = ".Rmd")
+
+                # Menggunakan helper function untuk konten laporan
+                report_content <- create_combined_report_content(values$sovi_data, "pdf")
+
+                writeLines(c(
+                    "---",
+                    "title: 'ALIVA Dashboard - Laporan Lengkap'",
+                    "author: 'Tim Dashboard ALIVA'",
+                    "date: '`r Sys.Date()`'",
+                    "output: pdf_document",
+                    "---",
                     "",
-                    "## Ringkasan",
-                    "",
-                    "ALIVA (Alif's Vulnerability Analytics) adalah dashboard interaktif yang dirancang khusus untuk analisis kerentanan sosial Indonesia. Dashboard ini menyediakan platform komprehensif untuk eksplorasi, analisis, dan visualisasi data kerentanan sosial dengan menggunakan metodologi statistik yang rigorous.",
-                    "",
-                    "## Fitur Utama",
-                    "",
-                    "### 1. Manajemen Data",
-                    "- Transformasi variabel kontinu menjadi kategorik",
-                    "- Kategorisasi berbasis quartiles dan cut-points",
-                    "- Validasi dan pembersihan data otomatis",
-                    "",
-                    "### 2. Eksplorasi Data",
-                    "- Statistik deskriptif komprehensif",
-                    "- Visualisasi distribusi (histogram, boxplot)",
-                    "- Peta spasial interaktif untuk analisis geografis",
-                    "- Matriks korelasi dan scatter plots",
-                    "",
-                    "### 3. Uji Asumsi Statistik",
-                    "- Uji normalitas (Shapiro-Wilk, Kolmogorov-Smirnov)",
-                    "- Uji homogenitas varians (Levene's test)",
-                    "- Interpretasi otomatis dan rekomendasi tindak lanjut",
-                    "",
-                    "### 4. Statistik Inferensia",
-                    "",
-                    "#### Uji Beda Rata-rata:",
-                    "- One-sample t-test",
-                    "- Independent two-sample t-test",
-                    "- Paired t-test",
-                    "- Welch's t-test untuk varians tidak sama",
-                    "",
-                    "#### Uji Proporsi & Varians:",
-                    "- One-sample proportion test",
+                    report_content,
                     "- Two-sample proportion test",
                     "- Chi-square goodness of fit",
                     "- F-test untuk perbandingan varians",

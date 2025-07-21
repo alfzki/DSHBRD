@@ -19,7 +19,7 @@ params:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(flextable)
+library(kableExtra)
 library(dplyr)
 ```
 
@@ -58,15 +58,16 @@ if (!is.null(params$data_summary)) {
         Nilai = as.numeric(params$data_summary[c("Min.", "1st Qu.", "Median", "Mean", "3rd Qu.", "Max.")])
     )
 
-    ft <- flextable(summary_df) %>%
-        set_header_labels(
-            Statistik = "Statistik Deskriptif",
-            Nilai = "Nilai"
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header") %>%
-        colformat_double(j = "Nilai", digits = 4)
+    ft <- knitr::kable(summary_df,
+        col.names = c("Statistik Deskriptif", "Nilai"),
+        caption = "Ringkasan Statistik Deskriptif",
+        digits = 4
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 } else {

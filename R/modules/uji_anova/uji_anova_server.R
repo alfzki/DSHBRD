@@ -373,42 +373,49 @@ uji_anova_server <- function(id, values) {
                         )
                     }
 
-                    # Create Word document
-                    doc <- officer::read_docx()
-
-                    doc <- doc %>%
-                        officer::body_add_par("INTERPRETASI HASIL ANOVA", style = "heading 1") %>%
-                        officer::body_add_par(paste("Tanggal Analisis:", Sys.Date()), style = "Normal") %>%
-                        officer::body_add_par("", style = "Normal") %>%
-                        officer::body_add_par("KESIMPULAN STATISTIK", style = "heading 2") %>%
-                        officer::body_add_par(base_interpretation, style = "Normal") %>%
-                        officer::body_add_par("", style = "Normal") %>%
-                        officer::body_add_par("DETAIL ANALISIS", style = "heading 2") %>%
-                        officer::body_add_par(paste("• F-statistic:", format_number(f_stat, 4)), style = "Normal") %>%
-                        officer::body_add_par(paste("• Derajat kebebasan:", anova_table$Df[1], "dan", anova_table$Df[2]), style = "Normal") %>%
-                        officer::body_add_par(paste("• Tingkat kepercayaan:", confidence_level), style = "Normal") %>%
-                        officer::body_add_par(paste(
-                            "• Ukuran efek (η²):", format_number(eta_squared, 4),
+                    # Create interpretation content
+                    interpretation_content <- c(
+                        "## Kesimpulan Statistik",
+                        "",
+                        base_interpretation,
+                        "",
+                        "## Detail Analisis",
+                        "",
+                        paste("- **F-statistic:**", format_number(f_stat, 4)),
+                        paste("- **Derajat kebebasan:**", anova_table$Df[1], "dan", anova_table$Df[2]),
+                        paste("- **Tingkat kepercayaan:**", confidence_level),
+                        paste(
+                            "- **Ukuran efek (η²):**", format_number(eta_squared, 4),
                             paste0("(", effect_size_interpretation, ")")
-                        ), style = "Normal") %>%
-                        officer::body_add_par(paste("• Jumlah grup:", n_groups), style = "Normal") %>%
-                        officer::body_add_par(paste("• Total observasi:", sum(group_counts)), style = "Normal") %>%
-                        officer::body_add_par("", style = "Normal") %>%
-                        officer::body_add_par("REKOMENDASI PRAKTIS", style = "heading 2") %>%
-                        officer::body_add_par(practical_recommendation, style = "Normal")
+                        ),
+                        paste("- **Jumlah grup:**", n_groups),
+                        paste("- **Total observasi:**", sum(group_counts)),
+                        "",
+                        "## Rekomendasi Praktis",
+                        "",
+                        practical_recommendation
+                    )
 
                     if (p_value < 0.05 && n_groups > 2) {
-                        doc <- doc %>%
-                            officer::body_add_par("", style = "Normal") %>%
-                            officer::body_add_par("LANGKAH SELANJUTNYA", style = "heading 2") %>%
-                            officer::body_add_par(paste(
+                        interpretation_content <- c(
+                            interpretation_content,
+                            "",
+                            "## Langkah Selanjutnya",
+                            "",
+                            paste(
                                 "Karena ANOVA menunjukkan perbedaan signifikan dan terdapat lebih dari 2 grup,",
                                 "lakukan uji post-hoc untuk mengidentifikasi",
                                 "pasangan grup mana yang berbeda secara signifikan."
-                            ), style = "Normal")
+                            )
+                        )
                     }
 
-                    print(doc, target = file)
+                    # Create Word document using lightweight alternative
+                    create_word_document(
+                        title = "Interpretasi Hasil ANOVA",
+                        content = interpretation_content,
+                        output_file = file
+                    )
                 }
             }
         )

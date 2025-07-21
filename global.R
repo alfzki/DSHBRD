@@ -1,10 +1,41 @@
 # Global configurations and functions for ALIVA Dashboard
-# This file contains package installations, data loading, and utility functions
+# Optimized for deployment - NO runtime package installation
+# Packages should be pre-installed and managed via renv
 
-# Package Installation and Loading
-# =================================
+# Package Loading (OPTIMIZED)
+# ============================
 
-# List of required packages
+# Explicit library calls for shinyapps.io dependency detection
+library(shiny)
+library(shinydashboard)
+library(shinyWidgets)
+library(shinythemes)
+library(shinyjs)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+library(leaflet)
+library(DT)
+library(htmlwidgets)
+library(car)
+library(lmtest)
+library(nortest)
+library(broom)
+library(psych)
+library(rmarkdown)
+library(knitr)
+library(kableExtra)
+library(here)
+library(glue)
+library(scales)
+library(RColorBrewer)
+library(viridis)
+
+# List of required packages (optimized for deployment)
 required_packages <- c(
     # Core Shiny packages
     "shiny", "shinydashboard", "shinyWidgets", "shinythemes", "shinyjs",
@@ -18,32 +49,42 @@ required_packages <- c(
     # Statistical analysis
     "car", "lmtest", "nortest", "broom", "psych",
 
-    # Report generation
-    "rmarkdown", "knitr", "pagedown", "officer", "flextable",
+    # Lightweight report generation (heavy packages removed for deployment)
+    "rmarkdown", "knitr", "kableExtra",
 
     # Additional utilities
     "here", "glue", "scales", "RColorBrewer", "viridis"
 )
 
-# Set CRAN mirror
-options(repos = c(CRAN = "https://cran.rstudio.com/"))
+# Function to verify package availability (non-halting for deployment)
+verify_packages <- function(packages) {
+    cat("Verifying package availability...\n")
+    failed_packages <- c()
+    loaded_packages <- c()
 
-# Function to check and install packages
-install_if_missing <- function(packages) {
-    new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
-    if (length(new_packages)) {
-        cat("Installing missing packages:", paste(new_packages, collapse = ", "), "\n")
-        install.packages(new_packages, dependencies = TRUE, repos = "https://cran.rstudio.com/")
+    for (pkg in packages) {
+        if (requireNamespace(pkg, quietly = TRUE)) {
+            loaded_packages <- c(loaded_packages, pkg)
+            cat("✓ Available:", pkg, "\n")
+        } else {
+            failed_packages <- c(failed_packages, pkg)
+            cat("✗ Missing:", pkg, "\n")
+        }
     }
+
+    if (length(failed_packages) > 0) {
+        warning(paste(
+            "Missing packages:", paste(failed_packages, collapse = ", "),
+            "\nSome features may not work properly."
+        ))
+    }
+
+    cat("Package verification complete. Available:", length(loaded_packages), "Missing:", length(failed_packages), "\n")
+    return(list(loaded = loaded_packages, failed = failed_packages))
 }
 
-# Install missing packages
-install_if_missing(required_packages)
-
-# Load all required packages
-lapply(required_packages, function(pkg) {
-    suppressPackageStartupMessages(library(pkg, character.only = TRUE))
-})
+# Verify package availability (non-halting)
+package_status <- verify_packages(required_packages)
 
 # Load utility functions
 # ======================

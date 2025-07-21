@@ -20,7 +20,7 @@ params:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-library(flextable)
+library(kableExtra)
 library(dplyr)
 ```
 
@@ -52,14 +52,15 @@ if (!is.null(params$input_params)) {
         )
     )
 
-    ft <- flextable(param_df) %>%
-        set_header_labels(
-            Parameter = "Parameter Uji",
-            Nilai = "Nilai"
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
+    ft <- knitr::kable(param_df,
+        col.names = c("Parameter Uji", "Nilai"),
+        caption = "Parameter Uji yang Digunakan"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 }
@@ -107,14 +108,15 @@ if (!is.null(params$hasil_uji)) {
         )
     )
 
-    ft <- flextable(hasil_df) %>%
-        set_header_labels(
-            Statistik = "Statistik Uji",
-            Nilai = "Nilai"
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
+    ft <- knitr::kable(hasil_df,
+        col.names = c("Statistik Uji", "Nilai"),
+        caption = "Hasil Uji Statistik"
+    ) %>%
+        kable_styling(
+            bootstrap_options = c("striped", "hover"),
+            full_width = FALSE,
+            position = "center"
+        )
 
     ft
 } else {

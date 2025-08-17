@@ -50,6 +50,7 @@ lapply(required_packages, function(pkg) {
 
 # Source interpretation helpers for statistical analysis
 source("R/utils/interpretation_helpers.R")
+source("R/utils/report_helpers.R")
 
 # Global Settings
 # ===============
@@ -80,79 +81,32 @@ load_sovi_data <- function() {
     if (file.exists(file_path)) {
         data <- readr::read_csv(file_path, show_col_types = FALSE)
 
-        # Add district names based on DISTRICTCODE (basic naming for now)
+        # Load geography mapping
+        geo_mapping_path <- here::here("data", "geography_mapping.csv")
+        if (!file.exists(geo_mapping_path)) {
+            stop("Geography mapping file not found at: ", geo_mapping_path)
+        }
+        geo_mapping <- readr::read_csv(geo_mapping_path, show_col_types = FALSE)
+
         data <- data %>%
             mutate(
                 # Create readable district names
                 district = paste("Kabupaten/Kota", sprintf("%04d", DISTRICTCODE)),
-
-                # Create region based on district code patterns
-                region = case_when(
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("11", "12", "13", "14", "15", "16", "17", "18", "19") ~ "Sumatera",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("31", "32", "33", "34", "35", "36") ~ "Jawa-Bali",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("51", "52", "53", "61", "62", "63", "64") ~ "Kalimantan-Sulawesi",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("71", "72", "73", "74", "75", "76", "81", "82", "91", "92", "94") ~ "Indonesia Timur",
-                    TRUE ~ "Lainnya"
-                ),
-                # Create island grouping
-                island = case_when(
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("11", "12", "13", "14", "15", "16", "17", "18", "19") ~ "Sumatera",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("31", "32", "33", "34", "35", "36") ~ "Jawa-Bali",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("51", "52", "53") ~ "Kalimantan",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("61", "62", "63", "64") ~ "Sulawesi",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("71", "72", "73", "74", "75", "76") ~ "Nusa Tenggara",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("81", "82") ~ "Maluku",
-                    substr(as.character(DISTRICTCODE), 1, 2) %in% c("91", "92", "94") ~ "Papua",
-                    TRUE ~ "Lainnya"
-                ),
-                # Create province grouping (simplified version)
-                province = case_when(
-                    substr(as.character(DISTRICTCODE), 1, 2) == "11" ~ "Aceh",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "12" ~ "Sumatera Utara",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "13" ~ "Sumatera Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "14" ~ "Riau",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "15" ~ "Jambi",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "16" ~ "Sumatera Selatan",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "17" ~ "Bengkulu",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "18" ~ "Lampung",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "19" ~ "Kepulauan Bangka Belitung",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "21" ~ "Kepulauan Riau",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "31" ~ "DKI Jakarta",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "32" ~ "Jawa Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "33" ~ "Jawa Tengah",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "34" ~ "DI Yogyakarta",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "35" ~ "Jawa Timur",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "36" ~ "Banten",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "51" ~ "Bali",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "52" ~ "Nusa Tenggara Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "53" ~ "Nusa Tenggara Timur",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "61" ~ "Kalimantan Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "62" ~ "Kalimantan Tengah",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "63" ~ "Kalimantan Selatan",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "64" ~ "Kalimantan Timur",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "65" ~ "Kalimantan Utara",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "71" ~ "Sulawesi Utara",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "72" ~ "Sulawesi Tengah",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "73" ~ "Sulawesi Selatan",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "74" ~ "Sulawesi Tenggara",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "75" ~ "Gorontalo",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "76" ~ "Sulawesi Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "81" ~ "Maluku",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "82" ~ "Maluku Utara",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "91" ~ "Papua Barat",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "92" ~ "Papua",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "94" ~ "Papua Tengah",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "95" ~ "Papua Pegunungan",
-                    substr(as.character(DISTRICTCODE), 1, 2) == "96" ~ "Papua Selatan",
-                    TRUE ~ "Lainnya"
-                )
+                # Create province code for joining
+                province_code = as.integer(substr(as.character(DISTRICTCODE), 1, 2))
             ) %>%
-            # Convert categorical variables to factors
+            # Join with geography mapping
+            left_join(geo_mapping, by = "province_code") %>%
+            # Rename province_name to province
+            rename(province = province_name) %>%
+            # Convert new categorical variables to factors
             mutate(
                 region = as.factor(region),
                 island = as.factor(island),
                 province = as.factor(province)
-            )
+            ) %>%
+            # Remove the temporary province_code
+            select(-province_code)
 
         # Restore any preserved user variables
         if (!is.null(preserved_vars)) {
@@ -200,32 +154,13 @@ load_distance_data <- function() {
 # Utility Functions
 # =================
 
-# Variable labels for better UI display
-SOVI_VARIABLE_LABELS <- list(
-    # Numeric variables with descriptions
-    "CHILDREN" = "Persentase Populasi Balita (CHILDREN)",
-    "FEMALE" = "Persentase Populasi Perempuan (FEMALE)",
-    "ELDERLY" = "Persentase Populasi Lansia ≥65 tahun (ELDERLY)",
-    "FHEAD" = "Persentase Rumah Tangga Kepala Keluarga Perempuan (FHEAD)",
-    "FAMILYSIZE" = "Rata-rata Jumlah Anggota Rumah Tangga (FAMILYSIZE)",
-    "NOELECTRIC" = "Persentase Rumah Tangga Tanpa Listrik (NOELECTRIC)",
-    "LOWEDU" = "Persentase Populasi Berpendidikan Rendah (LOWEDU)",
-    "GROWTH" = "Persentase Pertumbuhan Populasi (GROWTH)",
-    "POVERTY" = "Persentase Penduduk Miskin (POVERTY)",
-    "ILLITERATE" = "Persentase Populasi Buta Huruf (ILLITERATE)",
-    "NOTRAINING" = "Persentase RT Tanpa Pelatihan Bencana (NOTRAINING)",
-    "DPRONE" = "Persentase RT di Area Rawan Bencana (DPRONE)",
-    "RENTED" = "Persentase Rumah Tangga Menyewa (RENTED)",
-    "NOSEWER" = "Persentase RT Tanpa Sistem Drainase (NOSEWER)",
-    "TAPWATER" = "Persentase RT Menggunakan Air Ledeng (TAPWATER)",
-    "POPULATION" = "Jumlah Total Populasi (POPULATION)",
-    "DISTRICTCODE" = "Kode Wilayah (DISTRICTCODE)",
-
-    # Categorical variables
-    "region" = "Wilayah Regional",
-    "island" = "Kelompok Pulau",
-    "province" = "Provinsi"
-)
+# Load variable labels from external file
+variable_labels_path <- here::here("data", "variable_labels.csv")
+if (!file.exists(variable_labels_path)) {
+    stop("Variable labels file not found at: ", variable_labels_path)
+}
+VARIABLE_LABELS <- readr::read_csv(variable_labels_path, show_col_types = FALSE) %>%
+    tibble::deframe()
 
 #' Get variable choices with labels for UI dropdowns
 #' @param data data.frame
@@ -244,14 +179,16 @@ get_variable_choices <- function(data, var_type = "all") {
         vars <- names(data)
     }
 
-    # Create named vector with labels
-    choices <- setNames(vars, sapply(vars, function(x) {
-        if (x %in% names(SOVI_VARIABLE_LABELS)) {
-            SOVI_VARIABLE_LABELS[[x]]
+    # Create named vector with labels from the loaded CSV
+    labels <- unname(sapply(vars, function(x) {
+        if (x %in% names(VARIABLE_LABELS)) {
+            VARIABLE_LABELS[[x]]
         } else {
             x
         }
     }))
+
+    choices <- setNames(vars, labels)
 
     return(choices)
 }

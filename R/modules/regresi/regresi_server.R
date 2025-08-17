@@ -6,16 +6,17 @@
 #' Server logic for multiple linear regression
 #'
 #' @param id Module ID for namespacing
-#' @param values Reactive values object containing shared data
-regresi_server <- function(id, values) {
+#' @param data A reactive expression returning the dataset.
+#' @param update_trigger A reactive expression that invalidates when data is updated.
+regresi_server <- function(id, data, update_trigger) {
     moduleServer(id, function(input, output, session) {
         # Update variable choices - reactive to data structure changes
         observe({
             # Create reactive dependency on data and data update counter
-            req(values$sovi_data)
-            data_counter <- values$data_update_counter  # This creates a reactive dependency
+            req(data())
+            update_trigger() # Create a reactive dependency on the trigger
             
-            numeric_choices <- get_variable_choices(values$sovi_data, "numeric")
+            numeric_choices <- get_variable_choices(data(), "numeric")
 
             updateSelectInput(session, "dep_var", choices = numeric_choices)
             updateSelectizeInput(session, "indep_vars", choices = numeric_choices)
@@ -28,7 +29,7 @@ regresi_server <- function(id, values) {
         # Run regression
         observeEvent(input$run_regression, {
             req(input$dep_var, input$indep_vars)
-            if (!validate_data(values$sovi_data, "Data SOVI")) {
+            if (!validate_data(data(), "Data SOVI")) {
                 return()
             }
 
@@ -44,7 +45,7 @@ regresi_server <- function(id, values) {
             tryCatch(
                 {
                     # Run regression
-                    model <- lm(formula_obj, data = values$sovi_data)
+                    model <- lm(formula_obj, data = data())
                     model_result(model)
 
                     # Run assumption tests
@@ -90,25 +91,26 @@ regresi_server <- function(id, values) {
             print(summary(model))
         })
 
-        # Enhanced regression interpretation using helper function
+        # Refactored interpretation UI to use the centralized report renderer
         output$interpretation <- renderUI({
             req(model_result())
 
-            model <- model_result()
-            
-            # Use the interpretation helper function
-            interpretation_text <- interpret_regression(
-                lm_result = model,
-                alpha = 0.05
+            # Define a temporary file path for the HTML fragment
+            temp_html_file <- tempfile(fileext = ".html")
+
+            # Render only the interpretation part of the report to an HTML fragment
+            render_regression_report(
+                model = model_result(),
+                assumption_tests = assumption_tests(),
+                dep_var = input$dep_var,
+                indep_vars = input$indep_vars,
+                output_format = "html_fragment",
+                output_file = temp_html_file,
+                output_type = "interpretation_only"
             )
 
-            # Convert to HTML with proper formatting
-            interpretation_html <- gsub("\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>", interpretation_text)
-            interpretation_html <- gsub("\\n", "<br>", interpretation_html)
-
-            HTML(paste0("<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
-                       interpretation_html,
-                       "</div>"))
+            # Include the generated HTML fragment in the UI
+            includeHTML(temp_html_file)
         })
 
         # Display assumption tests
@@ -171,205 +173,52 @@ regresi_server <- function(id, values) {
             plotly::ggplotly(p1)
         })
 
-        # Enhanced Download Handlers
+        # Refactored Download Handlers using the centralized report helper
 
-        # 1. Individual interpretation download (Word)
-        output$download_interpretation <- downloadHandler(
-            filename = function() {
-                paste0("interpretasi_regresi_", Sys.Date(), ".docx")
-            },
-            content = function(file) {
-                req(model_result())
-
-                model <- model_result()
-                summary_model <- summary(model)
-
-                # Extract key statistics
-                r_squared <- summary_model$r.squared
-                adj_r_squared <- summary_model$adj.r.squared
-                f_statistic <- summary_model$fstatistic[1]
-                f_p_value <- pf(f_statistic, summary_model$fstatistic[2],
-                    summary_model$fstatistic[3],
-                    lower.tail = FALSE
-                )
-
-                model_quality <- if (r_squared >= 0.7) {
-                    "sangat baik (R² ≥ 0.7)"
-                } else if (r_squared >= 0.5) {
-                    "baik (R² ≥ 0.5)"
-                } else if (r_squared >= 0.3) {
-                    "cukup (R² ≥ 0.3)"
-                } else {
-                    "rendah (R² < 0.3)"
-                }
-
-                practical_recommendation <- if (f_p_value < 0.05) {
-                    if (r_squared > 0.5) {
-                        "Model memiliki kekuatan prediktif yang baik dan dapat digunakan untuk inferensi statistik."
-                    } else {
-                        "Model secara statistik signifikan namun memiliki kekuatan prediktif yang terbatas. Pertimbangkan untuk menambah variabel prediktor."
-                    }
-                } else {
-                    "Model tidak menunjukkan hubungan yang signifikan. Pertimbangkan untuk menggunakan variabel prediktor yang berbeda atau memeriksa asumsi model."
-                }
-
-                # Create Word document
-                doc <- officer::read_docx()
-
-                doc <- doc %>%
-                    officer::body_add_par("INTERPRETASI HASIL REGRESI LINEAR BERGANDA", style = "heading 1") %>%
-                    officer::body_add_par(paste("Tanggal Analisis:", Sys.Date()), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("RINGKASAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(paste(
-                        "Model memiliki kualitas", model_quality,
-                        "dalam menjelaskan variabilitas data."
-                    ), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("KEBAIKAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(paste(
-                        "• R² =", format_number(r_squared, 4),
-                        paste0("(", format_number(r_squared * 100, 1), "% varians dijelaskan)")
-                    ), style = "Normal") %>%
-                    officer::body_add_par(paste("• Adjusted R² =", format_number(adj_r_squared, 4)), style = "Normal") %>%
-                    officer::body_add_par(paste("• F-statistic =", format_number(f_statistic, 4)), style = "Normal") %>%
-                    officer::body_add_par(paste("• Model p-value =", format_number(f_p_value, 6)), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("KESIMPULAN MODEL", style = "heading 2") %>%
-                    officer::body_add_par(interpret_p_value(
-                        f_p_value,
-                        h0 = "Model tidak signifikan (semua koefisien = 0)",
-                        h1 = "Model signifikan (minimal ada satu koefisien ≠ 0)"
-                    ), style = "Normal") %>%
-                    officer::body_add_par("", style = "Normal") %>%
-                    officer::body_add_par("ANALISIS KOEFISIEN", style = "heading 2")
-
-                # Add coefficient interpretations
-                coeffs <- summary_model$coefficients
-                for (i in 2:nrow(coeffs)) {
-                    var_name <- rownames(coeffs)[i]
-                    coeff_value <- coeffs[i, 1]
-                    std_error <- coeffs[i, 2]
-                    p_value <- coeffs[i, 4]
-
-                    ci_lower <- coeff_value - 1.96 * std_error
-                    ci_upper <- coeff_value + 1.96 * std_error
-
-                    significance_text <- if (p_value < 0.001) {
-                        "sangat signifikan (p < 0.001)"
-                    } else if (p_value < 0.01) {
-                        "signifikan (p < 0.01)"
-                    } else if (p_value < 0.05) {
-                        "signifikan (p < 0.05)"
-                    } else {
-                        "tidak signifikan (p ≥ 0.05)"
-                    }
-
-                    doc <- doc %>%
-                        officer::body_add_par(paste("Variabel:", var_name), style = "heading 3") %>%
-                        officer::body_add_par(paste("• Koefisien:", format_number(coeff_value, 4)), style = "Normal") %>%
-                        officer::body_add_par(paste(
-                            "• 95% CI: [", format_number(ci_lower, 4), ",",
-                            format_number(ci_upper, 4), "]"
-                        ), style = "Normal") %>%
-                        officer::body_add_par(paste("• Status:", significance_text), style = "Normal")
-
-                    if (p_value < 0.05) {
-                        doc <- doc %>%
-                            officer::body_add_par(paste(
-                                "Untuk setiap kenaikan 1 unit", var_name,
-                                ", variabel", input$dep_var,
-                                ifelse(coeff_value > 0, "meningkat", "menurun"),
-                                "sebesar", abs(format_number(coeff_value, 4)), "unit."
-                            ), style = "Normal")
-                    }
-                    doc <- doc %>% officer::body_add_par("", style = "Normal")
-                }
-
-                doc <- doc %>%
-                    officer::body_add_par("REKOMENDASI", style = "heading 2") %>%
-                    officer::body_add_par(practical_recommendation, style = "Normal")
-
-                print(doc, target = file)
-            }
-        )
-
-        # 2. Comprehensive PDF report
-        output$download_report_pdf <- downloadHandler(
-            filename = function() {
-                paste0("laporan_regresi_", Sys.Date(), ".pdf")
-            },
-            content = function(file) {
-                req(model_result())
-
-                # Prepare parameters for R Markdown template
-                params <- list(
-                    data = values$sovi_data,
-                    model = model_result(),
-                    summary_model = summary(model_result()),
-                    assumption_tests = assumption_tests(),
-                    dep_var = input$dep_var,
-                    indep_vars = input$indep_vars,
-                    analysis_date = Sys.Date(),
-                    interpretation = interpret_regression(model_result(), alpha = 0.05)
-                )
-
-                # Render the R Markdown template
-                tryCatch({
-                    rmarkdown::render(
-                        input = "reports/laporan_regresi.Rmd",
-                        output_file = file,
-                        output_format = "pdf_document",
-                        params = params,
-                        envir = new.env(parent = globalenv()),
-                        quiet = TRUE
-                    )
-                }, error = function(e) {
-                    # If PDF generation fails, create a simple error document
-                    writeLines(paste("Error generating PDF report:", e$message), file)
-                    showNotification("PDF generation failed. Please try the Word format.", type = "error")
-                })
-            }
-        )
-
-        # 3. Comprehensive Word report
+        # 1. Download Word Report (replaces old interpretation and word download)
         output$download_report_word <- downloadHandler(
             filename = function() {
                 paste0("laporan_regresi_", Sys.Date(), ".docx")
             },
             content = function(file) {
                 req(model_result())
+                tryCatch({
+                    render_regression_report(
+                        model = model_result(),
+                        assumption_tests = assumption_tests(),
+                        dep_var = input$dep_var,
+                        indep_vars = input$indep_vars,
+                        output_format = "word_document",
+                        output_file = file
+                    )
+                }, error = function(e) {
+                    showNotification(paste("Error generating Word report:", e$message), type = "error")
+                })
+            }
+        )
 
-                # Prepare parameters for R Markdown template
-                params <- list(
-                    data = values$sovi_data,
-                    model = model_result(),
-                    summary_model = summary(model_result()),
-                    assumption_tests = assumption_tests(),
-                    dep_var = input$dep_var,
-                    indep_vars = input$indep_vars,
-                    analysis_date = Sys.Date(),
-                    interpretation = interpret_regression(model_result(), alpha = 0.05)
-                )
+        # Keep the old download_interpretation button, but have it download the full Word report
+        output$download_interpretation <- output$download_report_word
 
-                # Create temporary Rmd file for Word output
-                temp_rmd <- tempfile(fileext = ".Rmd")
-                file.copy("reports/laporan_regresi.Rmd", temp_rmd)
-
-                # Modify YAML header for Word output
-                rmd_content <- readLines(temp_rmd)
-                yaml_end <- which(rmd_content == "---")[2]
-                rmd_content[2] <- "output: word_document"
-                writeLines(rmd_content, temp_rmd)
-
-                # Render the R Markdown template
-                rmarkdown::render(
-                    input = temp_rmd,
-                    output_file = file,
-                    params = params,
-                    envir = new.env(parent = globalenv()),
-                    quiet = TRUE
-                )
+        # 2. Download PDF Report
+        output$download_report_pdf <- downloadHandler(
+            filename = function() {
+                paste0("laporan_regresi_", Sys.Date(), ".pdf")
+            },
+            content = function(file) {
+                req(model_result())
+                tryCatch({
+                    render_regression_report(
+                        model = model_result(),
+                        assumption_tests = assumption_tests(),
+                        dep_var = input$dep_var,
+                        indep_vars = input$indep_vars,
+                        output_format = "pdf_document",
+                        output_file = file
+                    )
+                }, error = function(e) {
+                    showNotification(paste("Error generating PDF report:", e$message), type = "error")
+                })
             }
         )
     })

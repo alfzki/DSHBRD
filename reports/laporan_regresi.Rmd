@@ -1,378 +1,115 @@
 ---
-title: "Laporan Regresi Linear - Dashboard ALIVA"
-subtitle: "Multiple Linear Regression"
-author: "Dashboard ALIVA"
-date: "`r format(Sys.Date(), '%d %B %Y')`"
+title: "Laporan Analisis Regresi Linear"
 output:
-  word_document:
-    reference_docx: NULL
+  word_document: default
   pdf_document:
     latex_engine: xelatex
-    keep_tex: false
+  html_fragment: default
 params:
-  variabel_dependen: "Variabel Terikat"
-  variabel_independen: NULL
-  hasil_regresi: NULL
-  uji_asumsi: NULL
-  interpretasi: NULL
-  plot_paths: NULL
-  model_formula: NULL
+  model: NULL
+  assumption_tests: NULL
+  dep_var: "Y"
+  indep_vars: c("X1")
+  # This new parameter controls what part of the report is rendered
+  output_type: "full_report" # Can be "full_report" or "interpretation_only"
 ---
 
 ```{r setup, include=FALSE}
+# This setup chunk runs silently and prepares the environment
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 library(flextable)
 library(dplyr)
+library(stringr)
+
+# Source the centralized interpretation helper to ensure consistency
+# Using here::here to make the path robust
+source(here::here("R", "utils", "interpretation_helpers.R"), local = knitr::knit_global())
+
+# Generate the core interpretation text once
+interpretation_html <- interpret_regression(params$model, alpha = 0.05)
+# Convert markdown-style bolding to HTML bolding for the UI
+interpretation_html <- str_replace_all(interpretation_html, "\\*\\*(.*?)\\*\\*", "<strong>\\1</strong>")
+interpretation_html <- str_replace_all(interpretation_html, "\\n", "<br>")
+
+# For non-HTML outputs, we need a plain text version
+interpretation_text <- interpret_regression(params$model, alpha = 0.05)
+interpretation_text <- str_replace_all(interpretation_text, "\\*\\*", "")
 ```
 
-# Laporan Analisis Regresi Linear Berganda
+```{r render-interpretation-only, eval=params$output_type == 'interpretation_only', results='asis'}
+# This chunk renders ONLY the interpretation in a styled div for the Shiny UI
+cat(paste0(
+  "<div style='padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; margin: 10px 0;'>",
+  interpretation_html,
+  "</div>"
+))
+```
 
-## Informasi Analisis
+```{r render-full-report, eval=params$output_type == 'full_report', results='asis'}
+# This chunk renders the FULL report for PDF/Word downloads
+summary_reg <- summary(params$model)
+```
 
-**Variabel Terikat (Y):** `r params$variabel_dependen`
+```{r full-report-header, eval=params$output_type == 'full_report', results='asis'}
+cat("# Laporan Analisis Regresi Linear Berganda\n\n")
+cat(paste("**Variabel Terikat (Y):**", params$dep_var, "\n\n"))
+cat(paste("**Variabel Bebas (X):**", paste(params$indep_vars, collapse = ", "), "\n\n"))
+cat(paste("**Model:**", as.character(formula(params$model))[3], "\n\n"))
+cat(paste("**Tanggal Analisis:**", format(Sys.Date(), '%d %B %Y'), "\n\n"))
+cat("---\n\n")
+```
 
-**Variabel Bebas (X):** `r if(!is.null(params$variabel_independen)) paste(params$variabel_independen, collapse = ", ") else "Tidak tersedia"`
-
-**Model:** `r params$model_formula %||% "Y ~ X1 + X2 + ..."`
-
-**Tanggal Analisis:** `r format(Sys.Date(), '%d %B %Y')`
-
-**Metode:** Ordinary Least Squares (OLS)
-
----
-
-## Model Regresi
-
-```{r model-info}
-if (!is.null(params$model_formula)) {
-    cat("**Persamaan Model:**\n\n")
-    cat(params$model_formula, "\n\n")
-} else {
-    cat("**Persamaan Model:** Y = β₀ + β₁X₁ + β₂X₂ + ... + βₖXₖ + ε\n\n")
-}
-
-if (!is.null(params$variabel_independen)) {
-    cat("**Jumlah Variabel Bebas:**", length(params$variabel_independen), "\n\n")
-
-    var_df <- data.frame(
-        No = 1:length(params$variabel_independen),
-        `Variabel Bebas` = params$variabel_independen,
-        check.names = FALSE
+```{r full-report-summary, eval=params$output_type == 'full_report'}
+cat("## Ringkasan Model\n\n")
+model_stats <- data.frame(
+    Statistik = c("R-squared", "Adjusted R-squared", "F-statistic", "p-value (F-stat)"),
+    Nilai = c(
+        round(summary_reg$r.squared, 4),
+        round(summary_reg$adj.r.squared, 4),
+        round(summary_reg$fstatistic[1], 4),
+        format(pf(summary_reg$fstatistic[1], summary_reg$fstatistic[2], summary_reg$fstatistic[3], lower.tail = FALSE), scientific = TRUE, digits = 4)
     )
-
-    ft <- flextable(var_df) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
-
-    ft
-}
+)
+flextable(model_stats) %>% theme_vanilla() %>% autofit()
 ```
 
----
-
-## Ringkasan Model
-
-```{r model-summary}
-if (!is.null(params$hasil_regresi)) {
-    summary_reg <- summary(params$hasil_regresi)
-
-    model_stats <- data.frame(
-        Statistik = c("R-squared", "Adjusted R-squared", "F-statistic", "p-value (F-stat)", "Residual Standard Error", "Degrees of Freedom"),
-        Nilai = c(
-            round(summary_reg$r.squared, 4),
-            round(summary_reg$adj.r.squared, 4),
-            round(summary_reg$fstatistic[1], 4),
-            format(pf(summary_reg$fstatistic[1], summary_reg$fstatistic[2], summary_reg$fstatistic[3], lower.tail = FALSE), scientific = TRUE, digits = 4),
-            round(summary_reg$sigma, 4),
-            paste(summary_reg$df[2], "on", summary_reg$df[1], "and", summary_reg$df[2], "DF")
+```{r full-report-coeffs, eval=params$output_type == 'full_report'}
+cat("\n\n## Koefisien Regresi\n\n")
+coeffs <- summary_reg$coefficients
+coeff_df <- data.frame(
+    Variabel = rownames(coeffs),
+    Koefisien = round(coeffs[, "Estimate"], 6),
+    `Std. Error` = round(coeffs[, "Std. Error"], 6),
+    `t-value` = round(coeffs[, "t value"], 4),
+    `p-value` = format(coeffs[, "Pr(>|t|)"], scientific = TRUE, digits = 4),
+    Signifikansi = ifelse(coeffs[, "Pr(>|t|)"] < 0.001, "***",
+        ifelse(coeffs[, "Pr(>|t|)"] < 0.01, "**",
+            ifelse(coeffs[, "Pr(>|t|)"] < 0.05, "*", "")
         )
-    )
-
-    ft <- flextable(model_stats) %>%
-        set_header_labels(
-            Statistik = "Statistik Model",
-            Nilai = "Nilai"
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
-
-    ft
-} else {
-    cat("Ringkasan model tidak tersedia.")
-}
+    ),
+    check.names = FALSE
+)
+flextable(coeff_df) %>% theme_vanilla() %>% autofit()
 ```
 
----
-
-## Koefisien Regresi
-
-```{r coefficients-table}
-if (!is.null(params$hasil_regresi)) {
-    summary_reg <- summary(params$hasil_regresi)
-    coeffs <- summary_reg$coefficients
-
-    coeff_df <- data.frame(
-        Variabel = rownames(coeffs),
-        Koefisien = round(coeffs[, "Estimate"], 6),
-        `Std. Error` = round(coeffs[, "Std. Error"], 6),
-        `t-value` = round(coeffs[, "t value"], 4),
-        `p-value` = format(coeffs[, "Pr(>|t|)"], scientific = TRUE, digits = 4),
-        Signifikansi = ifelse(coeffs[, "Pr(>|t|)"] < 0.001, "***",
-            ifelse(coeffs[, "Pr(>|t|)"] < 0.01, "**",
-                ifelse(coeffs[, "Pr(>|t|)"] < 0.05, "*",
-                    ifelse(coeffs[, "Pr(>|t|)"] < 0.1, ".", "")
-                )
-            )
-        ),
-        check.names = FALSE
-    )
-
-    ft <- flextable(coeff_df) %>%
-        set_header_labels(
-            Variabel = "Variabel",
-            Koefisien = "Koefisien (β)",
-            `Std. Error` = "Std. Error",
-            `t-value` = "t-statistic",
-            `p-value` = "p-value",
-            Signifikansi = "Sig."
-        ) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header") %>%
-        footnote(i = 1, j = 6, value = as_paragraph("Signifikansi: '***' p<0.001, '**' p<0.01, '*' p<0.05, '.' p<0.1"), ref_symbols = "")
-
-    ft
-} else {
-    cat("Tabel koefisien tidak tersedia.")
-}
-```
-
----
-
-## Persamaan Regresi Estimasi
-
-```{r regression-equation}
-if (!is.null(params$hasil_regresi)) {
-    coeffs <- coef(params$hasil_regresi)
-    intercept <- round(coeffs[1], 4)
-
-    equation <- paste("Ŷ =", intercept)
-
-    for (i in 2:length(coeffs)) {
-        coeff_val <- round(coeffs[i], 4)
-        var_name <- names(coeffs)[i]
-
-        if (coeff_val >= 0) {
-            equation <- paste(equation, "+", coeff_val, "*", var_name)
-        } else {
-            equation <- paste(equation, "-", abs(coeff_val), "*", var_name)
-        }
-    }
-
-    cat("**Persamaan Regresi Estimasi:**\n\n")
-    cat(equation, "\n\n")
-
-    cat("**Keterangan:**\n")
-    cat("- Ŷ: Nilai prediksi", params$variabel_dependen, "\n")
-    cat("- Koefisien menunjukkan perubahan rata-rata Y untuk setiap unit perubahan X\n")
-}
-```
-
----
-
-## Uji Asumsi Regresi
-
-```{r assumptions-tests}
-if (!is.null(params$uji_asumsi)) {
-    cat("### Hasil Uji Asumsi\n\n")
+```{r full-report-assumptions, eval=params$output_type == 'full_report'}
+cat("\n\n## Uji Asumsi Regresi\n\n")
+tests <- params$assumption_tests
+if (!is.null(tests)) {
+    vif_result <- if (length(params$indep_vars) > 1) paste("Max VIF =", round(max(tests$vif), 2)) else "N/A (single predictor)"
+    bp_result <- paste("p-value =", format(tests$breusch_pagan$p.value, digits=4))
+    shapiro_result <- if(!is.null(tests$shapiro)) paste("p-value =", format(tests$shapiro$p.value, digits=4)) else "N/A (n > 5000)"
 
     assumption_df <- data.frame(
-        `Jenis Uji` = c("Normalitas Residual (Shapiro-Wilk)", "Heteroskedastisitas (Breusch-Pagan)", "Multikolinearitas (VIF)"),
-        `Hasil` = c(
-            if (!is.null(params$uji_asumsi$normality)) {
-                paste(
-                    "W =", round(params$uji_asumsi$normality$statistic, 4),
-                    ", p-value =", format(params$uji_asumsi$normality$p.value, scientific = TRUE, digits = 4)
-                )
-            } else {
-                "Tidak tersedia"
-            },
-            if (!is.null(params$uji_asumsi$heteroscedasticity)) {
-                paste(
-                    "LM =", round(params$uji_asumsi$heteroscedasticity$statistic, 4),
-                    ", p-value =", format(params$uji_asumsi$heteroscedasticity$p.value, scientific = TRUE, digits = 4)
-                )
-            } else {
-                "Tidak tersedia"
-            },
-            if (!is.null(params$uji_asumsi$multicollinearity)) {
-                paste("Max VIF =", round(max(params$uji_asumsi$multicollinearity), 2))
-            } else {
-                "Tidak tersedia"
-            }
-        ),
-        `Interpretasi` = c(
-            if (!is.null(params$uji_asumsi$normality)) {
-                ifelse(params$uji_asumsi$normality$p.value > 0.05, "Residual berdistribusi normal", "Residual tidak berdistribusi normal")
-            } else {
-                "Tidak tersedia"
-            },
-            if (!is.null(params$uji_asumsi$heteroscedasticity)) {
-                ifelse(params$uji_asumsi$heteroscedasticity$p.value > 0.05, "Homoskedastisitas terpenuhi", "Heteroskedastisitas terdeteksi")
-            } else {
-                "Tidak tersedia"
-            },
-            if (!is.null(params$uji_asumsi$multicollinearity)) {
-                ifelse(max(params$uji_asumsi$multicollinearity) < 5, "Tidak ada masalah multikolinearitas serius", "Multikolinearitas terdeteksi")
-            } else {
-                "Tidak tersedia"
-            }
-        ),
-        check.names = FALSE
+        Uji = c("Multikolinearitas (VIF)", "Heteroskedastisitas (Breusch-Pagan)", "Normalitas Residual (Shapiro-Wilk)"),
+        Hasil = c(vif_result, bp_result, shapiro_result)
     )
-
-    ft <- flextable(assumption_df) %>%
-        theme_vanilla() %>%
-        autofit() %>%
-        align(align = "center", part = "header")
-
-    ft
-} else {
-    cat("Hasil uji asumsi tidak tersedia.")
+    flextable(assumption_df) %>% theme_vanilla() %>% autofit()
 }
 ```
 
----
-
-## Plot Diagnostik
-
-```{r diagnostic-plots, fig.cap="Plot Diagnostik Regresi", out.width="100%"}
-if (!is.null(params$plot_paths) && !is.null(params$plot_paths$diagnostic)) {
-    if (file.exists(params$plot_paths$diagnostic)) {
-        knitr::include_graphics(params$plot_paths$diagnostic)
-    }
-} else {
-    cat("Plot diagnostik tidak tersedia.")
-}
+```{r full-report-interpretation, eval=params$output_type == 'full_report', results='asis'}
+cat("\n\n## Interpretasi dan Kesimpulan\n\n")
+# Use the plain text version for non-HTML reports
+cat(interpretation_text)
 ```
-
----
-
-## Interpretasi dan Kesimpulan
-
-```{r interpretation}
-if (!is.null(params$interpretasi)) {
-    cat(params$interpretasi)
-} else if (!is.null(params$hasil_regresi)) {
-    summary_reg <- summary(params$hasil_regresi)
-
-    cat("### Interpretasi Model\n\n")
-
-    cat("**1. Koefisien Determinasi (R²):**\n")
-    cat("- R² =", round(summary_reg$r.squared, 4), "\n")
-    cat(
-        "- Artinya", round(summary_reg$r.squared * 100, 2), "% variabilitas", params$variabel_dependen,
-        "dapat dijelaskan oleh variabel bebas dalam model.\n\n"
-    )
-
-    cat("**2. Signifikansi Model:**\n")
-    f_pval <- pf(summary_reg$fstatistic[1], summary_reg$fstatistic[2], summary_reg$fstatistic[3], lower.tail = FALSE)
-    cat("- F-statistic =", round(summary_reg$fstatistic[1], 4), "\n")
-    cat("- p-value =", format(f_pval, scientific = TRUE, digits = 4), "\n")
-    if (f_pval < 0.05) {
-        cat("- Model secara keseluruhan signifikan pada α = 0.05\n\n")
-    } else {
-        cat("- Model secara keseluruhan tidak signifikan pada α = 0.05\n\n")
-    }
-
-    cat("**3. Interpretasi Koefisien:**\n")
-    coeffs <- summary_reg$coefficients
-    for (i in 2:nrow(coeffs)) {
-        var_name <- rownames(coeffs)[i]
-        coeff_val <- coeffs[i, "Estimate"]
-        p_val <- coeffs[i, "Pr(>|t|)"]
-
-        cat(
-            "- ", var_name, ": Setiap kenaikan 1 unit akan mengubah", params$variabel_dependen,
-            "sebesar", round(coeff_val, 4), "unit"
-        )
-        if (p_val < 0.05) {
-            cat(" (signifikan)\n")
-        } else {
-            cat(" (tidak signifikan)\n")
-        }
-    }
-}
-```
-
-### Validitas Model
-
-```{r model-validity}
-if (!is.null(params$uji_asumsi)) {
-    cat("**Evaluasi Asumsi:**\n\n")
-
-    assumptions_met <- 0
-    total_assumptions <- 0
-
-    if (!is.null(params$uji_asumsi$normality)) {
-        total_assumptions <- total_assumptions + 1
-        if (params$uji_asumsi$normality$p.value > 0.05) {
-            assumptions_met <- assumptions_met + 1
-            cat("✓ Asumsi normalitas residual terpenuhi\n")
-        } else {
-            cat("✗ Asumsi normalitas residual tidak terpenuhi\n")
-        }
-    }
-
-    if (!is.null(params$uji_asumsi$heteroscedasticity)) {
-        total_assumptions <- total_assumptions + 1
-        if (params$uji_asumsi$heteroscedasticity$p.value > 0.05) {
-            assumptions_met <- assumptions_met + 1
-            cat("✓ Asumsi homoskedastisitas terpenuhi\n")
-        } else {
-            cat("✗ Asumsi homoskedastisitas tidak terpenuhi\n")
-        }
-    }
-
-    if (!is.null(params$uji_asumsi$multicollinearity)) {
-        total_assumptions <- total_assumptions + 1
-        if (max(params$uji_asumsi$multicollinearity) < 5) {
-            assumptions_met <- assumptions_met + 1
-            cat("✓ Tidak ada masalah multikolinearitas serius\n")
-        } else {
-            cat("✗ Terdeteksi masalah multikolinearitas\n")
-        }
-    }
-
-    cat("\n**Status Asumsi:**", assumptions_met, "dari", total_assumptions, "asumsi terpenuhi\n")
-}
-```
-
-### Rekomendasi
-
-```{r recommendations}
-if (!is.null(params$hasil_regresi)) {
-    summary_reg <- summary(params$hasil_regresi)
-    r_squared <- summary_reg$r.squared
-
-    cat("**Rekomendasi Penggunaan Model:**\n\n")
-
-    if (r_squared > 0.7) {
-        cat("- Model memiliki daya prediksi yang baik (R² > 0.7)\n")
-    } else if (r_squared > 0.5) {
-        cat("- Model memiliki daya prediksi yang cukup baik (R² > 0.5)\n")
-    } else {
-        cat("- Model memiliki daya prediksi yang terbatas (R² ≤ 0.5)\n")
-    }
-
-    cat("- Validasi model dengan data baru disarankan\n")
-    cat("- Pertimbangkan transformasi variabel jika asumsi tidak terpenuhi\n")
-    cat("- Evaluasi kemungkinan variabel bebas tambahan yang relevan\n")
-}
-```
-
----
-
-*Laporan ini dihasilkan secara otomatis oleh NusaStat Dashboard pada `r format(Sys.time(), '%d %B %Y pukul %H:%M WIB')`*

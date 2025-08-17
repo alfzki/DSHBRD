@@ -142,7 +142,13 @@ server <- function(input, output, session) {
   uji_rata_server("uji_rata", values)
   uji_prop_var_server("uji_prop_var", values)
   uji_anova_server("uji_anova", values)
-  regresi_server("regresi", values)
+
+  # Refactored call for the regression module
+  regresi_server(
+    id = "regresi",
+    data = reactive(values$processed_data),
+    update_trigger = reactive(values$data_update_counter)
+  )
 }
 
 # Run the application

@@ -1,0 +1,38 @@
+province_code,province_name,region,island
+11,Aceh,Sumatera,Sumatera
+12,Sumatera Utara,Sumatera,Sumatera
+13,Sumatera Barat,Sumatera,Sumatera
+14,Riau,Sumatera,Sumatera
+15,Jambi,Sumatera,Sumatera
+16,Sumatera Selatan,Sumatera,Sumatera
+17,Bengkulu,Sumatera,Sumatera
+18,Lampung,Sumatera,Sumatera
+19,Kepulauan Bangka Belitung,Sumatera,Sumatera
+21,Kepulauan Riau,Lainnya,Lainnya
+31,DKI Jakarta,Jawa-Bali,Jawa-Bali
+32,Jawa Barat,Jawa-Bali,Jawa-Bali
+33,Jawa Tengah,Jawa-Bali,Jawa-Bali
+34,DI Yogyakarta,Jawa-Bali,Jawa-Bali
+35,Jawa Timur,Jawa-Bali,Jawa-Bali
+36,Banten,Jawa-Bali,Jawa-Bali
+51,Bali,Kalimantan-Sulawesi,Kalimantan
+52,Nusa Tenggara Barat,Kalimantan-Sulawesi,Kalimantan
+53,Nusa Tenggara Timur,Kalimantan-Sulawesi,Kalimantan
+61,Kalimantan Barat,Kalimantan-Sulawesi,Sulawesi
+62,Kalimantan Tengah,Kalimantan-Sulawesi,Sulawesi
+63,Kalimantan Selatan,Kalimantan-Sulawesi,Sulawesi
+64,Kalimantan Timur,Kalimantan-Sulawesi,Sulawesi
+65,Kalimantan Utara,Lainnya,Lainnya
+71,Sulawesi Utara,Indonesia Timur,Nusa Tenggara
+72,Sulawesi Tengah,Indonesia Timur,Nusa Tenggara
+73,Sulawesi Selatan,Indonesia Timur,Nusa Tenggara
+74,Sulawesi Tenggara,Indonesia Timur,Nusa Tenggara
+75,Gorontalo,Indonesia Timur,Nusa Tenggara
+76,Sulawesi Barat,Indonesia Timur,Nusa Tenggara
+81,Maluku,Indonesia Timur,Maluku
+82,Maluku Utara,Indonesia Timur,Maluku
+91,Papua Barat,Indonesia Timur,Papua
+92,Papua,Indonesia Timur,Papua
+94,Papua Tengah,Indonesia Timur,Papua
+95,Papua Pegunungan,Lainnya,Lainnya
+96,Papua Selatan,Lainnya,Lainnya
